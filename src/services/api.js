@@ -17,7 +17,9 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Forward the current hostname so the backend resolver works
+// Forward the current hostname so the backend can resolve the store.
+// Works for both custom domains (shop.clientdomain.com)
+// and platform subdomains (mystore.workflow.repair).
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     config.headers['X-Domain'] = window.location.hostname

@@ -2,7 +2,12 @@
  * storeResolver.js
  *
  * Resolves which store to serve by calling the Laravel API.
- * Replaces the Firebase Firestore-based implementation.
+ *
+ * Production:  hostname is either a verified custom domain (shop.clientdomain.com)
+ *              or a platform subdomain (mystore.workflow.repair).
+ *              Both are handled via the X-Domain header by api.js.
+ *
+ * Dev:         use ?store=<slug|id> query param or VITE_FALLBACK_STORE_ID env.
  *
  * Returns one of:
  *  { type: 'store', storeId, config }
@@ -11,7 +16,7 @@
 
 import api from '@/services/api'
 
-const isDev = () => {
+const isLocal = () => {
   const h = window.location.hostname
   return h === 'localhost' || h.startsWith('127.') || h.startsWith('192.') || h === '0.0.0.0'
 }
@@ -23,16 +28,18 @@ export async function resolveStore() {
   const hostname = window.location.hostname
   const searchParams = new URLSearchParams(window.location.search)
 
-  // In dev, allow ?store=<id> or VITE_FALLBACK_STORE_ID to bypass hostname resolution
-  const devStoreId = isDev()
-    ? searchParams.get('store') ||
-      sessionStorage.getItem('eshop_selected_store') ||
-      import.meta.env.VITE_FALLBACK_STORE_ID
-    : null
-
   try {
     const params = {}
-    if (devStoreId) params.store = devStoreId
+
+    if (isLocal()) {
+      // Dev: allow ?store=<slug|id> or env var fallback
+      const devStore = searchParams.get('store')
+        || sessionStorage.getItem('eshop_selected_store')
+        || import.meta.env.VITE_FALLBACK_STORE_ID
+      if (devStore) params.store = devStore
+    }
+    // Production: X-Domain header (set by api.js) carries the hostname.
+    // Backend resolves by custom domain or subdomain slug automatically.
 
     const { data } = await api.get('/eshop/resolve', { params })
     const config = data.data
@@ -45,16 +52,12 @@ export async function resolveStore() {
 }
 
 /**
- * Call this when a user picks a store (kept for compatibility with StoreLocator).
- * Persists the choice in sessionStorage so refreshes keep the same store.
+ * Persists a store selection across refreshes (StoreLocator compatibility).
  */
 export function selectStoreInSession(storeId) {
   sessionStorage.setItem('eshop_selected_store', storeId)
 }
 
-/**
- * Clear the store selection.
- */
 export function clearStoreSelection() {
   sessionStorage.removeItem('eshop_selected_store')
 }

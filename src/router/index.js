@@ -63,8 +63,6 @@ const routes = [
     meta: { title: 'Σύνδεση' }
   },
   {
-    // Chain store locator — shown automatically by App.vue in chain mode,
-    // but also reachable directly so the user can switch stores.
     path: '/stores',
     name: 'StoreLocator',
     component: () => import('@/views/StoreLocator.vue'),
