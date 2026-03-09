@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useAnalytics } from '@/composables/useAnalytics'
 
@@ -40,11 +40,15 @@ const text = computed(() =>
   'We use cookies to improve your experience and analyze site traffic. By accepting, you agree to our use of cookies.'
 )
 
-onMounted(() => {
-  if (!appStore.cookieConsentEnabled) return
-  const existing = localStorage.getItem('cookie_consent')
-  if (!existing) visible.value = true
-})
+// Watch because storeConfig loads asynchronously — cookieConsentEnabled is false on mount
+watch(
+  () => appStore.cookieConsentEnabled,
+  (enabled) => {
+    if (!enabled) return
+    if (!localStorage.getItem('cookie_consent')) visible.value = true
+  },
+  { immediate: true }
+)
 
 function accept() {
   localStorage.setItem('cookie_consent', 'accepted')

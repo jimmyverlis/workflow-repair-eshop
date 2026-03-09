@@ -128,8 +128,11 @@
               <div class="text-gray-600">
                 {{ order.deliveryMethod === 'store_pickup' ? '🏪 Παραλαβή από κατάστημα' : '🚚 Courier' }}
               </div>
-              <div v-if="order.shipping?.address" class="text-gray-700">
-                {{ order.shipping.address.street }}, {{ order.shipping.address.city }} {{ order.shipping.address.postalCode }}
+              <div v-if="order.shippingAddress" class="text-gray-700">
+                {{ order.shippingAddress.street }}, {{ order.shippingAddress.city }} {{ order.shippingAddress.postalCode }}
+              </div>
+              <div v-if="order.shipping?.carrier" class="text-gray-600">
+                <span class="font-medium">Courier:</span> {{ order.shipping.carrier }}
               </div>
               <div v-if="order.shipping?.trackingNumber" class="font-mono text-primary-600 font-medium">
                 Tracking: {{ order.shipping.trackingNumber }}
