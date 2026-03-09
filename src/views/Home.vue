@@ -240,6 +240,46 @@
               </div>
             </article>
           </div>
+
+          <div v-if="activePromotions.length" class="mt-10 rounded-[2rem] border border-primary-100 bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 class="text-2xl font-black text-slate-900">Live promo codes</h3>
+                <p class="text-sm text-slate-500">Use these checkout codes while they are active.</p>
+              </div>
+              <RouterLink to="/checkout" class="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                Go to checkout
+              </RouterLink>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <article
+                v-for="promotion in activePromotions"
+                :key="promotion.code"
+                class="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.2em] text-primary-600">Promo code</div>
+                    <div class="mt-2 text-2xl font-black text-slate-900">{{ promotion.code }}</div>
+                  </div>
+                  <Tag class="h-5 w-5 text-primary-600" />
+                </div>
+
+                <p v-if="promotion.description" class="mt-3 text-sm leading-6 text-slate-500">
+                  {{ promotion.description }}
+                </p>
+
+                <div class="mt-4 text-sm font-semibold text-slate-700">
+                  {{ promotionSummary(promotion) }}
+                </div>
+
+                <div v-if="promotion.minimum_subtotal" class="mt-2 text-xs text-slate-500">
+                  Minimum order: {{ Number(promotion.minimum_subtotal).toFixed(2) }}EUR
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -282,6 +322,7 @@ const heroSearch = ref('');
 const loadingHighlights = ref(false);
 const topProducts = ref([]);
 const discountedProducts = ref([]);
+const activePromotions = ref([]);
 const activeBannerIndex = ref(0);
 let bannerTimer = null;
 
@@ -359,6 +400,19 @@ function productTypeLabel(type) {
   return 'Product';
 }
 
+function promotionSummary(promotion) {
+  if (promotion.type === 'free_shipping') {
+    return 'Free shipping';
+  }
+
+  const value = Number(promotion.value || 0);
+  if (promotion.type === 'fixed_amount') {
+    return `${value.toFixed(2)}EUR off`;
+  }
+
+  return `${value}% off`;
+}
+
 async function loadHighlights() {
   loadingHighlights.value = true;
   try {
@@ -368,10 +422,12 @@ async function loadHighlights() {
 
     topProducts.value = data.data?.top_products || [];
     discountedProducts.value = data.data?.discounted_products || [];
+    activePromotions.value = data.data?.active_promotions || [];
   } catch (error) {
     console.error('Error loading home highlights:', error);
     topProducts.value = [];
     discountedProducts.value = [];
+    activePromotions.value = [];
   } finally {
     loadingHighlights.value = false;
   }

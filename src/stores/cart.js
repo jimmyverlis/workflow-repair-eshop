@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 export const useCartStore = defineStore('cart', () => {
   // State
   const items = ref([]);
+  const promotion = ref(null);
 
   function toNumber(value, fallback = 0) {
     const numeric = Number(value);
@@ -20,6 +21,9 @@ export const useCartStore = defineStore('cart', () => {
   );
 
   const isEmpty = computed(() => items.value.length === 0);
+  const discountAmount = computed(() => toNumber(promotion.value?.totals?.discount_amount));
+  const shippingDiscount = computed(() => toNumber(promotion.value?.totals?.shipping_discount));
+  const totalDiscount = computed(() => toNumber(promotion.value?.totals?.total_discount));
 
   const hasServices = computed(() => items.value.some(item => item.isService));
   const isServiceOnly = computed(() => items.value.length > 0 && items.value.every(item => item.isService));
@@ -79,26 +83,45 @@ export const useCartStore = defineStore('cart', () => {
 
   function clearCart() {
     items.value = [];
+    promotion.value = null;
     localStorage.removeItem('cart');
   }
 
+  function setPromotion(preview) {
+    promotion.value = preview || null;
+    saveCart();
+  }
+
+  function clearPromotion() {
+    promotion.value = null;
+    saveCart();
+  }
+
   function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(items.value));
+    localStorage.setItem('cart', JSON.stringify({
+      items: items.value,
+      promotion: promotion.value,
+    }));
   }
 
   function loadCart() {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       try {
-        items.value = JSON.parse(savedCart).map(item => ({
+        const parsed = JSON.parse(savedCart);
+        const savedItems = Array.isArray(parsed) ? parsed : (parsed.items || []);
+
+        items.value = savedItems.map(item => ({
           ...item,
           unitPrice: toNumber(item.unitPrice),
           quantity: toNumber(item.quantity, 1),
           stock: item.isService ? Infinity : toNumber(item.stock)
         }));
+        promotion.value = Array.isArray(parsed) ? null : (parsed.promotion || null);
       } catch (e) {
         console.error('Error loading cart:', e);
         items.value = [];
+        promotion.value = null;
       }
     }
   }
@@ -106,11 +129,15 @@ export const useCartStore = defineStore('cart', () => {
   return {
     // State
     items,
+    promotion,
 
     // Getters
     itemCount,
     subtotal,
     isEmpty,
+    discountAmount,
+    shippingDiscount,
+    totalDiscount,
     hasServices,
     isServiceOnly,
 
@@ -119,6 +146,8 @@ export const useCartStore = defineStore('cart', () => {
     removeItem,
     updateQuantity,
     clearCart,
+    setPromotion,
+    clearPromotion,
     saveCart,
     loadCart
   };
