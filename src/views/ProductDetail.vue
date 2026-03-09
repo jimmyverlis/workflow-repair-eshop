@@ -283,6 +283,8 @@ import api from '@/services/api';
 import ProductCard from '@/components/catalog/ProductCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
+import { useSeo } from '@/composables/useSeo';
+import { useAnalytics } from '@/composables/useAnalytics';
 import {
   buildProductBadges,
   buildProductKey,
@@ -301,6 +303,8 @@ const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
 const cartStore = useCartStore();
+const seo = useSeo();
+const analytics = useAnalytics();
 
 const product = ref(null);
 const loading = ref(true);
@@ -388,6 +392,38 @@ async function loadProduct() {
 
     product.value = normalizedProduct;
     saveRecentlyViewedProduct(normalizedProduct);
+
+    // SEO
+    const pName = normalizedProduct.name || '';
+    const pDesc = normalizedProduct.meta_description || normalizedProduct.eshop_description || normalizedProduct.description || ''
+    const pImage = normalizedProduct.images?.[0] || ''
+    seo.apply({
+      title: normalizedProduct.meta_title || pName,
+      description: pDesc,
+      image: pImage,
+      type: 'og:product',
+    })
+    seo.setJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: pName,
+      description: pDesc,
+      image: pImage ? [pImage] : undefined,
+      sku: normalizedProduct.id,
+      brand: normalizedProduct.brand ? { '@type': 'Brand', name: normalizedProduct.brand } : undefined,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: appStore.storeConfig?.currency || 'EUR',
+        price: normalizedProduct.eshop_price || normalizedProduct.price || 0,
+        availability: (normalizedProduct.quantity > 0)
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url: window.location.href,
+      },
+    }, 'product')
+
+    // Analytics: view_item event
+    analytics.trackViewItem(normalizedProduct);
     topSellerKeys.value = (highlightsResponse.data?.data?.top_products || [])
       .map(item => buildProductKey(normalizeProduct(item)));
 
@@ -467,6 +503,8 @@ function addToCart() {
     sellPrice: product.value.sellPrice ?? product.value.price,
     _collection: product.value._source,
   }, 1);
+
+  analytics.trackAddToCart(product.value, 1);
 }
 
 function addSpecificToCart(candidate) {

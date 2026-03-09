@@ -163,8 +163,10 @@ import { ref, onMounted } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { ordersAPI } from '@/services/api/orders';
 import { Package, CheckCircle, XCircle, Clock } from 'lucide-vue-next';
+import { useAnalytics } from '@/composables/useAnalytics';
 
 const route = useRoute();
+const analytics = useAnalytics();
 
 const order = ref(null);
 const loading = ref(true);
@@ -231,6 +233,21 @@ onMounted(async () => {
       errorMsg.value = 'Η παραγγελία δεν βρέθηκε.';
     } else {
       order.value = data;
+      // Fire purchase event once on success redirect (guard with sessionStorage to avoid re-fires on refresh)
+      const trackKey = `tracked_order_${data.orderId || orderId}`
+      if (paymentStatus.value === 'success' && data.paymentStatus === 'paid' && !sessionStorage.getItem(trackKey)) {
+        sessionStorage.setItem(trackKey, '1')
+        analytics.trackPurchase({
+          orderId: data.orderId || orderId,
+          total: data.totalAmount || 0,
+          items: (data.items || []).map(item => ({
+            item_id: item.itemId,
+            item_name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        })
+      }
     }
   } catch (err) {
     errorMsg.value = 'Δεν ήταν δυνατή η φόρτωση της παραγγελίας.';

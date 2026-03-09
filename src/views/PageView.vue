@@ -63,9 +63,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { Clock3, Mail, MapPin, Phone } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
+import { useSeo } from '@/composables/useSeo';
 
 const props = defineProps({
   pageKey: {
@@ -75,8 +76,13 @@ const props = defineProps({
 });
 
 const appStore = useAppStore();
+const seo = useSeo();
 
 const page = computed(() => appStore.pageContent[props.pageKey] || { title: 'Page', body: '' });
+
+watch(page, (p) => {
+  if (p.title) seo.apply({ title: p.title, description: p.body?.replace(/<[^>]*>/g, '').slice(0, 160) })
+}, { immediate: true });
 
 const pageLabel = computed(() => (
   {

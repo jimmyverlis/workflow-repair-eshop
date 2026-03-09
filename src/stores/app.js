@@ -259,6 +259,14 @@ export const useAppStore = defineStore('app', () => {
     }, {})
   })
 
+  const ga4MeasurementId = computed(() => storeConfig.value?.ga4_measurement_id || '')
+  const metaPixelId = computed(() => storeConfig.value?.meta_pixel_id || '')
+  const customHeadScripts = computed(() => storeConfig.value?.custom_head_scripts || '')
+  const cookieConsentEnabled = computed(() => !!storeConfig.value?.cookie_consent_enabled)
+  const cookieConsentText = computed(() => storeConfig.value?.cookie_consent_text || '')
+  const seoDefaultImage = computed(() => storeConfig.value?.seo_default_image || '')
+  const robotsIndex = computed(() => storeConfig.value?.robots_index !== false)
+
   const storeSelected = computed(() => !!storeId.value)
   const isChainMode = computed(() => false)
 
@@ -413,6 +421,14 @@ export const useAppStore = defineStore('app', () => {
     isAuthenticated,
     userEmail,
     userName,
+    // SEO & Analytics
+    ga4MeasurementId,
+    metaPixelId,
+    customHeadScripts,
+    cookieConsentEnabled,
+    cookieConsentText,
+    seoDefaultImage,
+    robotsIndex,
 
     // Actions
     initialize,

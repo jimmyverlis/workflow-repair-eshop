@@ -260,11 +260,12 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ChevronRight, Filter, Search, SlidersHorizontal, Smartphone, X } from 'lucide-vue-next';
 import api from '@/services/api';
 import ProductCard from '@/components/catalog/ProductCard.vue';
+import { useSeo } from '@/composables/useSeo';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
 import { promotionsAPI } from '@/services/api/promotions';
@@ -282,6 +283,7 @@ import {
 const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
+const seo = useSeo();
 const cartStore = useCartStore();
 
 const products = ref([]);
@@ -314,6 +316,10 @@ watch(
   },
   { immediate: true },
 );
+
+onMounted(() => {
+  seo.apply({ title: 'Products' })
+});
 
 watch(
   () => route.query,

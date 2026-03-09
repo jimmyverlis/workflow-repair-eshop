@@ -265,10 +265,12 @@ import { useAppStore } from '@/stores/app';
 import { ordersAPI } from '@/services/api/orders';
 import { paymentsAPI } from '@/services/api/payments';
 import { promotionsAPI } from '@/services/api/promotions';
+import { useAnalytics } from '@/composables/useAnalytics';
 
 const router = useRouter();
 const cartStore = useCartStore();
 const appStore = useAppStore();
+const analytics = useAnalytics();
 
 const stepLabels = ['Customer', 'Delivery', 'Payment'];
 const step = ref(1);
@@ -449,6 +451,9 @@ function goToStep(target) {
   }
 
   step.value = target;
+  if (target === 3) {
+    analytics.trackEvent('begin_checkout', { value: cartStore.totals?.total || 0 })
+  }
 }
 
 async function placeOrder() {

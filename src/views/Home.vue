@@ -319,9 +319,11 @@ import { useRouter, RouterLink } from 'vue-router';
 import { Clock3, Package, Shield, Sparkles, Tag, Truck } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
 import api from '@/services/api';
+import { useSeo } from '@/composables/useSeo';
 
 const router = useRouter();
 const appStore = useAppStore();
+const seo = useSeo();
 
 const heroSearch = ref('');
 const loadingHighlights = ref(false);
@@ -469,6 +471,10 @@ onMounted(() => {
   loadHighlights();
   startBannerRotation();
   countdownTimer = window.setInterval(() => { countdownTick.value = Date.now(); }, 1000);
+
+  seo.apply({
+    description: appStore.homeContent.subtitle || appStore.storeConfig?.meta_description || '',
+  })
 });
 
 onBeforeUnmount(() => {
