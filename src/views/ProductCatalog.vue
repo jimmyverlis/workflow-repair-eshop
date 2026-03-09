@@ -1,221 +1,281 @@
-<template>
-  <div class="product-catalog">
+﻿<template>
+  <div class="bg-slate-50">
     <div class="container mx-auto px-4 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Προϊόντα</h1>
-        <p class="text-gray-600">Βρείτε ό,τι χρειάζεστε για τη συσκευή σας</p>
-      </div>
+      <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+        <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Home</RouterLink>
+        <ChevronRight class="h-4 w-4" />
+        <span class="font-medium text-slate-900">{{ catalogTitle }}</span>
+      </nav>
 
-      <!-- Device Compatibility Filter -->
-      <div v-if="allDevices.length" class="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg shadow-md p-6 mb-6 border border-primary-100">
-        <div class="flex items-center gap-2 mb-4">
-          <Smartphone class="w-5 h-5 text-primary-600" />
-          <h2 class="text-lg font-bold text-primary-700">Βρείτε ανταλλακτικά για τη συσκευή σας</h2>
+      <section class="rounded-[2rem] border border-slate-200 bg-white px-6 py-8 shadow-sm md:px-8">
+        <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div class="max-w-3xl space-y-4">
+            <div class="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
+              Catalog
+            </div>
+            <div>
+              <h1 class="text-3xl font-black text-slate-900 md:text-5xl">{{ catalogTitle }}</h1>
+              <p class="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+                {{ catalogDescription }}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Results</div>
+              <div class="mt-2 text-2xl font-black text-slate-900">{{ filteredProducts.length }}</div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">On sale</div>
+              <div class="mt-2 text-2xl font-black text-slate-900">{{ discountedProductsCount }}</div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 col-span-2 sm:col-span-1">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Categories</div>
+              <div class="mt-2 text-2xl font-black text-slate-900">{{ availableCategories.length }}</div>
+            </div>
+          </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div v-if="featuredCategoryLinks.length" class="mt-8 flex flex-wrap gap-3">
+          <button
+            v-for="category in featuredCategoryLinks"
+            :key="`${category.label}-${category.url}`"
+            type="button"
+            class="rounded-full border px-4 py-2 text-sm font-semibold transition"
+            :class="isFeaturedCategoryActive(category)
+              ? 'border-primary-600 bg-primary-600 text-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-primary-200 hover:text-primary-700'"
+            @click="navigateToFeaturedCategory(category.url)"
+          >
+            {{ category.label }}
+          </button>
+        </div>
+      </section>
+
+      <section v-if="allDevices.length" class="mt-8 rounded-[2rem] border border-primary-100 bg-gradient-to-r from-primary-50 via-white to-blue-50 px-6 py-6 shadow-sm">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα</label>
-            <select v-model="selectedBrand" class="input" @change="selectedModel = ''">
-              <option value="">Όλες οι μάρκες</option>
-              <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
+            <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary-700">
+              <Smartphone class="h-4 w-4" />
+              Compatibility finder
+            </div>
+            <h2 class="mt-2 text-2xl font-black text-slate-900">Find parts for a specific device</h2>
+            <p class="mt-2 max-w-2xl text-sm text-slate-600">
+              Narrow the catalog by compatible device brand and model without losing the rest of the storefront filters.
+            </p>
+          </div>
+          <button
+            v-if="compatibilityBrand || compatibilityModel"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
+            @click="clearCompatibilityFilter"
+          >
+            <X class="h-4 w-4" />
+            Clear compatibility filter
+          </button>
+        </div>
+
+        <div class="mt-5 grid gap-4 md:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Device brand</label>
+            <select v-model="compatibilityBrand" class="input">
+              <option value="">All brands</option>
+              <option v-for="brand in compatibleBrands" :key="brand" :value="brand">{{ brand }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
-            <select v-model="selectedModel" class="input" :disabled="!selectedBrand">
-              <option value="">Όλα τα μοντέλα</option>
-              <option v-for="model in models" :key="model" :value="model">{{ model }}</option>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Device model</label>
+            <select v-model="compatibilityModel" class="input" :disabled="!compatibilityBrand">
+              <option value="">All models</option>
+              <option v-for="model in compatibleModels" :key="model" :value="model">{{ model }}</option>
             </select>
           </div>
-          <div class="flex items-end">
+          <div class="rounded-2xl border border-primary-100 bg-white px-4 py-4 text-sm text-slate-600">
+            <div class="font-semibold text-slate-900">Compatibility matches</div>
+            <div class="mt-2 text-2xl font-black text-primary-700">{{ compatibilityMatchesCount }}</div>
+            <div class="mt-1">Products compatible with the selected device filters.</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="mt-8 grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)]">
+        <aside class="space-y-5 xl:sticky xl:top-24 xl:self-start">
+          <section class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <SlidersHorizontal class="h-4 w-4" />
+              Filters
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Search</label>
+                <div class="flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-3">
+                  <Search class="h-4 w-4 text-slate-400" />
+                  <input v-model.trim="searchQuery" type="text" placeholder="Search products, brands or notes" class="w-full bg-transparent px-3 py-3 text-sm text-slate-900 outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Type</label>
+                <select v-model="selectedType" class="input">
+                  <option value="">All types</option>
+                  <option value="part">Parts</option>
+                  <option value="device">Devices</option>
+                  <option value="service">Services</option>
+                  <option value="general_product">Accessories</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Category</label>
+                <select v-model="selectedCategory" class="input">
+                  <option value="">All categories</option>
+                  <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Brand / manufacturer</label>
+                <select v-model="selectedBrand" class="input">
+                  <option value="">All brands</option>
+                  <option v-for="brand in availableBrands" :key="brand" :value="brand">{{ brand }}</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Min price</label>
+                  <input v-model="minPrice" type="number" min="0" step="0.01" placeholder="0" class="input" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Max price</label>
+                  <input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="999" class="input" />
+                </div>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Availability</label>
+                <select v-model="selectedAvailability" class="input">
+                  <option value="all">All stock states</option>
+                  <option value="in_stock">In stock only</option>
+                  <option value="out_of_stock">Out of stock only</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Condition</label>
+                <select v-model="selectedCondition" class="input">
+                  <option value="">All conditions</option>
+                  <option v-for="condition in availableConditions" :key="condition" :value="condition">{{ condition }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Sort by</label>
+                <select v-model="sortBy" class="input">
+                  <option value="featured">Featured</option>
+                  <option value="name">Name</option>
+                  <option value="price_asc">Price: low to high</option>
+                  <option value="price_desc">Price: high to low</option>
+                </select>
+              </div>
+
+              <label class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <span class="font-medium">Show discounts only</span>
+                <input v-model="discountsOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+              </label>
+            </div>
+
             <button
-              v-if="selectedBrand || selectedModel"
-              @click="selectedBrand = ''; selectedModel = ''"
-              class="btn btn-secondary w-full"
+              type="button"
+              class="mt-5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700"
+              @click="clearAllFilters"
             >
-              <X class="w-4 h-4 mr-1" /> Καθαρισμός
+              Reset all filters
+            </button>
+          </section>
+        </aside>
+
+        <section class="space-y-6">
+          <div v-if="activeFilterChips.length" class="flex flex-wrap gap-3">
+            <button
+              v-for="chip in activeFilterChips"
+              :key="chip.key"
+              type="button"
+              class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-primary-200 hover:text-primary-700"
+              @click="chip.clear()"
+            >
+              {{ chip.label }}
+              <X class="h-4 w-4" />
             </button>
           </div>
-        </div>
-      </div>
 
-      <!-- Filters & Search -->
-      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <!-- Search -->
-          <div class="md:col-span-2">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Αναζήτηση προϊόντων..."
-              class="input"
+          <div class="flex flex-col gap-3 rounded-[2rem] border border-slate-200 bg-white px-6 py-5 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div>
+              <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Catalog view</div>
+              <div class="mt-1 text-lg font-bold text-slate-900">{{ filteredProducts.length }} products found</div>
+            </div>
+            <p class="max-w-xl text-sm text-slate-500">
+              Browse devices, parts, accessories and services with category filters, price ranges and storefront merchandising badges.
+            </p>
+          </div>
+
+          <div v-if="loading" class="rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+            <div class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
+            <p class="mt-4 text-sm text-slate-500">Loading storefront catalog...</p>
+          </div>
+
+          <div v-else-if="filteredProducts.length" class="grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
+            <ProductCard
+              v-for="product in filteredProducts"
+              :key="product._uid"
+              :product="product"
+              :top-seller="isTopSeller(product)"
+              @select="goToProduct"
+              @add-to-cart="addToCart"
+              @book-service="bookService"
             />
           </div>
 
-          <!-- Type Filter -->
-          <div>
-            <select v-model="selectedType" class="input">
-              <option value="">Όλες οι κατηγορίες</option>
-              <option value="part">Ανταλλακτικά</option>
-              <option value="device">Συσκευές</option>
-              <option value="service">Υπηρεσίες</option>
-              <option value="general_product">Αξεσουάρ</option>
-            </select>
+          <div v-else class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+            <Filter class="mx-auto h-14 w-14 text-slate-300" />
+            <h2 class="mt-4 text-2xl font-black text-slate-900">No products match these filters</h2>
+            <p class="mt-3 text-sm text-slate-500">
+              Adjust the active filters, remove the compatibility constraint, or return to the full catalog.
+            </p>
+            <button
+              type="button"
+              class="mt-6 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
+              @click="clearAllFilters"
+            >
+              Show all products
+            </button>
           </div>
-          <div>
-            <select v-model="selectedCategory" class="input">
-              <option value="">All categories</option>
-              <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
-            </select>
-          </div>
-
-          <!-- Sort -->
-          <div>
-            <select v-model="sortBy" class="input">
-              <option value="name">Όνομα</option>
-              <option value="price_asc">Τιμή (Χαμηλή-Υψηλή)</option>
-              <option value="price_desc">Τιμή (Υψηλή-Χαμηλή)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        <p class="mt-4 text-gray-600">Φόρτωση προϊόντων...</p>
-      </div>
-
-      <!-- Products Grid -->
-      <div v-else-if="filteredProducts.length > 0">
-        <!-- Results count -->
-        <p class="text-sm text-gray-500 mb-4">{{ filteredProducts.length }} προϊόντα</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <div
-            v-for="product in filteredProducts"
-            :key="product._uid"
-            class="card hover:shadow-lg transition-shadow cursor-pointer"
-            @click="goToProduct(product)"
-          >
-            <!-- Product Image -->
-            <div class="relative aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-              <img
-                v-if="product.images && product.images[0]"
-                :src="product.images[0]"
-                :alt="product.name || product.brand + ' ' + product.model"
-                class="w-full h-full object-cover"
-              />
-              <Wrench v-else-if="product._productType === 'service'" class="w-16 h-16 text-gray-400" />
-              <Package v-else class="w-16 h-16 text-gray-400" />
-              <div
-                v-if="product.discountPercentage"
-                class="absolute left-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[11px] font-bold text-white shadow-sm"
-              >
-                -{{ product.discountPercentage }}%
-              </div>
-            </div>
-
-            <!-- Product Info -->
-            <div>
-              <div class="text-xs text-gray-500 uppercase mb-1">
-                {{ getTypeName(product._productType) }}
-              </div>
-              <h3 class="font-bold text-lg mb-1 line-clamp-2">
-                {{ product.name || (product.brand + ' ' + product.model) }}
-              </h3>
-
-              <div v-if="isDeviceProduct(product)" class="flex flex-wrap gap-1 mb-2">
-                <span v-if="product.category" class="inline-block text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
-                  {{ deviceStockLabel(product.category) }}
-                </span>
-                <span v-if="product.deviceType" class="inline-block text-[10px] px-1.5 py-0.5 bg-slate-50 text-slate-700 rounded-full border border-slate-200">
-                  {{ product.deviceType }}
-                </span>
-                <span v-if="product.grade" class="inline-block text-[10px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
-                  Grade {{ product.grade }}
-                </span>
-              </div>
-
-              <p v-if="isDeviceProduct(product) && devicePreview(product)" class="text-xs text-gray-500 line-clamp-2 mb-2">
-                {{ devicePreview(product) }}
-              </p>
-
-              <!-- Compatible devices badges -->
-              <div v-if="product.compatibleDevices?.length" class="flex flex-wrap gap-1 mb-2">
-                <span
-                  v-for="dev in product.compatibleDevices.slice(0, 3)"
-                  :key="dev"
-                  class="inline-block text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100"
-                >
-                  {{ dev }}
-                </span>
-                <span v-if="product.compatibleDevices.length > 3" class="text-[10px] text-gray-400">
-                  +{{ product.compatibleDevices.length - 3 }}
-                </span>
-              </div>
-
-              <!-- Price -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="text-2xl font-bold text-primary-600">
-                    {{ getPrice(product).toFixed(2) }}€
-                  </div>
-                  <div v-if="product.compareAtPrice" class="text-xs text-gray-400 line-through">
-                    {{ product.compareAtPrice.toFixed(2) }}€
-                  </div>
-                </div>
-
-                <!-- Stock Badge -->
-                <div v-if="product._productType === 'service'" class="text-xs text-blue-600 font-medium">
-                  Υπηρεσία
-                </div>
-                <div v-else-if="getStock(product) > 0" class="text-xs text-green-600 font-medium">
-                  Σε απόθεμα
-                </div>
-                <div v-else class="text-xs text-red-600 font-medium">
-                  Μη διαθέσιμο
-                </div>
-              </div>
-
-              <!-- Action Button -->
-              <button
-                v-if="product._productType === 'service'"
-                @click.stop="bookService(product)"
-                class="btn w-full mt-4 bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Κλείσιμο Υπηρεσίας
-              </button>
-              <button
-                v-else-if="getStock(product) > 0"
-                @click.stop="addToCart(product)"
-                class="btn btn-primary w-full mt-4"
-              >
-                Προσθήκη στο Καλάθι
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- No Results -->
-      <div v-else class="text-center py-12">
-        <Package class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 class="text-xl font-bold text-gray-700 mb-2">Δεν βρέθηκαν προϊόντα</h3>
-        <p class="text-gray-600">Δοκιμάστε να αλλάξετε τα φίλτρα αναζήτησης</p>
+        </section>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { computed, ref, watch } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { ChevronRight, Filter, Search, SlidersHorizontal, Smartphone, X } from 'lucide-vue-next';
+import api from '@/services/api';
+import ProductCard from '@/components/catalog/ProductCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
-import api from '@/services/api';
-import { Package, Smartphone, Wrench, X } from 'lucide-vue-next';
+import {
+  buildProductKey,
+  getDiscountPercentage,
+  getDisplayPrice,
+  getProductName,
+  getStock,
+  getTypeLabel,
+  normalizeProduct,
+  safeParseCatalogUrl,
+} from '@/utils/catalog';
 
 const router = useRouter();
 const route = useRoute();
@@ -223,282 +283,465 @@ const appStore = useAppStore();
 const cartStore = useCartStore();
 
 const products = ref([]);
+const topSellerKeys = ref([]);
 const loading = ref(true);
-const searchQuery = ref(route.query.q || '');
-const selectedType = ref(route.query.type || '');
-const selectedCategory = ref(route.query.category || '');
-const sortBy = ref('name');
+const searchQuery = ref('');
+const selectedType = ref('');
+const selectedCategory = ref('');
 const selectedBrand = ref('');
-const selectedModel = ref('');
+const selectedAvailability = ref('all');
+const selectedCondition = ref('');
+const minPrice = ref('');
+const maxPrice = ref('');
+const discountsOnly = ref(false);
+const sortBy = ref('featured');
+const compatibilityBrand = ref('');
+const compatibilityModel = ref('');
+const syncingFromRoute = ref(false);
+const lastLoadedStoreId = ref(null);
 
-function toNumber(value) {
-  const numeric = Number(value ?? 0);
-  return Number.isFinite(numeric) ? numeric : 0;
-}
+const topSellerKeySet = computed(() => new Set(topSellerKeys.value));
 
-function normalizeProduct(product) {
-  const eshopPrice = product.eshopPrice ?? product.eshop_price;
-  const sellPrice = product.sellPrice ?? product.sell_price ?? product.price;
-  const price = product.price ?? eshopPrice ?? sellPrice ?? 0;
+watch(
+  () => appStore.storeId,
+  async storeId => {
+    if (!storeId || storeId === lastLoadedStoreId.value) return;
+    lastLoadedStoreId.value = storeId;
+    await loadCatalog();
+  },
+  { immediate: true },
+);
 
-  return {
-    ...product,
-    source: product.source ?? 'inventory',
-    compatibleDevices: product.compatible_devices ?? product.compatibleDevices ?? [],
-    deviceType: product.deviceType ?? product.device_type ?? '',
-    grade: product.grade ?? '',
-    specifications: normalizeListOrObject(product.specifications),
-    defects: normalizeStringList(product.defects),
-    includedAccessories: normalizeStringList(product.included_accessories ?? product.includedAccessories),
-    notes: product.notes ?? '',
-    quantity: toNumber(product.quantity),
-    price: toNumber(price),
-    eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
-    sellPrice: sellPrice == null ? null : toNumber(sellPrice),
-    compareAtPrice: (product.compareAtPrice ?? product.compare_at_price) == null
-      ? null
-      : toNumber(product.compareAtPrice ?? product.compare_at_price),
-    discountPercentage: Number(product.discountPercentage ?? product.discount_percentage ?? 0),
-  };
-}
+watch(
+  () => route.query,
+  () => {
+    syncingFromRoute.value = true;
+    searchQuery.value = queryValue(route.query.q);
+    selectedType.value = queryValue(route.query.type);
+    selectedCategory.value = queryValue(route.query.category);
+    selectedBrand.value = queryValue(route.query.brand);
+    selectedAvailability.value = queryValue(route.query.availability) || 'all';
+    selectedCondition.value = queryValue(route.query.condition);
+    minPrice.value = queryValue(route.query.min_price);
+    maxPrice.value = queryValue(route.query.max_price);
+    discountsOnly.value = queryValue(route.query.sale) === '1';
+    sortBy.value = queryValue(route.query.sort) || 'featured';
+    compatibilityBrand.value = queryValue(route.query.device_brand);
+    compatibilityModel.value = queryValue(route.query.device_model);
+    syncingFromRoute.value = false;
+  },
+  { immediate: true, deep: true },
+);
 
-function isSensitiveField(value) {
-  return /\b(?:imei|serial(?:\s+number)?|s\/n|sn)\b/i.test(String(value ?? ''));
-}
+watch(
+  [searchQuery, selectedType, selectedCategory, selectedBrand, selectedAvailability, selectedCondition, minPrice, maxPrice, discountsOnly, sortBy, compatibilityBrand, compatibilityModel],
+  () => {
+    if (syncingFromRoute.value) return;
 
-function normalizeListOrObject(value) {
-  if (Array.isArray(value)) {
-    return value.flatMap(entry => {
-      if (!entry) return [];
+    const query = buildRouteQuery();
+    const currentQuery = JSON.stringify(normalizeQuery(route.query));
+    const nextQuery = JSON.stringify(normalizeQuery(query));
 
-      if (typeof entry === 'string') {
-        const normalized = entry.trim();
-        return normalized && !isSensitiveField(normalized) ? [normalized] : [];
-      }
+    if (currentQuery === nextQuery) return;
+    router.replace({ path: '/products', query });
+  },
+);
 
-      if (typeof entry === 'object') {
-        if ('key' in entry || 'value' in entry) {
-          const key = String(entry.key ?? '').trim();
-          const entryValue = String(entry.value ?? '').trim();
+const featuredCategoryLinks = computed(() => {
+  return (appStore.featuredCategories || []).map(category => ({
+    ...category,
+    parsedUrl: safeParseCatalogUrl(category.url),
+  }));
+});
 
-          if (!entryValue || isSensitiveField(key) || isSensitiveField(entryValue)) {
-            return [];
-          }
+const activeFeaturedCategory = computed(() => {
+  return featuredCategoryLinks.value.find(category => {
+    const parsed = category.parsedUrl;
+    if (!parsed || parsed.pathname !== '/products') return false;
 
-          return [{ key, value: entryValue }];
-        }
+    return (parsed.type || '') === (selectedType.value || '')
+      && (parsed.category || '') === (selectedCategory.value || '')
+      && (parsed.q || '') === (searchQuery.value || '');
+  }) || null;
+});
 
-        return Object.entries(entry)
-          .filter(([key, entryValue]) => {
-            if (entryValue === null || entryValue === undefined) return false;
-
-            const normalized = String(entryValue).trim();
-            return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
-          })
-          .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
-      }
-
-      const normalized = String(entry).trim();
-      return normalized && !isSensitiveField(normalized) ? [normalized] : [];
-    });
+const catalogTitle = computed(() => {
+  if (activeFeaturedCategory.value?.label) {
+    return activeFeaturedCategory.value.label;
   }
 
-  if (value && typeof value === 'object') {
-    return Object.entries(value)
-      .filter(([key, entryValue]) => {
-        if (entryValue === null || entryValue === undefined) return false;
-
-        const normalized = String(entryValue).trim();
-        return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
-      })
-      .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
+  if (selectedCategory.value && selectedType.value) {
+    return `${selectedCategory.value} ${getPluralTypeLabel(selectedType.value)}`;
   }
 
-  return [];
-}
-
-function normalizeStringList(value) {
-  return Array.isArray(value)
-    ? value
-      .map(item => String(item ?? '').trim())
-      .filter(item => item && !isSensitiveField(item))
-    : [];
-}
-
-onMounted(async () => {
-  try {
-    loading.value = true;
-    const { data } = await api.get(`/eshop/${appStore.storeId}/products`, {
-      params: { per_page: 100 }
-    });
-    products.value = (data.data || []).map(p => ({
-      ...normalizeProduct(p),
-      _source: p.source || 'inventory',
-      _productType: p.type === 'general' ? 'general_product' : (p.type || 'general_product'),
-      _uid: `${p.source || 'inventory'}_${p.id}`,
-    }));
-  } catch (error) {
-    console.error('Error loading products:', error);
-  } finally {
-    loading.value = false;
+  if (selectedCategory.value) {
+    return selectedCategory.value;
   }
+
+  if (selectedType.value) {
+    return getPluralTypeLabel(selectedType.value);
+  }
+
+  return 'Storefront catalog';
 });
 
-// Extract unique brand/model pairs from compatibleDevices
-const allDevices = computed(() => {
-  const devices = new Set();
-  products.value.forEach(p => {
-    (p.compatibleDevices || []).forEach(d => devices.add(d));
-  });
-  return [...devices].sort();
+const catalogDescription = computed(() => {
+  if (activeFeaturedCategory.value?.description) {
+    return activeFeaturedCategory.value.description;
+  }
+
+  if (selectedCategory.value) {
+    return `Browsing the ${selectedCategory.value} catalog with live storefront filters and merchandising badges.`;
+  }
+
+  if (selectedType.value) {
+    return `Browse all ${getPluralTypeLabel(selectedType.value).toLowerCase()} available in this storefront.`;
+  }
+
+  return 'Browse the full storefront catalog with richer filtering for price, condition, category, compatibility and promotions.';
 });
 
-const brands = computed(() => {
-  const brandSet = new Set();
-  allDevices.value.forEach(d => {
-    const parts = d.split(' ');
-    if (parts.length >= 1) brandSet.add(parts[0]);
-  });
-  return [...brandSet].sort();
-});
-
-const models = computed(() => {
-  if (!selectedBrand.value) return [];
-  const modelSet = new Set();
-  allDevices.value.forEach(d => {
-    if (d.startsWith(selectedBrand.value + ' ')) {
-      modelSet.add(d.substring(selectedBrand.value.length + 1));
-    }
-  });
-  return [...modelSet].sort();
-});
+const discountedProductsCount = computed(() => filteredProducts.value.filter(product => getDiscountPercentage(product) > 0).length);
 
 const availableCategories = computed(() => {
   const categories = new Set();
   products.value.forEach(product => {
     const category = String(product.category ?? '').trim();
-    if (category) {
-      categories.add(category);
-    }
+    if (category) categories.add(category);
   });
-  return [...categories].sort((a, b) => a.localeCompare(b));
+  return [...categories].sort((left, right) => left.localeCompare(right));
 });
 
-// Filtered products
-const filteredProducts = computed(() => {
-  let filtered = products.value;
+const availableBrands = computed(() => {
+  const brands = new Set();
+  products.value.forEach(product => {
+    const brand = String(product.brand || product.manufacturer || '').trim();
+    if (brand) brands.add(brand);
+  });
+  return [...brands].sort((left, right) => left.localeCompare(right));
+});
 
-  // Filter by device compatibility
-  if (selectedBrand.value) {
-    const prefix = selectedModel.value
-      ? `${selectedBrand.value} ${selectedModel.value}`
-      : selectedBrand.value;
-    filtered = filtered.filter(p =>
-      (p.compatibleDevices || []).some(d =>
-        selectedModel.value ? d === prefix : d.startsWith(prefix + ' ') || d === prefix
-      )
+const availableConditions = computed(() => {
+  const conditions = new Set();
+  products.value.forEach(product => {
+    const condition = String(product.condition ?? '').trim();
+    if (condition) conditions.add(condition);
+  });
+  return [...conditions].sort((left, right) => left.localeCompare(right));
+});
+
+const allDevices = computed(() => {
+  const compatibleDevices = new Set();
+  products.value.forEach(product => {
+    (product.compatibleDevices || []).forEach(device => compatibleDevices.add(device));
+  });
+  return [...compatibleDevices].sort((left, right) => left.localeCompare(right));
+});
+
+const compatibleBrands = computed(() => {
+  const brands = new Set();
+  allDevices.value.forEach(device => {
+    const [brand] = String(device).split(' ');
+    if (brand) brands.add(brand);
+  });
+  return [...brands].sort((left, right) => left.localeCompare(right));
+});
+
+const compatibleModels = computed(() => {
+  if (!compatibilityBrand.value) return [];
+
+  const models = new Set();
+  allDevices.value.forEach(device => {
+    if (device.startsWith(`${compatibilityBrand.value} `)) {
+      models.add(device.slice(compatibilityBrand.value.length + 1));
+    }
+  });
+
+  return [...models].sort((left, right) => left.localeCompare(right));
+});
+
+const compatibilityMatchesCount = computed(() => {
+  if (!compatibilityBrand.value && !compatibilityModel.value) {
+    return filteredProducts.value.length;
+  }
+
+  return filteredProducts.value.length;
+});
+
+const filteredProducts = computed(() => {
+  let filtered = [...products.value];
+
+  if (compatibilityBrand.value) {
+    const prefix = compatibilityModel.value
+      ? `${compatibilityBrand.value} ${compatibilityModel.value}`
+      : compatibilityBrand.value;
+
+    filtered = filtered.filter(product =>
+      (product.compatibleDevices || []).some(device => {
+        return compatibilityModel.value
+          ? device === prefix
+          : device === prefix || device.startsWith(`${prefix} `);
+      }),
     );
   }
 
-  // Filter by type
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(product => {
+      const haystack = [
+        getProductName(product),
+        product.description,
+        product.category,
+        product.brand,
+        product.model,
+        product.manufacturer,
+        product.partNumber,
+        ...(product.compatibleDevices || []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }
+
   if (selectedType.value) {
-    filtered = filtered.filter(p => p._productType === selectedType.value);
+    filtered = filtered.filter(product => product._productType === selectedType.value);
   }
 
   if (selectedCategory.value) {
-    filtered = filtered.filter(p => p.category === selectedCategory.value);
+    filtered = filtered.filter(product => String(product.category ?? '') === selectedCategory.value);
   }
 
-  // Filter by search query
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(p => {
-      const name = (p.name || `${p.brand} ${p.model}`).toLowerCase();
-      const desc = (p.eshopDescription || p.description || '').toLowerCase();
-      return name.includes(q) || desc.includes(q);
-    });
+  if (selectedBrand.value) {
+    filtered = filtered.filter(product => String(product.brand || product.manufacturer || '') === selectedBrand.value);
   }
 
-  // Sort
+  if (selectedAvailability.value === 'in_stock') {
+    filtered = filtered.filter(product => getStock(product) > 0 || product._productType === 'service');
+  }
+
+  if (selectedAvailability.value === 'out_of_stock') {
+    filtered = filtered.filter(product => product._productType !== 'service' && getStock(product) <= 0);
+  }
+
+  if (selectedCondition.value) {
+    filtered = filtered.filter(product => String(product.condition ?? '') === selectedCondition.value);
+  }
+
+  if (discountsOnly.value) {
+    filtered = filtered.filter(product => getDiscountPercentage(product) > 0);
+  }
+
+  if (minPrice.value !== '') {
+    const minimum = Number(minPrice.value);
+    if (Number.isFinite(minimum)) {
+      filtered = filtered.filter(product => getDisplayPrice(product) >= minimum);
+    }
+  }
+
+  if (maxPrice.value !== '') {
+    const maximum = Number(maxPrice.value);
+    if (Number.isFinite(maximum)) {
+      filtered = filtered.filter(product => getDisplayPrice(product) <= maximum);
+    }
+  }
+
   if (sortBy.value === 'price_asc') {
-    filtered = [...filtered].sort((a, b) => getPrice(a) - getPrice(b));
-  } else if (sortBy.value === 'price_desc') {
-    filtered = [...filtered].sort((a, b) => getPrice(b) - getPrice(a));
-  } else {
-    filtered = [...filtered].sort((a, b) => {
-      const nameA = a.name || `${a.brand} ${a.model}`;
-      const nameB = b.name || `${b.brand} ${b.model}`;
-      return nameA.localeCompare(nameB);
-    });
+    filtered.sort((left, right) => getDisplayPrice(left) - getDisplayPrice(right));
+    return filtered;
   }
+
+  if (sortBy.value === 'price_desc') {
+    filtered.sort((left, right) => getDisplayPrice(right) - getDisplayPrice(left));
+    return filtered;
+  }
+
+  if (sortBy.value === 'name') {
+    filtered.sort((left, right) => getProductName(left).localeCompare(getProductName(right)));
+    return filtered;
+  }
+
+  filtered.sort((left, right) => {
+    const leftScore = featuredSortScore(left);
+    const rightScore = featuredSortScore(right);
+
+    if (leftScore !== rightScore) {
+      return rightScore - leftScore;
+    }
+
+    return getProductName(left).localeCompare(getProductName(right));
+  });
 
   return filtered;
 });
 
-function syncFromRoute() {
-  searchQuery.value = route.query.q || '';
-  selectedType.value = route.query.type || '';
-  selectedCategory.value = route.query.category || '';
-}
+const activeFilterChips = computed(() => {
+  const chips = [];
 
-watch(() => route.query, syncFromRoute, { deep: true });
-
-function getPrice(product) {
-  return toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0);
-}
-
-function getStock(product) {
-  if (product._productType === 'service') return Infinity;
-  if (product._source === 'parts') {
-    // Parts use supplierDetails for stock
-    return (product.supplierDetails || []).reduce((sum, s) => sum + toNumber(s.stock), 0) || toNumber(product.quantity);
+  if (searchQuery.value) {
+    chips.push({ key: 'q', label: `Search: ${searchQuery.value}`, clear: () => { searchQuery.value = ''; } });
   }
-  return toNumber(product.quantity);
+  if (selectedType.value) {
+    chips.push({ key: 'type', label: `Type: ${getPluralTypeLabel(selectedType.value)}`, clear: () => { selectedType.value = ''; } });
+  }
+  if (selectedCategory.value) {
+    chips.push({ key: 'category', label: `Category: ${selectedCategory.value}`, clear: () => { selectedCategory.value = ''; } });
+  }
+  if (selectedBrand.value) {
+    chips.push({ key: 'brand', label: `Brand: ${selectedBrand.value}`, clear: () => { selectedBrand.value = ''; } });
+  }
+  if (selectedCondition.value) {
+    chips.push({ key: 'condition', label: `Condition: ${selectedCondition.value}`, clear: () => { selectedCondition.value = ''; } });
+  }
+  if (selectedAvailability.value !== 'all') {
+    chips.push({ key: 'availability', label: `Availability: ${selectedAvailability.value.replace('_', ' ')}`, clear: () => { selectedAvailability.value = 'all'; } });
+  }
+  if (discountsOnly.value) {
+    chips.push({ key: 'sale', label: 'Discounts only', clear: () => { discountsOnly.value = false; } });
+  }
+  if (minPrice.value !== '') {
+    chips.push({ key: 'min_price', label: `Min EUR ${minPrice.value}`, clear: () => { minPrice.value = ''; } });
+  }
+  if (maxPrice.value !== '') {
+    chips.push({ key: 'max_price', label: `Max EUR ${maxPrice.value}`, clear: () => { maxPrice.value = ''; } });
+  }
+  if (compatibilityBrand.value) {
+    chips.push({ key: 'device_brand', label: `Device brand: ${compatibilityBrand.value}`, clear: () => { clearCompatibilityFilter(); } });
+  }
+
+  return chips;
+});
+
+async function loadCatalog() {
+  loading.value = true;
+
+  try {
+    const [productsResponse, highlightsResponse] = await Promise.all([
+      api.get(`/eshop/${appStore.storeId}/products`, { params: { per_page: 100 } }),
+      api.get(`/eshop/${appStore.storeId}/highlights`, { params: { limit: 12 } }).catch(() => ({ data: { data: {} } })),
+    ]);
+
+    products.value = (productsResponse.data.data || []).map(item => normalizeProduct(item));
+    topSellerKeys.value = (highlightsResponse.data?.data?.top_products || [])
+      .map(item => buildProductKey(normalizeProduct(item)));
+  } catch (error) {
+    console.error('Error loading products:', error);
+    products.value = [];
+    topSellerKeys.value = [];
+  } finally {
+    loading.value = false;
+  }
 }
 
-function getTypeName(type) {
-  const types = {
-    part: 'Ανταλλακτικό',
-    device: 'Συσκευή',
-    service: 'Υπηρεσία',
-    general: 'Αξεσουάρ',
-    general_product: 'Αξεσουάρ'
-  };
-  return types[type] || type;
+function queryValue(value) {
+  return Array.isArray(value) ? (value[0] || '') : (value || '');
 }
 
-function isDeviceProduct(product) {
-  return product._productType === 'device';
+function normalizeQuery(query = {}) {
+  return Object.keys(query)
+    .sort()
+    .reduce((accumulator, key) => {
+      accumulator[key] = String(query[key]);
+      return accumulator;
+    }, {});
 }
 
-function deviceStockLabel(category) {
-  return category === 'used' ? 'Μεταχειρισμένο' : category === 'new' ? 'Καινούριο' : category;
+function buildRouteQuery() {
+  const query = {};
+
+  if (searchQuery.value) query.q = searchQuery.value;
+  if (selectedType.value) query.type = selectedType.value;
+  if (selectedCategory.value) query.category = selectedCategory.value;
+  if (selectedBrand.value) query.brand = selectedBrand.value;
+  if (selectedAvailability.value && selectedAvailability.value !== 'all') query.availability = selectedAvailability.value;
+  if (selectedCondition.value) query.condition = selectedCondition.value;
+  if (minPrice.value !== '') query.min_price = minPrice.value;
+  if (maxPrice.value !== '') query.max_price = maxPrice.value;
+  if (discountsOnly.value) query.sale = '1';
+  if (sortBy.value && sortBy.value !== 'featured') query.sort = sortBy.value;
+  if (compatibilityBrand.value) query.device_brand = compatibilityBrand.value;
+  if (compatibilityModel.value) query.device_model = compatibilityModel.value;
+
+  return query;
 }
 
-function summarizeSpecValue(value) {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object' && 'value' in value) return value.value;
-  return String(value);
+function getPluralTypeLabel(type) {
+  if (type === 'part') return 'Parts';
+  if (type === 'device') return 'Devices';
+  if (type === 'service') return 'Services';
+  if (type === 'general_product') return 'Accessories';
+  return getTypeLabel(type);
 }
 
-function devicePreview(product) {
-  const specification = (product.specifications || [])[0];
-  const specValue = summarizeSpecValue(specification);
-  return product.condition || specValue || product.notes || '';
+function featuredSortScore(product) {
+  let score = 0;
+
+  if (topSellerKeySet.value.has(buildProductKey(product))) score += 50;
+  if (getDiscountPercentage(product) > 0) score += 20;
+  if (getStock(product) > 0 || product._productType === 'service') score += 10;
+  if (product._productType === 'device') score += 4;
+
+  return score;
+}
+
+function isTopSeller(product) {
+  return topSellerKeySet.value.has(buildProductKey(product));
+}
+
+function clearCompatibilityFilter() {
+  compatibilityBrand.value = '';
+  compatibilityModel.value = '';
+}
+
+function clearAllFilters() {
+  searchQuery.value = '';
+  selectedType.value = '';
+  selectedCategory.value = '';
+  selectedBrand.value = '';
+  selectedAvailability.value = 'all';
+  selectedCondition.value = '';
+  minPrice.value = '';
+  maxPrice.value = '';
+  discountsOnly.value = false;
+  sortBy.value = 'featured';
+  clearCompatibilityFilter();
+}
+
+function isFeaturedCategoryActive(category) {
+  const parsed = category.parsedUrl;
+  if (!parsed || parsed.pathname !== '/products') return false;
+
+  return (parsed.type || '') === (selectedType.value || '')
+    && (parsed.category || '') === (selectedCategory.value || '')
+    && (parsed.q || '') === (searchQuery.value || '');
+}
+
+function navigateToFeaturedCategory(url) {
+  if (!url) return;
+
+  if (/^https?:\/\//i.test(url)) {
+    window.location.href = url;
+    return;
+  }
+
+  router.push(url);
 }
 
 function goToProduct(product) {
   router.push({
     path: `/product/${product.id}`,
-    query: { source: product._source }
+    query: { source: product._source },
   });
 }
 
 function addToCart(product) {
   cartStore.addItem({
     ...product,
-    _collection: product._source
+    eshopPrice: product.eshopPrice ?? product.price,
+    sellPrice: product.sellPrice ?? product.price,
+    _collection: product._source,
   }, 1);
 }
 
