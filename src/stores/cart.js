@@ -5,13 +5,18 @@ export const useCartStore = defineStore('cart', () => {
   // State
   const items = ref([]);
 
+  function toNumber(value, fallback = 0) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+  }
+
   // Getters
   const itemCount = computed(() =>
-    items.value.reduce((sum, item) => sum + item.quantity, 0)
+    items.value.reduce((sum, item) => sum + toNumber(item.quantity), 0)
   );
 
   const subtotal = computed(() =>
-    items.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
+    items.value.reduce((sum, item) => sum + (toNumber(item.unitPrice) * toNumber(item.quantity)), 0)
   );
 
   const isEmpty = computed(() => items.value.length === 0);
@@ -41,11 +46,11 @@ export const useCartStore = defineStore('cart', () => {
         type: product._productType || product.type || 'general_product',
         isService,
         name: product.name || `${product.brand || ''} ${product.model || ''}`.trim(),
-        unitPrice: product.eshopPrice || product.sellPrice || product.price || 0,
+        unitPrice: toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0),
         quantity: isService ? 1 : quantity,
         image: product.images?.[0] || null,
         sku: product.barcode || product.partNumber || '',
-        stock: isService ? Infinity : (product.quantity || 0)
+        stock: isService ? Infinity : toNumber(product.quantity)
       });
     }
 
@@ -85,7 +90,12 @@ export const useCartStore = defineStore('cart', () => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       try {
-        items.value = JSON.parse(savedCart);
+        items.value = JSON.parse(savedCart).map(item => ({
+          ...item,
+          unitPrice: toNumber(item.unitPrice),
+          quantity: toNumber(item.quantity, 1),
+          stock: item.isService ? Infinity : toNumber(item.stock)
+        }));
       } catch (e) {
         console.error('Error loading cart:', e);
         items.value = [];

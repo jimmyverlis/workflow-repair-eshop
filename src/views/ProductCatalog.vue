@@ -197,6 +197,26 @@ const sortBy = ref('name');
 const selectedBrand = ref('');
 const selectedModel = ref('');
 
+function toNumber(value) {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function normalizeProduct(product) {
+  const eshopPrice = product.eshopPrice ?? product.eshop_price;
+  const sellPrice = product.sellPrice ?? product.sell_price ?? product.price;
+  const price = product.price ?? eshopPrice ?? sellPrice ?? 0;
+
+  return {
+    ...product,
+    compatibleDevices: product.compatible_devices ?? product.compatibleDevices ?? [],
+    quantity: toNumber(product.quantity),
+    price: toNumber(price),
+    eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
+    sellPrice: sellPrice == null ? null : toNumber(sellPrice),
+  };
+}
+
 onMounted(async () => {
   try {
     loading.value = true;
@@ -204,13 +224,10 @@ onMounted(async () => {
       params: { per_page: 100 }
     });
     products.value = (data.data || []).map(p => ({
-      ...p,
+      ...normalizeProduct(p),
       _source: 'inventory',
       _productType: p.type || 'general_product',
       _uid: `inv_${p.id}`,
-      compatibleDevices: p.compatible_devices || [],
-      eshopPrice: p.price,
-      sellPrice: p.price,
     }));
   } catch (error) {
     console.error('Error loading products:', error);
@@ -296,16 +313,16 @@ const filteredProducts = computed(() => {
 });
 
 function getPrice(product) {
-  return product.eshopPrice || product.sellPrice || product.price || 0;
+  return toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0);
 }
 
 function getStock(product) {
   if (product._productType === 'service') return Infinity;
   if (product._source === 'parts') {
     // Parts use supplierDetails for stock
-    return (product.supplierDetails || []).reduce((sum, s) => sum + (s.stock || 0), 0) || product.quantity || 0;
+    return (product.supplierDetails || []).reduce((sum, s) => sum + toNumber(s.stock), 0) || toNumber(product.quantity);
   }
-  return product.quantity || 0;
+  return toNumber(product.quantity);
 }
 
 function getTypeName(type) {

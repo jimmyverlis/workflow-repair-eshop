@@ -57,7 +57,7 @@
           <div class="text-4xl font-bold text-primary-600 mb-4">
             {{ displayPrice.toFixed(2) }}€
           </div>
-          <p v-if="product.eshopPrice && product.sellPrice && product.eshopPrice < product.sellPrice" class="text-sm text-gray-400 line-through mb-2">
+          <p v-if="product.eshopPrice != null && product.sellPrice != null && product.eshopPrice < product.sellPrice" class="text-sm text-gray-400 line-through mb-2">
             {{ product.sellPrice.toFixed(2) }}€
           </p>
 
@@ -132,12 +132,32 @@ const product = ref(null);
 const loading = ref(true);
 const activeImageIndex = ref(0);
 
+function toNumber(value) {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function normalizeProduct(data = {}) {
+  const eshopPrice = data.eshopPrice ?? data.eshop_price;
+  const sellPrice = data.sellPrice ?? data.sell_price ?? data.price;
+  const price = data.price ?? eshopPrice ?? sellPrice ?? 0;
+
+  return {
+    ...data,
+    quantity: toNumber(data.quantity),
+    price: toNumber(price),
+    eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
+    sellPrice: sellPrice == null ? null : toNumber(sellPrice),
+    compatibleDevices: data.compatible_devices ?? data.compatibleDevices ?? [],
+  };
+}
+
 const activeImage = computed(() => product.value?.images?.[activeImageIndex.value] || null);
 const productName = computed(() => product.value?.name || '');
 const isService = computed(() => product.value?.type === 'service');
-const displayPrice = computed(() => product.value?.price || 0);
+const displayPrice = computed(() => toNumber(product.value?.price));
 const description = computed(() => product.value?.description || '');
-const stock = computed(() => isService.value ? Infinity : (product.value?.quantity || 0));
+const stock = computed(() => isService.value ? Infinity : toNumber(product.value?.quantity));
 
 const typeName = computed(() => {
   const type = product.value?.type;
@@ -155,7 +175,7 @@ const conditionLabel = computed(() => {
 onMounted(async () => {
   try {
     const { data } = await api.get(`/eshop/${appStore.storeId}/products/${route.params.id}`);
-    product.value = data.data;
+    product.value = normalizeProduct(data.data);
   } catch (error) {
     console.error('Error loading product:', error);
   } finally {
@@ -166,8 +186,8 @@ onMounted(async () => {
 function addToCart() {
   cartStore.addItem({
     ...product.value,
-    eshopPrice: product.value.price,
-    sellPrice: product.value.price,
+    eshopPrice: product.value.eshopPrice ?? product.value.price,
+    sellPrice: product.value.sellPrice ?? product.value.price,
     _collection: 'inventory',
   }, 1);
 }
