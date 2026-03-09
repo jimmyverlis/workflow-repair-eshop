@@ -2,6 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/services/api'
 import { resolveStore, selectStoreInSession, clearStoreSelection } from '@/utils/storeResolver'
+import {
+  createDefaultPromoBanners,
+  createPromoBannerPlaceholder,
+  createStoreLogoPlaceholder,
+} from '@/utils/brandPlaceholders'
 
 export const useAppStore = defineStore('app', () => {
   // ── Resolution state ──────────────────────────────────────────────────────
@@ -32,7 +37,7 @@ export const useAppStore = defineStore('app', () => {
 
   const branding = computed(() => ({
     primaryColor: storeConfig.value?.primary_color || '#3b82f6',
-    logo: storeConfig.value?.logo || null,
+    logo: storeConfig.value?.logo || createStoreLogoPlaceholder(storeName.value, storeConfig.value?.primary_color || '#3b82f6'),
   }))
 
   const storeDetails = computed(() => ({
@@ -50,8 +55,50 @@ export const useAppStore = defineStore('app', () => {
   const allowRegistration = computed(() => storeConfig.value?.allow_registration !== false)
   const requireAuthForCheckout = computed(() => !!storeConfig.value?.require_auth_for_checkout)
   const requireAuthForRepairBooking = computed(() => !!storeConfig.value?.require_auth_for_repair_booking)
-  const navigationItems = computed(() => Array.isArray(storeConfig.value?.nav_items) ? storeConfig.value.nav_items : [])
-  const promoBanners = computed(() => Array.isArray(storeConfig.value?.promo_banners) ? storeConfig.value.promo_banners : [])
+  const navigationItems = computed(() => (
+    Array.isArray(storeConfig.value?.nav_items)
+      ? storeConfig.value.nav_items.map(item => ({
+          label: item.label || '',
+          url: item.url || '',
+          highlight: !!item.highlight,
+          openInNewTab: !!(item.open_in_new_tab ?? item.openInNewTab),
+          open_in_new_tab: !!(item.open_in_new_tab ?? item.openInNewTab),
+        }))
+      : []
+  ))
+  const promoBanners = computed(() => {
+    const primaryColor = storeConfig.value?.primary_color || '#3b82f6'
+    const configured = Array.isArray(storeConfig.value?.promo_banners) ? storeConfig.value.promo_banners : []
+    const normalized = configured
+      .map((banner, index) => {
+        const backgroundColor = banner.background_color ?? banner.backgroundColor ?? primaryColor
+        const textColor = banner.text_color ?? banner.textColor ?? '#ffffff'
+        const title = banner.title || `Promo banner ${index + 1}`
+        const subtitle = banner.subtitle || ''
+
+        return {
+          title,
+          subtitle,
+          buttonLabel: banner.button_label ?? banner.buttonLabel ?? '',
+          buttonUrl: banner.button_url ?? banner.buttonUrl ?? '',
+          badge: banner.badge ?? '',
+          backgroundColor,
+          textColor,
+          imageUrl: banner.image_url ?? banner.imageUrl ?? createPromoBannerPlaceholder({
+            storeName: storeName.value,
+            title,
+            subtitle,
+            primaryColor: backgroundColor,
+            textColor,
+          }),
+        }
+      })
+      .filter(banner => banner.title)
+
+    return normalized.length
+      ? normalized
+      : createDefaultPromoBanners({ storeName: storeName.value, primaryColor })
+  })
 
   const storeSelected = computed(() => !!storeId.value)
   const isChainMode = computed(() => false)
