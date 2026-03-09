@@ -232,6 +232,7 @@
               :key="product._uid"
               :product="product"
               :top-seller="isTopSeller(product)"
+              :ribbon="getProductRibbon(product)"
               @select="goToProduct"
               @add-to-cart="addToCart"
               @book-service="bookService"
@@ -266,6 +267,7 @@ import api from '@/services/api';
 import ProductCard from '@/components/catalog/ProductCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
+import { promotionsAPI } from '@/services/api/promotions';
 import {
   buildProductKey,
   getDiscountPercentage,
@@ -284,6 +286,7 @@ const cartStore = useCartStore();
 
 const products = ref([]);
 const topSellerKeys = ref([]);
+const catalogPromos = ref([]);
 const loading = ref(true);
 const searchQuery = ref('');
 const selectedType = ref('');
@@ -618,21 +621,41 @@ async function loadCatalog() {
   loading.value = true;
 
   try {
-    const [productsResponse, highlightsResponse] = await Promise.all([
+    const [productsResponse, highlightsResponse, promosResponse] = await Promise.all([
       api.get(`/eshop/${appStore.storeId}/products`, { params: { per_page: 100 } }),
       api.get(`/eshop/${appStore.storeId}/highlights`, { params: { limit: 12 } }).catch(() => ({ data: { data: {} } })),
+      promotionsAPI.getSuggestions(appStore.storeId).catch(() => []),
     ]);
 
     products.value = (productsResponse.data.data || []).map(item => normalizeProduct(item));
     topSellerKeys.value = (highlightsResponse.data?.data?.top_products || [])
       .map(item => buildProductKey(normalizeProduct(item)));
+    catalogPromos.value = promosResponse;
   } catch (error) {
     console.error('Error loading products:', error);
     products.value = [];
     topSellerKeys.value = [];
+    catalogPromos.value = [];
   } finally {
     loading.value = false;
   }
+}
+
+function getProductRibbon(product) {
+  for (const promo of catalogPromos.value) {
+    if (!promo.campaign_ribbon) continue;
+    const type = product._productType ?? product.type ?? '';
+    const category = product.category ?? '';
+    if (promo.applies_to === 'order') return promo.campaign_ribbon;
+    if (promo.applies_to === 'type') {
+      const normalize = t => (t === 'general' ? 'general_product' : t ?? '').toLowerCase();
+      if (normalize(type) === normalize(promo.applies_to_value)) return promo.campaign_ribbon;
+    }
+    if (promo.applies_to === 'category') {
+      if (category.toLowerCase() === (promo.applies_to_value ?? '').toLowerCase()) return promo.campaign_ribbon;
+    }
+  }
+  return '';
 }
 
 function queryValue(value) {

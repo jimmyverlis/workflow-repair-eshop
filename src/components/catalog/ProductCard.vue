@@ -24,6 +24,11 @@
             {{ badge.label }}
           </span>
         </div>
+        <div v-if="ribbon" class="absolute right-0 top-4 overflow-hidden">
+          <div class="translate-x-2 rotate-45 origin-bottom-right bg-primary-600 px-5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+            {{ ribbon }}
+          </div>
+        </div>
       </div>
 
       <div class="space-y-3">
@@ -132,6 +137,10 @@ const props = defineProps({
   showCompatibility: {
     type: Boolean,
     default: true,
+  },
+  ribbon: {
+    type: String,
+    default: '',
   },
 });
 

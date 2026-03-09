@@ -104,6 +104,11 @@
                     {{ activeBanner.buttonLabel }}
                   </button>
                 </div>
+                <div v-if="activeBannerCountdown" class="mt-4 inline-flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 text-sm font-semibold backdrop-blur">
+                  <Clock3 class="h-4 w-4 flex-shrink-0" />
+                  <span>Ends in {{ activeBannerCountdown }}</span>
+                  <span v-if="activeBannerPromo?.code" class="font-mono opacity-75">· {{ activeBannerPromo.code }}</span>
+                </div>
               </div>
 
               <div class="min-h-[220px] overflow-hidden rounded-[1.5rem] border border-black/10 bg-white/20">
@@ -324,7 +329,9 @@ const topProducts = ref([]);
 const discountedProducts = ref([]);
 const activePromotions = ref([]);
 const activeBannerIndex = ref(0);
+const countdownTick = ref(Date.now());
 let bannerTimer = null;
+let countdownTimer = null;
 
 const heroTitle = computed(() => appStore.homeContent.title || `Welcome to ${appStore.storeName}`);
 const heroSubtitle = computed(() => appStore.homeContent.subtitle || 'Parts, devices, services and repair support in one storefront.');
@@ -350,6 +357,23 @@ const activeBannerStyle = computed(() => ({
   background: activeBanner.value.backgroundColor || '#111827',
   color: activeBanner.value.textColor || '#ffffff',
 }));
+const activeBannerPromo = computed(() => {
+  const code = activeBanner.value.discountCode;
+  if (!code) return null;
+  return activePromotions.value.find(p => p.code === code) || null;
+});
+const activeBannerCountdown = computed(() => {
+  const promo = activeBannerPromo.value;
+  if (!promo?.valid_to) return null;
+  void countdownTick.value; // reactive dep
+  const diff = new Date(promo.valid_to) - Date.now();
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  if (h > 48) return null; // only show for near-expiry
+  return `${h}h ${m}m ${s}s`;
+});
 
 function badgeIcon(iconName) {
   if (iconName === 'truck') return Truck;
@@ -444,11 +468,11 @@ function startBannerRotation() {
 onMounted(() => {
   loadHighlights();
   startBannerRotation();
+  countdownTimer = window.setInterval(() => { countdownTick.value = Date.now(); }, 1000);
 });
 
 onBeforeUnmount(() => {
-  if (bannerTimer) {
-    window.clearInterval(bannerTimer);
-  }
+  if (bannerTimer) window.clearInterval(bannerTimer);
+  if (countdownTimer) window.clearInterval(countdownTimer);
 });
 </script>

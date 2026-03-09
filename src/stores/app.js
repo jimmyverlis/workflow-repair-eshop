@@ -152,6 +152,7 @@ export const useAppStore = defineStore('app', () => {
             primaryColor: backgroundColor,
             textColor,
           }),
+          discountCode: banner.discount_code ?? banner.discountCode ?? '',
         }
       })
       .filter(banner => banner.title)

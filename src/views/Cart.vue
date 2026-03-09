@@ -85,6 +85,26 @@
                 {{ promoMessage }}
               </p>
 
+              <!-- Promo suggestions -->
+              <div v-if="suggestions.length && !cartStore.promotion?.promotion" class="mt-4">
+                <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-slate-400 mb-2">
+                  <Tag class="h-3 w-3" /> Available offers
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="suggestion in suggestions"
+                    :key="suggestion.code"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-100 transition"
+                    @click="applySuggestion(suggestion.code)"
+                  >
+                    <span class="font-mono">{{ suggestion.code }}</span>
+                    <span class="text-primary-500">·</span>
+                    <span>{{ promotionSummary(suggestion) }}</span>
+                  </button>
+                </div>
+              </div>
+
               <div v-if="cartStore.promotion?.promotion" class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 <div class="font-semibold">{{ cartStore.promotion.promotion.code }}</div>
                 <div v-if="cartStore.promotion.promotion.description" class="mt-1">{{ cartStore.promotion.promotion.description }}</div>
@@ -131,7 +151,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { Package, ShoppingCart } from 'lucide-vue-next';
+import { Package, ShoppingCart, Tag } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
 import { promotionsAPI } from '@/services/api/promotions';
@@ -143,6 +163,7 @@ const promoCode = ref('');
 const promoLoading = ref(false);
 const promoMessage = ref('');
 const promoSuccess = ref(false);
+const suggestions = ref([]);
 
 const vatRate = computed(() => Number(appStore.storeConfig?.vat_rate ?? 24));
 const cartSignature = computed(() => JSON.stringify(cartStore.items.map(item => ({ key: item._key, quantity: item.quantity, price: item.unitPrice }))));
@@ -166,6 +187,13 @@ onMounted(async () => {
   if (cartStore.promotion?.promotion?.code) {
     promoCode.value = cartStore.promotion.promotion.code;
     await applyDiscountCode(true);
+  }
+  if (appStore.storeId) {
+    try {
+      suggestions.value = await promotionsAPI.getSuggestions(appStore.storeId);
+    } catch {
+      suggestions.value = [];
+    }
   }
 });
 
@@ -245,5 +273,17 @@ function removeDiscountCode() {
 
 function roundCurrency(value) {
   return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function promotionSummary(promo) {
+  if (promo.type === 'free_shipping') return 'Free shipping';
+  const val = Number(promo.value || 0);
+  if (promo.type === 'fixed_amount') return `${val.toFixed(2)}€ off`;
+  return `${val}% off`;
+}
+
+function applySuggestion(code) {
+  promoCode.value = code;
+  applyDiscountCode();
 }
 </script>
