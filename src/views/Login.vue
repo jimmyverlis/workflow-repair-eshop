@@ -80,6 +80,13 @@
           </button>
         </form>
 
+        <!-- Forgot password link -->
+        <div v-if="!isRegister" class="text-center mt-4 text-sm">
+          <RouterLink to="/forgot-password" class="text-gray-500 hover:text-primary-600 hover:underline">
+            Ξεχάσατε τον κωδικό σας;
+          </RouterLink>
+        </div>
+
         <!-- Toggle register/login -->
         <div v-if="appStore.allowRegistration" class="text-center mt-6 text-sm text-gray-600">
           <span v-if="isRegister">Έχετε ήδη λογαριασμό; </span>
@@ -103,7 +110,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 
 const router = useRouter();

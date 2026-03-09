@@ -133,6 +133,139 @@
         </div>
       </div>
 
+      <!-- PROFILE TAB -->
+      <div v-if="activeTab === 'profile'" class="space-y-6">
+        <!-- Edit Profile -->
+        <div class="card">
+          <h3 class="font-bold text-lg mb-4">Στοιχεία Προφίλ</h3>
+          <div v-if="profileMsg" class="rounded-lg px-4 py-3 mb-4 text-sm" :class="profileMsgSuccess ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'">
+            {{ profileMsg }}
+          </div>
+          <form @submit.prevent="saveProfile" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Όνομα</label>
+                <input v-model="profileForm.first_name" type="text" class="input" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Επώνυμο</label>
+                <input v-model="profileForm.last_name" type="text" class="input" required />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Τηλέφωνο</label>
+              <input v-model="profileForm.phone" type="tel" class="input" placeholder="+30 6912345678" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Διεύθυνση</label>
+              <input v-model="profileForm.address" type="text" class="input" placeholder="Οδός 1" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Πόλη</label>
+                <input v-model="profileForm.city" type="text" class="input" placeholder="Αθήνα" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Τ.Κ.</label>
+                <input v-model="profileForm.postal_code" type="text" class="input" placeholder="11111" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Χώρα</label>
+                <input v-model="profileForm.country" type="text" class="input" placeholder="Ελλάδα" />
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" :disabled="savingProfile" class="btn btn-primary">
+                <span v-if="savingProfile" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                Αποθήκευση
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card">
+          <h3 class="font-bold text-lg mb-4">Αλλαγή Κωδικού</h3>
+          <div v-if="passwordMsg" class="rounded-lg px-4 py-3 mb-4 text-sm" :class="passwordMsgSuccess ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'">
+            {{ passwordMsg }}
+          </div>
+          <form @submit.prevent="changePassword" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Τρέχων Κωδικός</label>
+              <input v-model="passwordForm.current_password" type="password" class="input" placeholder="••••••••" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Νέος Κωδικός</label>
+              <input v-model="passwordForm.password" type="password" class="input" placeholder="••••••••" required minlength="8" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Επιβεβαίωση Νέου Κωδικού</label>
+              <input v-model="passwordForm.password_confirmation" type="password" class="input" placeholder="••••••••" required minlength="8" />
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" :disabled="savingPassword" class="btn btn-primary">
+                <span v-if="savingPassword" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                Ενημέρωση Κωδικού
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Saved Addresses -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-lg">Αποθηκευμένες Διευθύνσεις</h3>
+            <button @click="addAddress" class="btn btn-secondary text-sm flex items-center gap-2">
+              <MapPin class="w-4 h-4" /> Προσθήκη
+            </button>
+          </div>
+          <div v-if="savedAddresses.length === 0" class="text-gray-500 text-sm py-4 text-center">
+            Δεν έχετε αποθηκευμένες διευθύνσεις.
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="(addr, index) in savedAddresses" :key="index" class="rounded-lg border border-gray-200 p-4 flex items-start justify-between gap-3">
+              <div class="text-sm">
+                <div class="font-medium">{{ addr.label || 'Διεύθυνση ' + (index + 1) }}</div>
+                <div class="text-gray-600 mt-1">{{ addr.street }}, {{ addr.city }} {{ addr.postal_code }}</div>
+                <div v-if="addr.country" class="text-gray-500">{{ addr.country }}</div>
+              </div>
+              <button @click="removeAddress(index)" class="text-red-500 hover:text-red-700 text-xs flex-shrink-0">
+                Αφαίρεση
+              </button>
+            </div>
+          </div>
+          <!-- Add address form -->
+          <div v-if="showAddAddressForm" class="mt-4 border-t pt-4 space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Ετικέτα (π.χ. Σπίτι, Δουλειά)</label>
+              <input v-model="newAddress.label" type="text" class="input" placeholder="Σπίτι" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Διεύθυνση</label>
+              <input v-model="newAddress.street" type="text" class="input" placeholder="Οδός 1" required />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Πόλη</label>
+                <input v-model="newAddress.city" type="text" class="input" placeholder="Αθήνα" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Τ.Κ.</label>
+                <input v-model="newAddress.postal_code" type="text" class="input" placeholder="11111" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Χώρα</label>
+                <input v-model="newAddress.country" type="text" class="input" placeholder="Ελλάδα" />
+              </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+              <button @click="showAddAddressForm = false" class="btn btn-secondary text-sm">Ακύρωση</button>
+              <button @click="confirmAddAddress" class="btn btn-primary text-sm">Αποθήκευση Διεύθυνσης</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -144,7 +277,7 @@ import { useAppStore } from '@/stores/app';
 import { ordersAPI } from '@/services/api/orders';
 import { appointmentsAPI } from '@/services/api/appointments';
 import {
-  User, LogOut, ShoppingBag, Wrench, Calendar
+  User, LogOut, ShoppingBag, Wrench, Calendar, Settings, MapPin
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -161,10 +294,36 @@ const loadingOrders = ref(false);
 const loadingRepairs = ref(false);
 const loadingAppointments = ref(false);
 
+// Profile form
+const profileForm = ref({
+  first_name: appStore.currentUser?.first_name || '',
+  last_name: appStore.currentUser?.last_name || '',
+  phone: appStore.currentUser?.phone || '',
+  address: appStore.currentUser?.address || '',
+  city: appStore.currentUser?.city || '',
+  postal_code: appStore.currentUser?.postal_code || '',
+  country: appStore.currentUser?.country || '',
+});
+const savingProfile = ref(false);
+const profileMsg = ref('');
+const profileMsgSuccess = ref(false);
+
+// Password form
+const passwordForm = ref({ current_password: '', password: '', password_confirmation: '' });
+const savingPassword = ref(false);
+const passwordMsg = ref('');
+const passwordMsgSuccess = ref(false);
+
+// Saved addresses
+const savedAddresses = ref(appStore.currentUser?.saved_addresses || []);
+const showAddAddressForm = ref(false);
+const newAddress = ref({ label: '', street: '', city: '', postal_code: '', country: 'Ελλάδα' });
+
 const tabs = computed(() => [
   { key: 'orders', label: 'Παραγγελίες', icon: ShoppingBag, count: orders.value.length || undefined },
   { key: 'repairs', label: 'Επισκευές', icon: Wrench, count: repairs.value.length || undefined },
-  { key: 'appointments', label: 'Ραντεβού', icon: Calendar, count: appointments.value.length || undefined }
+  { key: 'appointments', label: 'Ραντεβού', icon: Calendar, count: appointments.value.length || undefined },
+  { key: 'profile', label: 'Προφίλ & Ρυθμίσεις', icon: Settings },
 ]);
 
 function formatDate(ts) {
@@ -237,8 +396,6 @@ async function loadOrders() {
 }
 
 async function loadRepairs() {
-  // Repair history via the eshop repairs status endpoint is tracked by device code —
-  // a full list endpoint can be added later; show empty for now.
   repairs.value = [];
 }
 
@@ -257,6 +414,73 @@ async function loadAppointments() {
   }
 }
 
+async function saveProfile() {
+  savingProfile.value = true;
+  profileMsg.value = '';
+  try {
+    await appStore.updateProfile({
+      first_name: profileForm.value.first_name,
+      last_name: profileForm.value.last_name,
+      phone: profileForm.value.phone,
+      address: profileForm.value.address,
+      city: profileForm.value.city,
+      postal_code: profileForm.value.postal_code,
+      country: profileForm.value.country,
+    });
+    profileMsgSuccess.value = true;
+    profileMsg.value = 'Τα στοιχεία σας αποθηκεύτηκαν.';
+  } catch (err) {
+    profileMsgSuccess.value = false;
+    const errors = err.response?.data?.errors;
+    profileMsg.value = errors ? Object.values(errors).flat().join(' ') : (err.response?.data?.message || 'Σφάλμα αποθήκευσης.');
+  } finally {
+    savingProfile.value = false;
+  }
+}
+
+async function changePassword() {
+  passwordMsg.value = '';
+  if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
+    passwordMsgSuccess.value = false;
+    passwordMsg.value = 'Οι κωδικοί δεν ταιριάζουν.';
+    return;
+  }
+  savingPassword.value = true;
+  try {
+    await appStore.updateProfile({
+      current_password: passwordForm.value.current_password,
+      password: passwordForm.value.password,
+      password_confirmation: passwordForm.value.password_confirmation,
+    });
+    passwordMsgSuccess.value = true;
+    passwordMsg.value = 'Ο κωδικός άλλαξε επιτυχώς.';
+    passwordForm.value = { current_password: '', password: '', password_confirmation: '' };
+  } catch (err) {
+    passwordMsgSuccess.value = false;
+    const errors = err.response?.data?.errors;
+    passwordMsg.value = errors ? Object.values(errors).flat().join(' ') : (err.response?.data?.message || 'Σφάλμα αλλαγής κωδικού.');
+  } finally {
+    savingPassword.value = false;
+  }
+}
+
+function addAddress() {
+  newAddress.value = { label: '', street: '', city: '', postal_code: '', country: 'Ελλάδα' };
+  showAddAddressForm.value = true;
+}
+
+async function confirmAddAddress() {
+  if (!newAddress.value.street) return;
+  savedAddresses.value = [...savedAddresses.value, { ...newAddress.value }];
+  showAddAddressForm.value = false;
+  await appStore.updateProfile({ saved_addresses: savedAddresses.value });
+}
+
+async function removeAddress(index) {
+  savedAddresses.value = savedAddresses.value.filter((_, i) => i !== index);
+  await appStore.updateProfile({ saved_addresses: savedAddresses.value });
+}
+
 async function handleSignOut() {
   await appStore.signOut();
   router.push('/');
@@ -266,6 +490,21 @@ onMounted(() => {
   loadOrders();
   loadRepairs();
   loadAppointments();
+
+  // Sync profile form from store
+  const u = appStore.currentUser;
+  if (u) {
+    profileForm.value = {
+      first_name: u.first_name || '',
+      last_name: u.last_name || '',
+      phone: u.phone || '',
+      address: u.address || '',
+      city: u.city || '',
+      postal_code: u.postal_code || '',
+      country: u.country || '',
+    };
+    savedAddresses.value = u.saved_addresses || [];
+  }
 });
 
 watch(() => route.query.tab, value => {

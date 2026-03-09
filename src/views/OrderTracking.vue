@@ -11,15 +11,46 @@
         <p class="mt-4 text-gray-600">Φόρτωση παραγγελίας...</p>
       </div>
 
-      <!-- Payment result banner -->
-      <div v-if="paymentStatus === 'success'" class="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
-        <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0" />
-        <div class="text-green-800 text-sm font-medium">Η πληρωμή ολοκληρώθηκε επιτυχώς!</div>
-      </div>
-      <div v-else-if="paymentStatus === 'fail'" class="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
-        <XCircle class="w-5 h-5 text-red-600 flex-shrink-0" />
-        <div class="text-red-800 text-sm font-medium">Η πληρωμή δεν ολοκληρώθηκε. Δοκιμάστε ξανά.</div>
-      </div>
+      <!-- Payment result banners -->
+      <template v-if="!loading && order">
+        <!-- Success + confirmed -->
+        <div v-if="paymentStatus === 'success' && order.paymentStatus === 'paid'" class="bg-green-50 border border-green-200 rounded-xl px-5 py-4 mb-4 flex items-start gap-3">
+          <CheckCircle class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <div class="font-semibold text-green-800">Η πληρωμή ολοκληρώθηκε επιτυχώς!</div>
+            <div class="text-sm text-green-700 mt-1">Η παραγγελία σας καταχωρήθηκε και θα επεξεργαστεί σύντομα.</div>
+          </div>
+        </div>
+
+        <!-- Success returned from Viva but payment webhook not yet processed -->
+        <div v-else-if="paymentStatus === 'success' && order.paymentStatus !== 'paid'" class="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 mb-4 flex items-start gap-3">
+          <Clock class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <div class="font-semibold text-yellow-800">Επεξεργασία πληρωμής...</div>
+            <div class="text-sm text-yellow-700 mt-1">Η πληρωμή σας επεξεργάζεται. Ανανεώστε τη σελίδα σε λίγα δευτερόλεπτα.</div>
+          </div>
+        </div>
+
+        <!-- Payment failed -->
+        <div v-else-if="paymentStatus === 'fail'" class="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-4 flex items-start gap-3">
+          <XCircle class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <div class="font-semibold text-red-800">Η πληρωμή δεν ολοκληρώθηκε</div>
+            <div class="text-sm text-red-700 mt-1">Δεν χρεωθήκατε. Η παραγγελία σας έχει αποθηκευτεί. Επικοινωνήστε μαζί μας αν χρειάζεστε βοήθεια.</div>
+            <RouterLink to="/cart" class="inline-block mt-3 text-sm font-medium text-red-700 underline hover:text-red-900">Επιστροφή στο καλάθι</RouterLink>
+          </div>
+        </div>
+
+        <!-- Cancelled -->
+        <div v-else-if="paymentStatus === 'cancel'" class="bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 mb-4 flex items-start gap-3">
+          <XCircle class="w-6 h-6 text-gray-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <div class="font-semibold text-gray-700">Η πληρωμή ακυρώθηκε</div>
+            <div class="text-sm text-gray-600 mt-1">Δεν χρεωθήκατε. Η παραγγελία σας παραμένει αποθηκευμένη.</div>
+            <RouterLink to="/cart" class="inline-block mt-3 text-sm font-medium text-gray-700 underline hover:text-gray-900">Επιστροφή στο καλάθι</RouterLink>
+          </div>
+        </div>
+      </template>
 
       <!-- Error -->
       <div v-if="errorMsg && !loading" class="card text-center py-12">
@@ -75,8 +106,11 @@
               <div class="flex justify-between text-gray-600">
                 <span>Υποσύνολο</span><span>{{ order.subtotal?.toFixed(2) }}€</span>
               </div>
+              <div v-if="order.discountAmount > 0" class="flex justify-between text-green-600">
+                <span>Έκπτωση</span><span>-{{ order.discountAmount?.toFixed(2) }}€</span>
+              </div>
               <div class="flex justify-between text-gray-600">
-                <span>ΦΠΑ (24%)</span><span>{{ order.vatAmount?.toFixed(2) }}€</span>
+                <span>ΦΠΑ</span><span>{{ order.vatAmount?.toFixed(2) }}€</span>
               </div>
               <div class="flex justify-between text-gray-600">
                 <span>Αποστολή</span>
@@ -128,7 +162,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { ordersAPI } from '@/services/api/orders';
-import { Package, CheckCircle, XCircle } from 'lucide-vue-next';
+import { Package, CheckCircle, XCircle, Clock } from 'lucide-vue-next';
 
 const route = useRoute();
 

@@ -54,6 +54,31 @@
                 <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
                 <input v-model.trim="customer.email" type="email" required class="input" placeholder="customer@example.com" />
               </div>
+
+              <!-- Invoice / Company fields -->
+              <div v-if="appStore.invoiceFieldsEnabled" class="pt-2 border-t border-slate-100">
+                <label class="flex items-center gap-2 cursor-pointer mb-3">
+                  <input v-model="invoice.wantsInvoice" type="checkbox" class="rounded border-gray-300 text-primary-600" />
+                  <span class="text-sm font-medium text-slate-700">Θέλω τιμολόγιο (εταιρεία / ΑΦΜ)</span>
+                </label>
+                <div v-if="invoice.wantsInvoice" class="space-y-3">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Επωνυμία Εταιρείας</label>
+                    <input v-model.trim="invoice.company_name" type="text" class="input" placeholder="My Company S.A." />
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-slate-700">ΑΦΜ</label>
+                      <input v-model.trim="invoice.vat_number" type="text" class="input" placeholder="123456789" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm font-medium text-slate-700">ΔΟΥ</label>
+                      <input v-model.trim="invoice.tax_office" type="text" class="input" placeholder="ΔΟΥ Αθηνών" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="flex justify-end pt-2">
                 <button type="submit" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
                   Continue
@@ -109,6 +134,11 @@
             <div v-else class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
               <div class="font-semibold text-slate-900">{{ appStore.storeName }}</div>
               <div class="mt-1">{{ appStore.storeDetails?.address || 'Store address available from storefront settings.' }}</div>
+              <div v-if="appStore.pickupContent" class="mt-2 text-slate-500">{{ appStore.pickupContent }}</div>
+            </div>
+
+            <div v-if="delivery.method === 'courier' && appStore.courierContent" class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              {{ appStore.courierContent }}
             </div>
 
             <div class="mt-6 flex justify-between">
@@ -255,6 +285,13 @@ const customer = ref({
   phone: '',
 });
 
+const invoice = ref({
+  wantsInvoice: false,
+  company_name: '',
+  vat_number: '',
+  tax_office: '',
+});
+
 const delivery = ref({
   method: 'store_pickup',
   address: {
@@ -295,6 +332,12 @@ watch([() => delivery.value.method, cartSignature], async () => {
 
 onMounted(async () => {
   if (appStore.requireAuthForCheckout && !appStore.isAuthenticated) {
+    router.replace({ path: '/login', query: { redirect: '/checkout' } });
+    return;
+  }
+
+  // Also block if guest checkout explicitly disabled and user is not authenticated
+  if (!appStore.allowGuestCheckout && !appStore.isAuthenticated) {
     router.replace({ path: '/login', query: { redirect: '/checkout' } });
     return;
   }
@@ -409,6 +452,7 @@ function goToStep(target) {
 }
 
 async function placeOrder() {
+  if (submitting.value) return;  // anti-double-submit
   submitting.value = true;
   errorMsg.value = '';
 
@@ -444,6 +488,11 @@ async function placeOrder() {
       paymentMethod: 'viva_wallet',
       shippingCost: orderTotals.value.shipping_cost,
       discountCode: cartStore.promotion?.promotion?.code || null,
+      invoiceData: appStore.invoiceFieldsEnabled && invoice.value.wantsInvoice ? {
+        company_name: invoice.value.company_name,
+        vat_number: invoice.value.vat_number,
+        tax_office: invoice.value.tax_office,
+      } : null,
     };
 
     const orderResult = await ordersAPI.createOrder(orderData);

@@ -112,6 +112,10 @@ export const useAppStore = defineStore('app', () => {
   const allowRegistration = computed(() => storeConfig.value?.allow_registration !== false)
   const requireAuthForCheckout = computed(() => !!storeConfig.value?.require_auth_for_checkout)
   const requireAuthForRepairBooking = computed(() => !!storeConfig.value?.require_auth_for_repair_booking)
+  const allowGuestCheckout = computed(() => storeConfig.value?.allow_guest_checkout !== false)
+  const invoiceFieldsEnabled = computed(() => !!storeConfig.value?.invoice_fields_enabled)
+  const pickupContent = computed(() => storeConfig.value?.pickup_content || '')
+  const courierContent = computed(() => storeConfig.value?.courier_content || '')
   const navigationItems = computed(() => (
     Array.isArray(storeConfig.value?.nav_items)
       ? storeConfig.value.nav_items.map(item => ({
@@ -333,6 +337,25 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  async function updateProfile(payload) {
+    const { data } = await api.put(`/eshop/${storeId.value}/auth/me`, payload)
+    currentUser.value = data.data
+    return data.data
+  }
+
+  async function forgotPassword(email) {
+    await api.post(`/eshop/${storeId.value}/auth/forgot-password`, { email })
+  }
+
+  async function resetPassword(token, email, password, passwordConfirmation) {
+    await api.post(`/eshop/${storeId.value}/auth/reset-password`, {
+      token,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    })
+  }
+
   // Kept for compatibility
   async function selectStore(id) {
     selectStoreInSession(id)
@@ -371,6 +394,10 @@ export const useAppStore = defineStore('app', () => {
     allowRegistration,
     requireAuthForCheckout,
     requireAuthForRepairBooking,
+    allowGuestCheckout,
+    invoiceFieldsEnabled,
+    pickupContent,
+    courierContent,
     navigationItems,
     promoBanners,
     footerDescription,
@@ -392,6 +419,9 @@ export const useAppStore = defineStore('app', () => {
     register,
     signOut,
     fetchUser,
+    updateProfile,
+    forgotPassword,
+    resetPassword,
     selectStore,
     backToChain,
     clearError,
