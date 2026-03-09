@@ -137,6 +137,8 @@ export const useAppStore = defineStore('app', () => {
   const requireAuthForRepairBooking = computed(() => !!storeConfig.value?.require_auth_for_repair_booking)
   const allowGuestCheckout = computed(() => storeConfig.value?.allow_guest_checkout !== false)
   const invoiceFieldsEnabled = computed(() => !!storeConfig.value?.invoice_fields_enabled)
+  const payAtStoreEnabled = computed(() => !!storeConfig.value?.pay_at_store_enabled)
+  const payAtCourierEnabled = computed(() => !!storeConfig.value?.pay_at_courier_enabled)
   const pickupContent = computed(() => storeConfig.value?.pickup_content || '')
   const courierContent = computed(() => storeConfig.value?.courier_content || '')
   const navigationItems = computed(() => (
@@ -511,6 +513,8 @@ export const useAppStore = defineStore('app', () => {
     requireAuthForRepairBooking,
     allowGuestCheckout,
     invoiceFieldsEnabled,
+    payAtStoreEnabled,
+    payAtCourierEnabled,
     pickupContent,
     courierContent,
     navigationItems,

@@ -5,7 +5,7 @@
         <div>
           <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Secure checkout</div>
           <h1 class="mt-2 text-4xl font-black text-slate-900">Checkout</h1>
-          <p class="mt-2 text-sm text-slate-500">Confirm customer details, delivery method, and payment before redirecting to Viva Wallet.</p>
+          <p class="mt-2 text-sm text-slate-500">Confirm customer details, delivery method, and choose how the customer will pay.</p>
         </div>
       </div>
 
@@ -152,8 +152,8 @@
           </section>
 
           <section v-if="step === 3" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-2xl font-black text-slate-900">Review and pay</h2>
-            <p class="mt-2 text-sm text-slate-500">Apply a promo code if you have one, then proceed to Viva Wallet.</p>
+            <h2 class="text-2xl font-black text-slate-900">Review and payment</h2>
+            <p class="mt-2 text-sm text-slate-500">Apply a promo code if you have one, then confirm the payment method for this delivery.</p>
 
             <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
               <div class="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
@@ -170,6 +170,23 @@
                     {{ [delivery.address.street, delivery.address.city, delivery.address.postalCode].filter(Boolean).join(', ') }}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-5">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Payment method</div>
+              <h3 class="mt-2 text-lg font-bold text-slate-900">Choose how the customer will pay</h3>
+              <div class="mt-4 grid gap-3">
+                <label
+                  v-for="option in availablePaymentMethods"
+                  :key="option.value"
+                  class="cursor-pointer rounded-[1.25rem] border-2 p-4 transition"
+                  :class="selectedPaymentMethod === option.value ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-slate-50 hover:border-primary-200'"
+                >
+                  <input v-model="selectedPaymentMethod" type="radio" :value="option.value" class="sr-only" />
+                  <div class="font-semibold text-slate-900">{{ option.label }}</div>
+                  <div class="mt-1 text-sm text-slate-500">{{ option.description }}</div>
+                </label>
               </div>
             </div>
 
@@ -206,7 +223,7 @@
                 Back
               </button>
               <button type="button" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="submitting" @click="placeOrder">
-                {{ submitting ? 'Redirecting...' : `Pay EUR ${orderTotals.total_amount.toFixed(2)}` }}
+                {{ submitButtonLabel }}
               </button>
             </div>
           </section>
@@ -280,6 +297,7 @@ const promoLoading = ref(false);
 const promoMessage = ref('');
 const promoSuccess = ref(false);
 const promoCode = ref('');
+const selectedPaymentMethod = ref('viva_wallet');
 
 const customer = ref({
   name: '',
@@ -307,6 +325,33 @@ const delivery = ref({
 const vatRate = computed(() => Number(appStore.storeConfig?.vat_rate ?? 24));
 const canUseCourier = computed(() => appStore.storeConfig?.shipping_enabled !== false);
 const configuredShippingCost = computed(() => Number(appStore.storeConfig?.shipping_cost ?? 5));
+const availablePaymentMethods = computed(() => {
+  const methods = [
+    {
+      value: 'viva_wallet',
+      label: 'Pay online',
+      description: 'Secure online payment through Viva Wallet before the order is confirmed.',
+    },
+  ];
+
+  if (delivery.value.method === 'store_pickup' && appStore.payAtStoreEnabled) {
+    methods.push({
+      value: 'pay_at_store',
+      label: 'Pay at the store',
+      description: 'The customer pays in store when collecting the order.',
+    });
+  }
+
+  if (delivery.value.method === 'courier' && appStore.payAtCourierEnabled) {
+    methods.push({
+      value: 'pay_at_courier',
+      label: 'Pay at the courier',
+      description: 'The customer pays on delivery when the courier arrives.',
+    });
+  }
+
+  return methods;
+});
 const freeShippingThreshold = computed(() => {
   const threshold = appStore.storeConfig?.free_shipping_threshold;
   return threshold == null ? null : Number(threshold);
@@ -317,6 +362,15 @@ const baseShippingCost = computed(() => {
   return configuredShippingCost.value;
 });
 const cartSignature = computed(() => JSON.stringify(cartStore.items.map(item => ({ key: item._key, quantity: item.quantity, price: item.unitPrice }))));
+const submitButtonLabel = computed(() => {
+  if (submitting.value) {
+    return selectedPaymentMethod.value === 'viva_wallet' ? 'Redirecting...' : 'Placing order...';
+  }
+
+  return selectedPaymentMethod.value === 'viva_wallet'
+    ? `Pay EUR ${orderTotals.value.total_amount.toFixed(2)}`
+    : 'Place order';
+});
 const orderTotals = computed(() => {
   if (cartStore.promotion?.totals) {
     return normalizeTotals(cartStore.promotion.totals);
@@ -331,6 +385,17 @@ watch([() => delivery.value.method, cartSignature], async () => {
     await applyDiscountCode(true);
   }
 });
+
+watch(availablePaymentMethods, (options) => {
+  if (!Array.isArray(options) || options.length === 0) {
+    selectedPaymentMethod.value = 'viva_wallet';
+    return;
+  }
+
+  if (!options.some(option => option.value === selectedPaymentMethod.value)) {
+    selectedPaymentMethod.value = options[0].value;
+  }
+}, { immediate: true });
 
 onMounted(async () => {
   if (appStore.requireAuthForCheckout && !appStore.isAuthenticated) {
@@ -490,7 +555,7 @@ async function placeOrder() {
           notes: delivery.value.address.notes,
         },
       } : null,
-      paymentMethod: 'viva_wallet',
+      paymentMethod: selectedPaymentMethod.value,
       shippingCost: orderTotals.value.shipping_cost,
       discountCode: cartStore.promotion?.promotion?.code || null,
       invoiceData: appStore.invoiceFieldsEnabled && invoice.value.wantsInvoice ? {
@@ -502,6 +567,12 @@ async function placeOrder() {
 
     const orderResult = await ordersAPI.createOrder(orderData);
     const { orderId, orderNumber } = orderResult;
+
+    if (!orderResult.payment_required || selectedPaymentMethod.value !== 'viva_wallet') {
+      cartStore.clearCart();
+      await router.push(`/order/${orderId}`);
+      return;
+    }
 
     const paymentResult = await paymentsAPI.createVivaPayment({
       orderId,
