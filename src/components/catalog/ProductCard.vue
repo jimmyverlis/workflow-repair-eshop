@@ -74,10 +74,15 @@
           </div>
         </div>
         <div class="text-right text-xs font-semibold">
-          <span v-if="product._productType === 'service'" class="text-sky-600">Service</span>
-          <span v-else-if="stock > 0" class="text-emerald-600">In stock</span>
+          <span v-if="stockState === 'service'" class="text-sky-600">Service</span>
+          <span v-else-if="stockState === 'in_stock'" class="text-emerald-600">In stock</span>
+          <span v-else-if="stockState === 'low_stock'" class="text-amber-600">Low stock</span>
           <span v-else class="text-rose-600">Out of stock</span>
         </div>
+      </div>
+
+      <div v-if="stockState === 'low_stock'" class="mt-2 text-xs font-medium text-amber-700">
+        {{ availabilityLabel }}
       </div>
 
       <button
@@ -104,6 +109,19 @@
       >
         View details
       </button>
+
+      <div class="mt-3 flex items-center gap-2">
+        <button
+          type="button"
+          class="flex-1 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition"
+          :class="isCompared
+            ? 'border-primary-600 bg-primary-50 text-primary-700'
+            : 'border-slate-200 text-slate-700 hover:border-primary-200 hover:text-primary-700'"
+          @click.stop="toggleCompare"
+        >
+          {{ isCompared ? 'Added to compare' : 'Compare' }}
+        </button>
+      </div>
     </div>
   </article>
 </template>
@@ -111,13 +129,17 @@
 <script setup>
 import { computed } from 'vue';
 import { Package, Smartphone, Wrench } from 'lucide-vue-next';
+import { useAppStore } from '@/stores/app';
+import { useCompareStore } from '@/stores/compare';
 import {
   buildProductBadges,
+  getAvailabilityLabel,
   getCompareAtPrice,
   getDisplayPrice,
   getProductName,
   getProductSummary,
   getStock,
+  getStockState,
   getTypeLabel,
 } from '@/utils/catalog';
 
@@ -146,6 +168,9 @@ const props = defineProps({
 
 defineEmits(['select', 'add-to-cart', 'book-service']);
 
+const appStore = useAppStore();
+const compareStore = useCompareStore();
+
 const badgeToneClasses = {
   indigo: 'bg-indigo-600 text-white',
   rose: 'bg-rose-500 text-white',
@@ -156,11 +181,21 @@ const badgeToneClasses = {
   slate: 'border border-slate-200 bg-slate-50 text-slate-700',
 };
 
-const badges = computed(() => buildProductBadges(props.product, { topSeller: props.topSeller }));
+const badges = computed(() => buildProductBadges(props.product, {
+  topSeller: props.topSeller,
+  lowStockThreshold: appStore.lowStockThreshold,
+}));
 const productName = computed(() => getProductName(props.product));
 const displayPrice = computed(() => getDisplayPrice(props.product));
 const compareAtPrice = computed(() => getCompareAtPrice(props.product));
 const stock = computed(() => getStock(props.product));
+const stockState = computed(() => getStockState(props.product, appStore.lowStockThreshold));
+const availabilityLabel = computed(() => getAvailabilityLabel(props.product, appStore.lowStockThreshold));
 const typeLabel = computed(() => getTypeLabel(props.product._productType ?? props.product.type));
 const summary = computed(() => getProductSummary(props.product));
+const isCompared = computed(() => compareStore.hasProduct(props.product));
+
+function toggleCompare() {
+  compareStore.toggleProduct(props.product);
+}
 </script>

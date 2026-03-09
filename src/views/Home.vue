@@ -162,6 +162,38 @@
         </div>
       </section>
 
+      <section v-else-if="section === 'featured_brands'" class="bg-slate-50 py-14">
+        <div class="container mx-auto px-4">
+          <div class="mb-6">
+            <h2 class="text-3xl font-black">Featured brands</h2>
+            <p class="mt-1 text-gray-500">Dedicated storefront entry points for the brands customers ask for most.</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <button
+              v-for="brand in featuredBrands"
+              :key="brand.name"
+              type="button"
+              class="group rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+              @click="goToBrandLanding(brand.name)"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-primary-50 text-primary-600">
+                  <img v-if="brand.imageUrl" :src="brand.imageUrl" :alt="brand.name" class="h-full w-full object-cover" />
+                  <Package v-else class="h-7 w-7" />
+                </div>
+                <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Brand</div>
+              </div>
+              <h3 class="mt-5 text-2xl font-black text-slate-900 group-hover:text-primary-700">{{ brand.name }}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-500">
+                {{ brand.description || 'Browse this brand across devices, parts and accessories.' }}
+              </p>
+              <div class="mt-6 text-sm font-semibold text-primary-600">Browse {{ brand.name }}</div>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section v-else-if="section === 'top_products'" class="py-14">
         <div class="container mx-auto px-4">
           <div class="mb-6 flex items-center justify-between gap-4">
@@ -288,6 +320,74 @@
         </div>
       </section>
 
+      <section v-else-if="section === 'feature_blocks'" class="py-14">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <article
+              v-for="(block, index) in featureBlocks"
+              :key="`${block.title}-${index}`"
+              class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                <component :is="badgeIcon(block.icon)" class="h-7 w-7" />
+              </div>
+              <h3 class="mt-5 text-2xl font-black text-slate-900">{{ block.title }}</h3>
+              <p class="mt-3 text-sm leading-6 text-slate-500">{{ block.subtitle }}</p>
+              <button
+                v-if="block.linkUrl"
+                type="button"
+                class="mt-6 text-sm font-semibold text-primary-600 hover:text-primary-700"
+                @click="navigateToUrl(block.linkUrl)"
+              >
+                {{ block.linkLabel || 'Learn more' }}
+              </button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section v-else-if="section === 'testimonials'" class="bg-slate-50 py-14">
+        <div class="container mx-auto px-4">
+          <div class="mb-6">
+            <h2 class="text-3xl font-black">What customers say</h2>
+            <p class="mt-1 text-gray-500">Merchandising social proof directly from ERP-managed testimonials.</p>
+          </div>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <article
+              v-for="(testimonial, index) in testimonials"
+              :key="`${testimonial.name}-${index}`"
+              class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <div class="text-sm text-amber-500">{{ '★'.repeat(Math.max(1, Math.min(5, Number(testimonial.rating || 5)))) }}</div>
+              <p class="mt-4 text-base leading-7 text-slate-600">“{{ testimonial.quote }}”</p>
+              <div class="mt-5">
+                <div class="text-sm font-bold text-slate-900">{{ testimonial.name }}</div>
+                <div v-if="testimonial.role" class="text-sm text-slate-500">{{ testimonial.role }}</div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section v-else-if="section === 'faq'" class="py-14">
+        <div class="container mx-auto px-4">
+          <div class="mb-6">
+            <h2 class="text-3xl font-black">Frequently asked questions</h2>
+            <p class="mt-1 text-gray-500">Answer the pre-purchase questions before they turn into support tickets.</p>
+          </div>
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <article
+              v-for="(faq, index) in faqItems"
+              :key="`${faq.question}-${index}`"
+              class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <h3 class="text-lg font-bold text-slate-900">{{ faq.question }}</h3>
+              <p class="mt-3 text-sm leading-7 text-slate-600">{{ faq.answer }}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section v-else-if="section === 'trust_badges'" class="py-16">
         <div class="container mx-auto px-4">
           <div class="mb-6">
@@ -352,6 +452,10 @@ const quickLinks = computed(() => {
 });
 const heroButtons = computed(() => appStore.heroCtaButtons);
 const featuredCategories = computed(() => appStore.featuredCategories);
+const featuredBrands = computed(() => appStore.featuredBrands);
+const featureBlocks = computed(() => appStore.featureBlocks);
+const faqItems = computed(() => appStore.faqItems);
+const testimonials = computed(() => appStore.testimonials);
 const trustBadges = computed(() => appStore.trustBadges);
 const homeSections = computed(() => appStore.homeSections);
 const activeBanner = computed(() => promoBanners.value[activeBannerIndex.value] || {});
@@ -405,6 +509,13 @@ function navigateToUrl(url, openInNewTab = false) {
   }
 
   router.push(url);
+}
+
+function goToBrandLanding(brandName) {
+  router.push({
+    name: 'BrandCatalog',
+    params: { brand: brandName },
+  });
 }
 
 function goToProduct(product) {

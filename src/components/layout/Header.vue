@@ -1,10 +1,19 @@
 <template>
   <div
-    v-if="appStore.storeConfig?.banner_message"
+    v-if="announcementData.text"
     class="text-white text-center text-sm py-2 px-4 font-medium"
     style="background-color: var(--color-primary-700, #1d4ed8)"
   >
-    {{ appStore.storeConfig.banner_message }}
+    <button
+      v-if="announcementData.linkUrl"
+      type="button"
+      class="inline-flex items-center gap-2 hover:underline"
+      @click="navigateTo(announcementData.linkUrl)"
+    >
+      <span>{{ announcementData.text }}</span>
+      <span v-if="announcementData.linkLabel" class="font-semibold">{{ announcementData.linkLabel }}</span>
+    </button>
+    <span v-else>{{ announcementData.text }}</span>
   </div>
 
   <header class="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur">
@@ -55,6 +64,16 @@
         </form>
 
         <div class="ml-auto lg:ml-0 flex items-center gap-3">
+          <RouterLink to="/compare" class="relative rounded-xl p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-600">
+            <Scale class="h-6 w-6" />
+            <span
+              v-if="compareStore.count > 0"
+              class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white"
+            >
+              {{ compareStore.count }}
+            </span>
+          </RouterLink>
+
           <RouterLink to="/cart" class="relative rounded-xl p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-600">
             <ShoppingCart class="h-6 w-6" />
             <span
@@ -150,6 +169,10 @@
             {{ item.label }}
           </button>
 
+          <RouterLink to="/compare" class="rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileMenuOpen = false">
+            Compare<span v-if="compareStore.count"> ({{ compareStore.count }})</span>
+          </RouterLink>
+
           <div class="mt-3 border-t border-gray-200 pt-3">
             <template v-if="appStore.isAuthenticated">
               <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('account')">My account</button>
@@ -180,11 +203,13 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
+import { useCompareStore } from '@/stores/compare';
 import {
   ChevronDown,
   LogOut,
   Menu,
   Package,
+  Scale,
   Search,
   ShoppingCart,
   User,
@@ -196,6 +221,7 @@ const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
 const cartStore = useCartStore();
+const compareStore = useCompareStore();
 
 const mobileMenuOpen = ref(false);
 const accountOpen = ref(false);
@@ -213,6 +239,22 @@ const navItems = computed(() => {
     { label: 'Accessories', url: '/products?type=general_product' },
     { label: 'Repairs', url: '/repair-booking', highlight: true },
   ];
+});
+
+const announcementData = computed(() => {
+  if (appStore.announcementBar.enabled) {
+    return {
+      text: appStore.announcementBar.text,
+      linkLabel: appStore.announcementBar.linkLabel,
+      linkUrl: appStore.announcementBar.linkUrl,
+    };
+  }
+
+  return {
+    text: appStore.storeConfig?.banner_message || '',
+    linkLabel: '',
+    linkUrl: '',
+  };
 });
 
 watch(() => route.query.q, value => {

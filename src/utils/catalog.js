@@ -152,6 +152,35 @@ export function getStock(product = {}) {
   return toNumber(product.quantity);
 }
 
+export function getStockState(product = {}, lowStockThreshold = 5) {
+  const type = product._productType ?? product.type;
+  if (type === 'service') {
+    return 'service';
+  }
+
+  const stock = getStock(product);
+  if (stock <= 0) {
+    return 'out_of_stock';
+  }
+
+  const threshold = Math.max(1, toNumber(lowStockThreshold, 5));
+  if (stock <= threshold) {
+    return 'low_stock';
+  }
+
+  return 'in_stock';
+}
+
+export function getAvailabilityLabel(product = {}, lowStockThreshold = 5) {
+  const stockState = getStockState(product, lowStockThreshold);
+  const stock = getStock(product);
+
+  if (stockState === 'service') return 'Bookable';
+  if (stockState === 'out_of_stock') return 'Out of stock';
+  if (stockState === 'low_stock') return `Low stock (${stock} left)`;
+  return 'In stock';
+}
+
 export function getTypeLabel(type = '') {
   const normalized = String(type ?? '').toLowerCase();
 
@@ -183,6 +212,7 @@ export function buildProductBadges(product = {}, options = {}) {
   const badges = [];
   const type = product._productType ?? product.type;
   const discountPercentage = getDiscountPercentage(product);
+  const stockState = getStockState(product, options.lowStockThreshold ?? 5);
 
   if (options.topSeller) {
     badges.push({ label: 'Top seller', tone: 'indigo' });
@@ -214,6 +244,10 @@ export function buildProductBadges(product = {}, options = {}) {
 
   if (product.grade) {
     badges.push({ label: `Grade ${product.grade}`, tone: 'emerald' });
+  }
+
+  if (stockState === 'low_stock') {
+    badges.push({ label: 'Low stock', tone: 'amber' });
   }
 
   return badges.slice(0, 4);

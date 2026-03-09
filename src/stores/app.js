@@ -43,7 +43,7 @@ const defaultTrustBadges = () => ([
   { title: 'Repair expertise', subtitle: 'Devices, parts and service from one team.', icon: 'sparkles' },
 ])
 
-const defaultHomeSections = () => ['hero', 'promo_banners', 'featured_categories', 'top_products', 'discounts', 'trust_badges']
+const defaultHomeSections = () => ['hero', 'promo_banners', 'featured_categories', 'featured_brands', 'top_products', 'discounts', 'feature_blocks', 'testimonials', 'faq', 'trust_badges']
 
 const defaultFeaturedCategories = () => ([
   { label: 'Devices', url: '/products?type=device', description: 'New and used devices ready to buy.' },
@@ -54,6 +54,29 @@ const defaultFeaturedCategories = () => ([
 const defaultHeroButtons = () => ([
   { label: 'Explore products', url: '/products', style: 'primary', openInNewTab: false },
   { label: 'Book a repair', url: '/repair-booking', style: 'secondary', openInNewTab: false },
+])
+
+const defaultFeatureBlocks = () => ([
+  { title: 'Same-day dispatch', subtitle: 'Fast shipping for stocked devices, parts and accessories.', icon: 'truck', link_label: 'Browse stock', link_url: '/products' },
+  { title: 'Expert repair support', subtitle: 'Book repairs and speak directly with the store team.', icon: 'sparkles', link_label: 'Book repair', link_url: '/repair-booking' },
+  { title: 'Store pickup available', subtitle: 'Reserve items online and collect them in store.', icon: 'clock', link_label: 'Contact us', link_url: '/contact' },
+])
+
+const defaultFeaturedBrands = () => ([
+  { name: 'Apple', description: 'Devices, parts and accessories for the Apple ecosystem.' },
+  { name: 'Samsung', description: 'Popular devices, repairs and replacement parts.' },
+  { name: 'Xiaomi', description: 'Accessories, repair-ready stock and daily deals.' },
+])
+
+const defaultFaqItems = () => ([
+  { question: 'Do you offer store pickup?', answer: 'Yes. Choose pickup during checkout or contact the store directly.' },
+  { question: 'Can I book a repair online?', answer: 'Yes. Use the repair booking page to request diagnostics or service.' },
+  { question: 'How do I know if an item is in stock?', answer: 'Product pages show live availability and low-stock messages when quantities are limited.' },
+])
+
+const defaultTestimonials = () => ([
+  { name: 'Returning customer', role: 'Repair and accessories', quote: 'Fast turnaround, clear communication and reliable after-sales support.', rating: 5 },
+  { name: 'Business client', role: 'Device fleet support', quote: 'The store handled recurring repairs and urgent parts sourcing without delays.', rating: 5 },
 ])
 
 const defaultPageContent = () => ({
@@ -245,6 +268,70 @@ export const useAppStore = defineStore('app', () => {
 
     return normalized.length ? normalized.slice(0, 2) : defaultHeroButtons()
   })
+  const announcementBar = computed(() => {
+    const configured = storeConfig.value?.announcement_bar || {}
+    const now = Date.now()
+    const startsAt = configured.starts_at ? new Date(configured.starts_at).getTime() : null
+    const endsAt = configured.ends_at ? new Date(configured.ends_at).getTime() : null
+    const withinWindow = (startsAt == null || now >= startsAt) && (endsAt == null || now <= endsAt)
+
+    return {
+      enabled: !!configured.enabled && withinWindow && !!configured.text,
+      text: configured.text || '',
+      linkLabel: configured.link_label || '',
+      linkUrl: configured.link_url || '',
+    }
+  })
+  const featureBlocks = computed(() => {
+    const blocks = Array.isArray(storeConfig.value?.feature_blocks) ? storeConfig.value.feature_blocks : []
+    const normalized = blocks
+      .map(block => ({
+        title: block.title || '',
+        subtitle: block.subtitle || '',
+        icon: block.icon || 'sparkles',
+        linkLabel: block.link_label ?? block.linkLabel ?? '',
+        linkUrl: block.link_url ?? block.linkUrl ?? '',
+      }))
+      .filter(block => block.title)
+
+    return normalized.length ? normalized : defaultFeatureBlocks()
+  })
+  const featuredBrands = computed(() => {
+    const brands = Array.isArray(storeConfig.value?.featured_brands) ? storeConfig.value.featured_brands : []
+    const normalized = brands
+      .map(brand => ({
+        name: brand.name || '',
+        description: brand.description || '',
+        imageUrl: brand.image_url ?? brand.imageUrl ?? '',
+      }))
+      .filter(brand => brand.name)
+
+    return normalized.length ? normalized : defaultFeaturedBrands()
+  })
+  const faqItems = computed(() => {
+    const entries = Array.isArray(storeConfig.value?.faq_items) ? storeConfig.value.faq_items : []
+    const normalized = entries
+      .map(entry => ({
+        question: entry.question || '',
+        answer: entry.answer || '',
+      }))
+      .filter(entry => entry.question && entry.answer)
+
+    return normalized.length ? normalized : defaultFaqItems()
+  })
+  const testimonials = computed(() => {
+    const entries = Array.isArray(storeConfig.value?.testimonials) ? storeConfig.value.testimonials : []
+    const normalized = entries
+      .map(entry => ({
+        name: entry.name || '',
+        role: entry.role || '',
+        quote: entry.quote || '',
+        rating: Number(entry.rating || 5),
+      }))
+      .filter(entry => entry.name && entry.quote)
+
+    return normalized.length ? normalized : defaultTestimonials()
+  })
   const pageContent = computed(() => {
     const configured = storeConfig.value?.page_content || {}
     const defaults = defaultPageContent()
@@ -266,6 +353,7 @@ export const useAppStore = defineStore('app', () => {
   const cookieConsentText = computed(() => storeConfig.value?.cookie_consent_text || '')
   const seoDefaultImage = computed(() => storeConfig.value?.seo_default_image || '')
   const robotsIndex = computed(() => storeConfig.value?.robots_index !== false)
+  const lowStockThreshold = computed(() => Number(storeConfig.value?.low_stock_threshold ?? 5))
 
   const storeSelected = computed(() => !!storeId.value)
   const isChainMode = computed(() => false)
@@ -417,6 +505,11 @@ export const useAppStore = defineStore('app', () => {
     homeSections,
     featuredCategories,
     heroCtaButtons,
+    announcementBar,
+    featureBlocks,
+    featuredBrands,
+    faqItems,
+    testimonials,
     pageContent,
     isAuthenticated,
     userEmail,
@@ -429,6 +522,7 @@ export const useAppStore = defineStore('app', () => {
     cookieConsentText,
     seoDefaultImage,
     robotsIndex,
+    lowStockThreshold,
 
     // Actions
     initialize,

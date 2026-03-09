@@ -51,6 +51,21 @@
             {{ category.label }}
           </button>
         </div>
+
+        <div v-if="featuredBrands.length" class="mt-4 flex flex-wrap gap-3">
+          <button
+            v-for="brand in featuredBrands"
+            :key="`brand-chip-${brand.name}`"
+            type="button"
+            class="rounded-full border px-4 py-2 text-sm font-semibold transition"
+            :class="isBrandActive(brand.name)
+              ? 'border-primary-600 bg-primary-600 text-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-primary-200 hover:text-primary-700'"
+            @click="goToBrandLanding(brand.name)"
+          >
+            {{ brand.name }}
+          </button>
+        </div>
       </section>
 
       <section v-if="allDevices.length" class="mt-8 rounded-[2rem] border border-primary-100 bg-gradient-to-r from-primary-50 via-white to-blue-50 px-6 py-6 shadow-sm">
@@ -304,6 +319,9 @@ const compatibilityBrand = ref('');
 const compatibilityModel = ref('');
 const syncingFromRoute = ref(false);
 const lastLoadedStoreId = ref(null);
+const currentRouteName = computed(() => String(route.name || 'ProductCatalog'));
+const isBrandLanding = computed(() => currentRouteName.value === 'BrandCatalog');
+const isCompatibilityLanding = computed(() => currentRouteName.value === 'CompatibilityCatalog');
 
 const topSellerKeySet = computed(() => new Set(topSellerKeys.value));
 
@@ -322,21 +340,21 @@ onMounted(() => {
 });
 
 watch(
-  () => route.query,
+  () => [route.name, route.params.brand, route.params.model, route.query],
   () => {
     syncingFromRoute.value = true;
     searchQuery.value = queryValue(route.query.q);
     selectedType.value = queryValue(route.query.type);
     selectedCategory.value = queryValue(route.query.category);
-    selectedBrand.value = queryValue(route.query.brand);
+    selectedBrand.value = isBrandLanding.value ? paramValue(route.params.brand) : queryValue(route.query.brand);
     selectedAvailability.value = queryValue(route.query.availability) || 'all';
     selectedCondition.value = queryValue(route.query.condition);
     minPrice.value = queryValue(route.query.min_price);
     maxPrice.value = queryValue(route.query.max_price);
     discountsOnly.value = queryValue(route.query.sale) === '1';
     sortBy.value = queryValue(route.query.sort) || 'featured';
-    compatibilityBrand.value = queryValue(route.query.device_brand);
-    compatibilityModel.value = queryValue(route.query.device_model);
+    compatibilityBrand.value = isCompatibilityLanding.value ? paramValue(route.params.brand) : queryValue(route.query.device_brand);
+    compatibilityModel.value = isCompatibilityLanding.value ? paramValue(route.params.model) : queryValue(route.query.device_model);
     syncingFromRoute.value = false;
   },
   { immediate: true, deep: true },
@@ -351,8 +369,8 @@ watch(
     const currentQuery = JSON.stringify(normalizeQuery(route.query));
     const nextQuery = JSON.stringify(normalizeQuery(query));
 
-    if (currentQuery === nextQuery) return;
-    router.replace({ path: '/products', query });
+    if (currentQuery === nextQuery && routeLocationMatchesFilters()) return;
+    router.replace(buildRouteLocation(query));
   },
 );
 
@@ -362,6 +380,8 @@ const featuredCategoryLinks = computed(() => {
     parsedUrl: safeParseCatalogUrl(category.url),
   }));
 });
+
+const featuredBrands = computed(() => appStore.featuredBrands || []);
 
 const activeFeaturedCategory = computed(() => {
   return featuredCategoryLinks.value.find(category => {
@@ -375,6 +395,16 @@ const activeFeaturedCategory = computed(() => {
 });
 
 const catalogTitle = computed(() => {
+  if (isCompatibilityLanding.value && compatibilityBrand.value) {
+    return compatibilityModel.value
+      ? `${compatibilityBrand.value} ${compatibilityModel.value} compatibility`
+      : `${compatibilityBrand.value} compatibility`;
+  }
+
+  if (isBrandLanding.value && selectedBrand.value) {
+    return `${selectedBrand.value} catalog`;
+  }
+
   if (activeFeaturedCategory.value?.label) {
     return activeFeaturedCategory.value.label;
   }
@@ -395,6 +425,16 @@ const catalogTitle = computed(() => {
 });
 
 const catalogDescription = computed(() => {
+  if (isCompatibilityLanding.value && compatibilityBrand.value) {
+    return compatibilityModel.value
+      ? `Products and parts compatible with ${compatibilityBrand.value} ${compatibilityModel.value}, with the full storefront filters still available.`
+      : `Products and parts compatible with ${compatibilityBrand.value} devices.`;
+  }
+
+  if (isBrandLanding.value && selectedBrand.value) {
+    return `Browse ${selectedBrand.value} products, parts and accessories available in this storefront.`;
+  }
+
   if (activeFeaturedCategory.value?.description) {
     return activeFeaturedCategory.value.description;
   }
@@ -461,8 +501,11 @@ const compatibleModels = computed(() => {
 
   const models = new Set();
   allDevices.value.forEach(device => {
-    if (device.startsWith(`${compatibilityBrand.value} `)) {
-      models.add(device.slice(compatibilityBrand.value.length + 1));
+    const normalizedDevice = String(device || '');
+    const lowerDevice = normalizedDevice.toLowerCase();
+    const lowerBrand = String(compatibilityBrand.value).toLowerCase();
+    if (lowerDevice.startsWith(`${lowerBrand} `)) {
+      models.add(normalizedDevice.slice(compatibilityBrand.value.length + 1));
     }
   });
 
@@ -487,9 +530,11 @@ const filteredProducts = computed(() => {
 
     filtered = filtered.filter(product =>
       (product.compatibleDevices || []).some(device => {
+        const normalizedDevice = String(device || '').toLowerCase();
+        const normalizedPrefix = String(prefix || '').toLowerCase();
         return compatibilityModel.value
-          ? device === prefix
-          : device === prefix || device.startsWith(`${prefix} `);
+          ? normalizedDevice === normalizedPrefix
+          : normalizedDevice === normalizedPrefix || normalizedDevice.startsWith(`${normalizedPrefix} `);
       }),
     );
   }
@@ -524,7 +569,8 @@ const filteredProducts = computed(() => {
   }
 
   if (selectedBrand.value) {
-    filtered = filtered.filter(product => String(product.brand || product.manufacturer || '') === selectedBrand.value);
+    const normalizedBrand = String(selectedBrand.value).toLowerCase();
+    filtered = filtered.filter(product => String(product.brand || product.manufacturer || '').toLowerCase() === normalizedBrand);
   }
 
   if (selectedAvailability.value === 'in_stock') {
@@ -619,6 +665,9 @@ const activeFilterChips = computed(() => {
   if (compatibilityBrand.value) {
     chips.push({ key: 'device_brand', label: `Device brand: ${compatibilityBrand.value}`, clear: () => { clearCompatibilityFilter(); } });
   }
+  if (compatibilityModel.value) {
+    chips.push({ key: 'device_model', label: `Device model: ${compatibilityModel.value}`, clear: () => { compatibilityModel.value = ''; } });
+  }
 
   return chips;
 });
@@ -668,6 +717,10 @@ function queryValue(value) {
   return Array.isArray(value) ? (value[0] || '') : (value || '');
 }
 
+function paramValue(value) {
+  return decodeURIComponent(queryValue(value));
+}
+
 function normalizeQuery(query = {}) {
   return Object.keys(query)
     .sort()
@@ -683,17 +736,56 @@ function buildRouteQuery() {
   if (searchQuery.value) query.q = searchQuery.value;
   if (selectedType.value) query.type = selectedType.value;
   if (selectedCategory.value) query.category = selectedCategory.value;
-  if (selectedBrand.value) query.brand = selectedBrand.value;
+  if (selectedBrand.value && !isBrandLanding.value) query.brand = selectedBrand.value;
   if (selectedAvailability.value && selectedAvailability.value !== 'all') query.availability = selectedAvailability.value;
   if (selectedCondition.value) query.condition = selectedCondition.value;
   if (minPrice.value !== '') query.min_price = minPrice.value;
   if (maxPrice.value !== '') query.max_price = maxPrice.value;
   if (discountsOnly.value) query.sale = '1';
   if (sortBy.value && sortBy.value !== 'featured') query.sort = sortBy.value;
-  if (compatibilityBrand.value) query.device_brand = compatibilityBrand.value;
-  if (compatibilityModel.value) query.device_model = compatibilityModel.value;
+  if (compatibilityBrand.value && !isCompatibilityLanding.value) query.device_brand = compatibilityBrand.value;
+  if (compatibilityModel.value && !isCompatibilityLanding.value) query.device_model = compatibilityModel.value;
 
   return query;
+}
+
+function routeLocationMatchesFilters() {
+  if (isBrandLanding.value) {
+    return paramValue(route.params.brand) === selectedBrand.value;
+  }
+
+  if (isCompatibilityLanding.value) {
+    return paramValue(route.params.brand) === compatibilityBrand.value
+      && paramValue(route.params.model) === compatibilityModel.value;
+  }
+
+  return currentRouteName.value === 'ProductCatalog';
+}
+
+function buildRouteLocation(query) {
+  if (isBrandLanding.value && selectedBrand.value) {
+    return {
+      name: 'BrandCatalog',
+      params: { brand: selectedBrand.value },
+      query,
+    };
+  }
+
+  if (isCompatibilityLanding.value && compatibilityBrand.value) {
+    return {
+      name: 'CompatibilityCatalog',
+      params: {
+        brand: compatibilityBrand.value,
+        ...(compatibilityModel.value ? { model: compatibilityModel.value } : {}),
+      },
+      query,
+    };
+  }
+
+  return {
+    path: '/products',
+    query,
+  };
 }
 
 function getPluralTypeLabel(type) {
@@ -722,6 +814,10 @@ function isTopSeller(product) {
 function clearCompatibilityFilter() {
   compatibilityBrand.value = '';
   compatibilityModel.value = '';
+
+  if (isCompatibilityLanding.value) {
+    router.replace({ path: '/products', query: buildRouteQuery() });
+  }
 }
 
 function clearAllFilters() {
@@ -745,6 +841,18 @@ function isFeaturedCategoryActive(category) {
   return (parsed.type || '') === (selectedType.value || '')
     && (parsed.category || '') === (selectedCategory.value || '')
     && (parsed.q || '') === (searchQuery.value || '');
+}
+
+function isBrandActive(brandName) {
+  return String(selectedBrand.value).toLowerCase() === String(brandName).toLowerCase();
+}
+
+function goToBrandLanding(brandName) {
+  router.push({
+    name: 'BrandCatalog',
+    params: { brand: brandName },
+    query: buildRouteQuery(),
+  });
 }
 
 function navigateToFeaturedCategory(url) {

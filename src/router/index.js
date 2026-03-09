@@ -15,6 +15,18 @@ const routes = [
     meta: { title: 'Products' },
   },
   {
+    path: '/brands/:brand',
+    name: 'BrandCatalog',
+    component: () => import('@/views/ProductCatalog.vue'),
+    meta: { title: 'Brand' },
+  },
+  {
+    path: '/compatibility/:brand/:model?',
+    name: 'CompatibilityCatalog',
+    component: () => import('@/views/ProductCatalog.vue'),
+    meta: { title: 'Compatibility' },
+  },
+  {
     path: '/product/:id',
     name: 'ProductDetail',
     component: () => import('@/views/ProductDetail.vue'),
@@ -25,6 +37,12 @@ const routes = [
     name: 'Cart',
     component: () => import('@/views/Cart.vue'),
     meta: { title: 'Cart' },
+  },
+  {
+    path: '/compare',
+    name: 'Compare',
+    component: () => import('@/views/CompareView.vue'),
+    meta: { title: 'Compare' },
   },
   {
     path: '/checkout',

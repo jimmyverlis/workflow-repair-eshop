@@ -95,7 +95,8 @@
                     </div>
                     <div class="text-right text-sm font-semibold">
                       <span v-if="isService" class="rounded-full bg-sky-100 px-4 py-2 text-sky-700">Bookable service</span>
-                      <span v-else-if="stock > 0" class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-700">In stock now</span>
+                      <span v-else-if="stockState === 'in_stock'" class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-700">In stock now</span>
+                      <span v-else-if="stockState === 'low_stock'" class="rounded-full bg-amber-100 px-4 py-2 text-amber-700">Low stock</span>
                       <span v-else class="rounded-full bg-rose-100 px-4 py-2 text-rose-700">Out of stock</span>
                     </div>
                   </div>
@@ -109,6 +110,10 @@
                       <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Availability</div>
                       <div class="mt-2 text-lg font-bold text-slate-900">{{ availabilityLabel }}</div>
                     </div>
+                  </div>
+
+                  <div v-if="stockState === 'low_stock' && !isService" class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                    {{ availabilityLabel }}. Order soon before this item sells out.
                   </div>
                 </div>
 
@@ -129,9 +134,61 @@
                   >
                     Add to cart
                   </button>
+                  <button
+                    v-if="!isService"
+                    type="button"
+                    class="rounded-2xl border px-5 py-3 text-sm font-semibold transition"
+                    :class="isCompared
+                      ? 'border-primary-600 bg-primary-50 text-primary-700'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-primary-200 hover:text-primary-700'"
+                    @click="toggleCompare"
+                  >
+                    {{ isCompared ? 'Added to compare' : 'Compare' }}
+                  </button>
+                  <button
+                    v-if="!isService && stockState === 'out_of_stock'"
+                    type="button"
+                    class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800 transition hover:border-amber-300"
+                    @click="notifyFormOpen = !notifyFormOpen"
+                  >
+                    {{ notifyFormOpen ? 'Hide notify form' : 'Notify me when available' }}
+                  </button>
                   <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700">
                     Browse similar products
                   </RouterLink>
+                </div>
+
+                <div v-if="notifyFormOpen && !isService && stockState === 'out_of_stock'" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Back in stock</div>
+                  <h2 class="mt-2 text-xl font-black text-slate-900">Get notified when this item returns</h2>
+                  <p class="mt-2 text-sm text-slate-500">
+                    Leave your contact details and the store can follow up when this product is available again.
+                  </p>
+
+                  <div class="mt-4 grid gap-3 md:grid-cols-2">
+                    <input v-model="notifyForm.customer_name" type="text" placeholder="Your name" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
+                    <input v-model="notifyForm.email" type="email" placeholder="Email address" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
+                    <input v-model="notifyForm.phone" type="text" placeholder="Phone (optional)" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2" />
+                    <textarea v-model="notifyForm.notes" rows="3" placeholder="Optional note" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2"></textarea>
+                  </div>
+
+                  <div v-if="notifyError" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {{ notifyError }}
+                  </div>
+                  <div v-if="notifyStatus" class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {{ notifyStatus }}
+                  </div>
+
+                  <div class="mt-4">
+                    <button
+                      type="button"
+                      class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="notifySubmitting"
+                      @click="submitBackInStockRequest"
+                    >
+                      {{ notifySubmitting ? 'Saving request...' : 'Notify me' }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,16 +340,20 @@ import api from '@/services/api';
 import ProductCard from '@/components/catalog/ProductCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
+import { useCompareStore } from '@/stores/compare';
 import { useSeo } from '@/composables/useSeo';
 import { useAnalytics } from '@/composables/useAnalytics';
+import { backInStockAPI } from '@/services/api/backInStock';
 import {
   buildProductBadges,
   buildProductKey,
+  getAvailabilityLabel,
   getCompareAtPrice,
   getConditionLabel,
   getDisplayPrice,
   getProductName,
   getRecentlyViewedEntries,
+  getStockState,
   getStock,
   getTypeLabel,
   normalizeProduct,
@@ -303,6 +364,7 @@ const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
 const cartStore = useCartStore();
+const compareStore = useCompareStore();
 const seo = useSeo();
 const analytics = useAnalytics();
 
@@ -312,6 +374,16 @@ const activeImageIndex = ref(0);
 const relatedProducts = ref([]);
 const recentlyViewedProducts = ref([]);
 const topSellerKeys = ref([]);
+const notifyFormOpen = ref(false);
+const notifySubmitting = ref(false);
+const notifyStatus = ref('');
+const notifyError = ref('');
+const notifyForm = ref({
+  email: '',
+  customer_name: '',
+  phone: '',
+  notes: '',
+});
 
 const badgeToneClasses = {
   indigo: 'bg-indigo-600 text-white',
@@ -332,7 +404,11 @@ const displayPrice = computed(() => getDisplayPrice(product.value || {}));
 const compareAtPrice = computed(() => getCompareAtPrice(product.value || {}));
 const description = computed(() => product.value?.description || '');
 const stock = computed(() => getStock(product.value || {}));
-const merchandisingBadges = computed(() => buildProductBadges(product.value || {}, { topSeller: isTopSeller(product.value) }));
+const stockState = computed(() => getStockState(product.value || {}, appStore.lowStockThreshold));
+const merchandisingBadges = computed(() => buildProductBadges(product.value || {}, {
+  topSeller: isTopSeller(product.value),
+  lowStockThreshold: appStore.lowStockThreshold,
+}));
 const typeLabel = computed(() => getTypeLabel(product.value?._productType));
 const conditionLabel = computed(() => getConditionLabel(product.value?.condition));
 const specificationEntries = computed(() => product.value?.specifications ?? []);
@@ -362,10 +438,22 @@ const typeCrumbLabel = computed(() => {
   return typeLabel.value;
 });
 const availabilityLabel = computed(() => {
-  if (isService.value) return 'Bookable';
-  if (stock.value > 0) return 'In stock';
-  return 'Out of stock';
+  return getAvailabilityLabel(product.value || {}, appStore.lowStockThreshold);
 });
+const isCompared = computed(() => compareStore.hasProduct(product.value || {}));
+
+watch(
+  () => appStore.currentUser,
+  user => {
+    notifyForm.value = {
+      ...notifyForm.value,
+      email: user?.email || notifyForm.value.email || '',
+      customer_name: [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || notifyForm.value.customer_name || '',
+      phone: user?.phone || notifyForm.value.phone || '',
+    };
+  },
+  { immediate: true },
+);
 
 watch(
   () => [appStore.storeId, route.params.id, route.query.source],
@@ -379,6 +467,9 @@ watch(
 async function loadProduct() {
   loading.value = true;
   activeImageIndex.value = 0;
+  notifyFormOpen.value = false;
+  notifyStatus.value = '';
+  notifyError.value = '';
 
   try {
     const [productResponse, productsResponse, highlightsResponse] = await Promise.all([
@@ -507,6 +598,10 @@ function addToCart() {
   analytics.trackAddToCart(product.value, 1);
 }
 
+function toggleCompare() {
+  compareStore.toggleProduct(product.value || {});
+}
+
 function addSpecificToCart(candidate) {
   cartStore.addItem({
     ...candidate,
@@ -530,5 +625,30 @@ function goToProduct(candidate) {
     path: `/product/${candidate.id}`,
     query: { source: candidate._source },
   });
+}
+
+async function submitBackInStockRequest() {
+  if (!product.value) return;
+
+  notifySubmitting.value = true;
+  notifyError.value = '';
+  notifyStatus.value = '';
+
+  try {
+    const response = await backInStockAPI.create(appStore.storeId, {
+      source: product.value._source,
+      item_id: product.value.id,
+      email: notifyForm.value.email,
+      customer_name: notifyForm.value.customer_name,
+      phone: notifyForm.value.phone,
+      notes: notifyForm.value.notes,
+    });
+
+    notifyStatus.value = response?.message || 'Your request was saved.';
+  } catch (error) {
+    notifyError.value = error?.response?.data?.message || 'Could not save the request.';
+  } finally {
+    notifySubmitting.value = false;
+  }
 }
 </script>
