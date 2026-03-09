@@ -43,7 +43,7 @@ const defaultTrustBadges = () => ([
   { title: 'Repair expertise', subtitle: 'Devices, parts and service from one team.', icon: 'sparkles' },
 ])
 
-const defaultHomeSections = () => ['hero', 'promo_banners', 'featured_categories', 'featured_brands', 'top_products', 'discounts', 'feature_blocks', 'testimonials', 'faq', 'trust_badges']
+const defaultHomeSections = () => ['hero', 'promo_banners', 'featured_categories', 'featured_brands', 'top_products', 'discounts', 'feature_blocks', 'testimonials', 'faq', 'newsletter', 'trust_badges']
 
 const defaultFeaturedCategories = () => ([
   { label: 'Devices', url: '/products?type=device', description: 'New and used devices ready to buy.' },
@@ -354,6 +354,23 @@ export const useAppStore = defineStore('app', () => {
   const seoDefaultImage = computed(() => storeConfig.value?.seo_default_image || '')
   const robotsIndex = computed(() => storeConfig.value?.robots_index !== false)
   const lowStockThreshold = computed(() => Number(storeConfig.value?.low_stock_threshold ?? 5))
+  const wishlistEnabled = computed(() => storeConfig.value?.wishlist_enabled !== false)
+  const savedCartsEnabled = computed(() => storeConfig.value?.saved_carts_enabled !== false)
+  const newsletterEnabled = computed(() => storeConfig.value?.newsletter_enabled !== false)
+  const newsletterContent = computed(() => ({
+    title: storeConfig.value?.newsletter_title || 'Get product drops and repair offers first',
+    subtitle: storeConfig.value?.newsletter_subtitle || 'Sign up for launches, discounts and store updates.',
+  }))
+  const loyaltyEnabled = computed(() => !!storeConfig.value?.loyalty_enabled)
+  const loyaltyPointsPerCurrency = computed(() => Number(storeConfig.value?.loyalty_points_per_currency ?? 1))
+  const referralsEnabled = computed(() => !!storeConfig.value?.referrals_enabled)
+  const referralRewardPoints = computed(() => Number(storeConfig.value?.referral_reward_points ?? 100))
+  const returnRequestsEnabled = computed(() => storeConfig.value?.return_requests_enabled !== false)
+  const returnWindowDays = computed(() => Number(storeConfig.value?.return_window_days ?? 14))
+  const returnInstructions = computed(() => storeConfig.value?.return_instructions || '')
+  const loyaltyPointsBalance = computed(() => Number(currentUser.value?.loyalty_points_balance ?? 0))
+  const loyaltyPointsEarned = computed(() => Number(currentUser.value?.loyalty_points_earned ?? 0))
+  const referralCode = computed(() => currentUser.value?.referral_code || '')
 
   const storeSelected = computed(() => !!storeId.value)
   const isChainMode = computed(() => false)
@@ -393,7 +410,7 @@ export const useAppStore = defineStore('app', () => {
 
   // ── Customer Auth ─────────────────────────────────────────────────────────
 
-  async function register(firstName, lastName, email, password, passwordConfirmation, phone = null) {
+  async function register(firstName, lastName, email, password, passwordConfirmation, phone = null, referralCodeValue = '') {
     const { data } = await api.post(`/eshop/${storeId.value}/auth/register`, {
       first_name: firstName,
       last_name: lastName,
@@ -401,6 +418,7 @@ export const useAppStore = defineStore('app', () => {
       phone,
       password,
       password_confirmation: passwordConfirmation,
+      referral_code: referralCodeValue || null,
     })
     localStorage.setItem('eshop_customer_token', data.token)
     currentUser.value = data.data
@@ -523,6 +541,20 @@ export const useAppStore = defineStore('app', () => {
     seoDefaultImage,
     robotsIndex,
     lowStockThreshold,
+    wishlistEnabled,
+    savedCartsEnabled,
+    newsletterEnabled,
+    newsletterContent,
+    loyaltyEnabled,
+    loyaltyPointsPerCurrency,
+    referralsEnabled,
+    referralRewardPoints,
+    returnRequestsEnabled,
+    returnWindowDays,
+    returnInstructions,
+    loyaltyPointsBalance,
+    loyaltyPointsEarned,
+    referralCode,
 
     // Actions
     initialize,

@@ -24,6 +24,15 @@
             {{ badge.label }}
           </span>
         </div>
+        <button
+          v-if="appStore.wishlistEnabled"
+          type="button"
+          class="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/90 text-slate-600 shadow-sm transition hover:scale-105"
+          :class="isWishlisted ? 'text-rose-500' : 'hover:text-rose-500'"
+          @click.stop="toggleWishlist"
+        >
+          <Heart class="h-5 w-5" :class="isWishlisted ? 'fill-current' : ''" />
+        </button>
         <div v-if="ribbon" class="absolute right-0 top-4 overflow-hidden">
           <div class="translate-x-2 rotate-45 origin-bottom-right bg-primary-600 px-5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
             {{ ribbon }}
@@ -128,9 +137,10 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Package, Smartphone, Wrench } from 'lucide-vue-next';
+import { Heart, Package, Smartphone, Wrench } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
 import { useCompareStore } from '@/stores/compare';
+import { useWishlistStore } from '@/stores/wishlist';
 import {
   buildProductBadges,
   getAvailabilityLabel,
@@ -170,6 +180,7 @@ defineEmits(['select', 'add-to-cart', 'book-service']);
 
 const appStore = useAppStore();
 const compareStore = useCompareStore();
+const wishlistStore = useWishlistStore();
 
 const badgeToneClasses = {
   indigo: 'bg-indigo-600 text-white',
@@ -194,8 +205,13 @@ const availabilityLabel = computed(() => getAvailabilityLabel(props.product, app
 const typeLabel = computed(() => getTypeLabel(props.product._productType ?? props.product.type));
 const summary = computed(() => getProductSummary(props.product));
 const isCompared = computed(() => compareStore.hasProduct(props.product));
+const isWishlisted = computed(() => wishlistStore.hasProduct(props.product));
 
 function toggleCompare() {
   compareStore.toggleProduct(props.product);
+}
+
+async function toggleWishlist() {
+  await wishlistStore.toggleProduct(props.product);
 }
 </script>

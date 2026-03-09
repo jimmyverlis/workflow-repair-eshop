@@ -11,6 +11,26 @@ export const useCartStore = defineStore('cart', () => {
     return Number.isFinite(numeric) ? numeric : fallback;
   }
 
+  function normalizeCartItem(item = {}) {
+    const collection = item.collection || item._collection || item._source || 'inventory';
+    const inventoryId = item.inventoryId || item.itemId || item.id;
+    const isService = Boolean(item.isService || collection === 'services' || item.type === 'service' || item._productType === 'service');
+
+    return {
+      _key: item._key || `${collection}:${inventoryId}`,
+      inventoryId,
+      collection,
+      type: item.type || item._productType || 'general_product',
+      isService,
+      name: item.name || '',
+      unitPrice: toNumber(item.unitPrice ?? item.eshopPrice ?? item.sellPrice ?? item.price),
+      quantity: isService ? 1 : Math.max(1, toNumber(item.quantity, 1)),
+      image: item.image || item.images?.[0] || null,
+      sku: item.sku || item.barcode || item.partNumber || '',
+      stock: isService ? Infinity : toNumber(item.stock ?? item.quantity),
+    };
+  }
+
   // Getters
   const itemCount = computed(() =>
     items.value.reduce((sum, item) => sum + toNumber(item.quantity), 0)
@@ -43,19 +63,19 @@ export const useCartStore = defineStore('cart', () => {
         existingItem.quantity += quantity;
       }
     } else {
-      items.value.push({
+      items.value.push(normalizeCartItem({
         _key: uniqueKey,
         inventoryId: itemId,
         collection,
         type: product._productType || product.type || 'general_product',
         isService,
         name: product.name || `${product.brand || ''} ${product.model || ''}`.trim(),
-        unitPrice: toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0),
+        unitPrice: product.eshopPrice ?? product.sellPrice ?? product.price ?? 0,
         quantity: isService ? 1 : quantity,
         image: product.images?.[0] || null,
         sku: product.barcode || product.partNumber || '',
-        stock: isService ? Infinity : toNumber(product.quantity)
-      });
+        stock: isService ? Infinity : toNumber(product.quantity),
+      }));
     }
 
     saveCart();
@@ -97,6 +117,20 @@ export const useCartStore = defineStore('cart', () => {
     saveCart();
   }
 
+  function replaceCart(nextItems = [], { keepPromotion = false } = {}) {
+    items.value = Array.isArray(nextItems)
+      ? nextItems
+          .map(item => normalizeCartItem(item))
+          .filter(item => item.inventoryId)
+      : [];
+
+    if (!keepPromotion) {
+      promotion.value = null;
+    }
+
+    saveCart();
+  }
+
   function saveCart() {
     localStorage.setItem('cart', JSON.stringify({
       items: items.value,
@@ -111,12 +145,7 @@ export const useCartStore = defineStore('cart', () => {
         const parsed = JSON.parse(savedCart);
         const savedItems = Array.isArray(parsed) ? parsed : (parsed.items || []);
 
-        items.value = savedItems.map(item => ({
-          ...item,
-          unitPrice: toNumber(item.unitPrice),
-          quantity: toNumber(item.quantity, 1),
-          stock: item.isService ? Infinity : toNumber(item.stock)
-        }));
+        items.value = savedItems.map(item => normalizeCartItem(item));
         promotion.value = Array.isArray(parsed) ? null : (parsed.promotion || null);
       } catch (e) {
         console.error('Error loading cart:', e);
@@ -148,6 +177,7 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     setPromotion,
     clearPromotion,
+    replaceCart,
     saveCart,
     loadCart
   };

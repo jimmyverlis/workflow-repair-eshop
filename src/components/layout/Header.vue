@@ -64,6 +64,20 @@
         </form>
 
         <div class="ml-auto lg:ml-0 flex items-center gap-3">
+          <RouterLink
+            v-if="appStore.wishlistEnabled"
+            to="/wishlist"
+            class="relative rounded-xl p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-600"
+          >
+            <Heart class="h-6 w-6" />
+            <span
+              v-if="wishlistStore.count > 0"
+              class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white"
+            >
+              {{ wishlistStore.count }}
+            </span>
+          </RouterLink>
+
           <RouterLink to="/compare" class="relative rounded-xl p-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-600">
             <Scale class="h-6 w-6" />
             <span
@@ -172,6 +186,14 @@
           <RouterLink to="/compare" class="rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileMenuOpen = false">
             Compare<span v-if="compareStore.count"> ({{ compareStore.count }})</span>
           </RouterLink>
+          <RouterLink
+            v-if="appStore.wishlistEnabled"
+            to="/wishlist"
+            class="rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
+            @click="mobileMenuOpen = false"
+          >
+            Wishlist<span v-if="wishlistStore.count"> ({{ wishlistStore.count }})</span>
+          </RouterLink>
 
           <div class="mt-3 border-t border-gray-200 pt-3">
             <template v-if="appStore.isAuthenticated">
@@ -204,8 +226,10 @@ import { useRoute, useRouter, RouterLink } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
 import { useCompareStore } from '@/stores/compare';
+import { useWishlistStore } from '@/stores/wishlist';
 import {
   ChevronDown,
+  Heart,
   LogOut,
   Menu,
   Package,
@@ -222,6 +246,7 @@ const route = useRoute();
 const appStore = useAppStore();
 const cartStore = useCartStore();
 const compareStore = useCompareStore();
+const wishlistStore = useWishlistStore();
 
 const mobileMenuOpen = ref(false);
 const accountOpen = ref(false);
@@ -265,6 +290,15 @@ watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false;
   accountOpen.value = false;
 });
+
+watch(
+  () => [appStore.storeId, appStore.isAuthenticated, appStore.wishlistEnabled],
+  () => {
+    if (!appStore.storeId) return;
+    wishlistStore.loadWishlist(true);
+  },
+  { immediate: true },
+);
 
 function navigateTo(url, openInNewTab = false) {
   accountOpen.value = false;

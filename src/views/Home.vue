@@ -388,6 +388,59 @@
         </div>
       </section>
 
+      <section v-else-if="section === 'newsletter'" class="bg-slate-950 py-14 text-white">
+        <div class="container mx-auto px-4">
+          <div class="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
+            <div>
+              <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
+                <Mail class="h-4 w-4" />
+                Newsletter
+              </div>
+              <h2 class="mt-5 text-3xl font-black md:text-4xl">{{ appStore.newsletterContent.title }}</h2>
+              <p class="mt-3 max-w-2xl text-base text-white/75 md:text-lg">
+                {{ appStore.newsletterContent.subtitle }}
+              </p>
+
+              <div class="mt-6 flex flex-wrap gap-3 text-sm text-white/70">
+                <span v-if="appStore.loyaltyEnabled" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                  Loyalty enabled
+                </span>
+                <span v-if="appStore.referralsEnabled" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                  Referral rewards available
+                </span>
+              </div>
+            </div>
+
+            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur">
+              <form class="space-y-4" @submit.prevent="submitNewsletter">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-white/80">Name</label>
+                  <input v-model.trim="newsletterForm.name" type="text" class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none" placeholder="Your name" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-white/80">Email</label>
+                  <input v-model.trim="newsletterForm.email" type="email" required class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none" placeholder="you@example.com" />
+                </div>
+                <button
+                  type="submit"
+                  class="w-full rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="newsletterSubmitting"
+                >
+                  {{ newsletterSubmitting ? 'Subscribing...' : 'Subscribe' }}
+                </button>
+              </form>
+
+              <div v-if="newsletterStatus" class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                {{ newsletterStatus }}
+              </div>
+              <div v-if="newsletterError" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {{ newsletterError }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section v-else-if="section === 'trust_badges'" class="py-16">
         <div class="container mx-auto px-4">
           <div class="mb-6">
@@ -414,11 +467,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
-import { Clock3, Package, Shield, Sparkles, Tag, Truck } from 'lucide-vue-next';
+import { Clock3, Mail, Package, Shield, Sparkles, Tag, Truck } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
 import api from '@/services/api';
+import { retentionAPI } from '@/services/api/retention';
 import { useSeo } from '@/composables/useSeo';
 
 const router = useRouter();
@@ -432,6 +486,13 @@ const discountedProducts = ref([]);
 const activePromotions = ref([]);
 const activeBannerIndex = ref(0);
 const countdownTick = ref(Date.now());
+const newsletterSubmitting = ref(false);
+const newsletterStatus = ref('');
+const newsletterError = ref('');
+const newsletterForm = ref({
+  name: '',
+  email: '',
+});
 let bannerTimer = null;
 let countdownTimer = null;
 
@@ -480,6 +541,17 @@ const activeBannerCountdown = computed(() => {
   if (h > 48) return null; // only show for near-expiry
   return `${h}h ${m}m ${s}s`;
 });
+
+watch(
+  () => appStore.currentUser,
+  user => {
+    newsletterForm.value = {
+      name: [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim(),
+      email: user?.email || '',
+    };
+  },
+  { immediate: true },
+);
 
 function badgeIcon(iconName) {
   if (iconName === 'truck') return Truck;
@@ -567,6 +639,26 @@ async function loadHighlights() {
     activePromotions.value = [];
   } finally {
     loadingHighlights.value = false;
+  }
+}
+
+async function submitNewsletter() {
+  newsletterSubmitting.value = true;
+  newsletterError.value = '';
+  newsletterStatus.value = '';
+
+  try {
+    await retentionAPI.subscribeToNewsletter(appStore.storeId, {
+      email: newsletterForm.value.email,
+      name: newsletterForm.value.name,
+      source: 'home',
+    });
+
+    newsletterStatus.value = 'You are subscribed. The store can now reach you with launches and offers.';
+  } catch (error) {
+    newsletterError.value = error.response?.data?.message || 'Newsletter signup failed.';
+  } finally {
+    newsletterSubmitting.value = false;
   }
 }
 

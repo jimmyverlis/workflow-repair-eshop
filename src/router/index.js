@@ -39,6 +39,12 @@ const routes = [
     meta: { title: 'Cart' },
   },
   {
+    path: '/wishlist',
+    name: 'Wishlist',
+    component: () => import('@/views/WishlistView.vue'),
+    meta: { title: 'Wishlist' },
+  },
+  {
     path: '/compare',
     name: 'Compare',
     component: () => import('@/views/CompareView.vue'),

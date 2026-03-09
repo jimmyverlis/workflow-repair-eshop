@@ -66,6 +66,94 @@
 
         <aside>
           <div class="sticky top-24 space-y-4">
+            <section v-if="appStore.savedCartsEnabled" class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Retention</div>
+                  <h2 class="mt-2 text-xl font-black text-slate-900">Saved carts</h2>
+                </div>
+                <button
+                  v-if="appStore.isAuthenticated"
+                  type="button"
+                  class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
+                  @click="loadSavedCarts"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <template v-if="appStore.isAuthenticated">
+                <div class="mt-4 flex gap-2">
+                  <input
+                    v-model.trim="savedCartName"
+                    type="text"
+                    placeholder="Name this cart"
+                    class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300"
+                  />
+                  <button
+                    type="button"
+                    class="rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+                    :disabled="savedCartLoading || !savedCartName"
+                    @click="saveCurrentCart"
+                  >
+                    {{ savedCartLoading ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
+
+                <p v-if="savedCartMessage" class="mt-3 text-sm" :class="savedCartSuccess ? 'text-emerald-600' : 'text-rose-600'">
+                  {{ savedCartMessage }}
+                </p>
+
+                <div v-if="savedCarts.length" class="mt-4 space-y-3">
+                  <article
+                    v-for="saved in savedCarts"
+                    :key="saved.id"
+                    class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <div class="font-semibold text-slate-900">{{ saved.name }}</div>
+                        <div class="mt-1 text-xs text-slate-500">{{ saved.item_count }} items · EUR {{ Number(saved.subtotal || 0).toFixed(2) }}</div>
+                      </div>
+                      <button
+                        type="button"
+                        class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-600 hover:text-rose-700"
+                        @click="deleteSavedCart(saved.id)"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-700"
+                        @click="loadSavedCartIntoCart(saved)"
+                      >
+                        Load cart
+                      </button>
+                      <RouterLink
+                        :to="{ path: '/account', query: { tab: 'saved-carts' } }"
+                        class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
+                      >
+                        Manage in account
+                      </RouterLink>
+                    </div>
+                  </article>
+                </div>
+              </template>
+
+              <template v-else>
+                <p class="mt-4 text-sm text-slate-500">Sign in to save this cart and restore it later from any device.</p>
+                <RouterLink
+                  :to="{ path: '/login', query: { redirect: '/cart' } }"
+                  class="mt-4 inline-flex rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
+                >
+                  Sign in to save carts
+                </RouterLink>
+              </template>
+            </section>
+
             <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <div class="flex items-center justify-between gap-3">
                 <div>
@@ -150,12 +238,15 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { Package, ShoppingCart, Tag } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
 import { promotionsAPI } from '@/services/api/promotions';
+import { retentionAPI } from '@/services/api/retention';
 
+const router = useRouter();
 const appStore = useAppStore();
 const cartStore = useCartStore();
 
@@ -164,6 +255,11 @@ const promoLoading = ref(false);
 const promoMessage = ref('');
 const promoSuccess = ref(false);
 const suggestions = ref([]);
+const savedCartName = ref('');
+const savedCartLoading = ref(false);
+const savedCartMessage = ref('');
+const savedCartSuccess = ref(false);
+const savedCarts = ref([]);
 
 const vatRate = computed(() => Number(appStore.storeConfig?.vat_rate ?? 24));
 const cartSignature = computed(() => JSON.stringify(cartStore.items.map(item => ({ key: item._key, quantity: item.quantity, price: item.unitPrice }))));
@@ -194,6 +290,9 @@ onMounted(async () => {
     } catch {
       suggestions.value = [];
     }
+  }
+  if (appStore.isAuthenticated && appStore.savedCartsEnabled) {
+    await loadSavedCarts();
   }
 });
 
@@ -285,5 +384,72 @@ function promotionSummary(promo) {
 function applySuggestion(code) {
   promoCode.value = code;
   applyDiscountCode();
+}
+
+async function loadSavedCarts() {
+  if (!appStore.isAuthenticated || !appStore.storeId || !appStore.savedCartsEnabled) {
+    savedCarts.value = [];
+    return;
+  }
+
+  try {
+    savedCarts.value = await retentionAPI.getSavedCarts(appStore.storeId);
+  } catch {
+    savedCarts.value = [];
+  }
+}
+
+async function saveCurrentCart() {
+  if (!appStore.isAuthenticated) {
+    router.push({ path: '/login', query: { redirect: '/cart' } });
+    return;
+  }
+
+  savedCartLoading.value = true;
+  savedCartMessage.value = '';
+
+  try {
+    await retentionAPI.saveCart(appStore.storeId, {
+      name: savedCartName.value,
+      items: cartStore.items,
+    });
+
+    savedCartSuccess.value = true;
+    savedCartMessage.value = 'Cart saved to your account.';
+    savedCartName.value = '';
+    await loadSavedCarts();
+  } catch (error) {
+    savedCartSuccess.value = false;
+    savedCartMessage.value = error.response?.data?.message || 'Could not save the cart.';
+  } finally {
+    savedCartLoading.value = false;
+  }
+}
+
+async function loadSavedCartIntoCart(savedCart) {
+  try {
+    const payload = await retentionAPI.loadSavedCart(appStore.storeId, savedCart.id);
+    cartStore.replaceCart(payload.items || []);
+    promoMessage.value = '';
+    promoCode.value = '';
+    savedCartSuccess.value = true;
+    savedCartMessage.value = `Loaded "${payload.name}" into the cart.`;
+    router.push('/cart');
+  } catch (error) {
+    savedCartSuccess.value = false;
+    savedCartMessage.value = error.response?.data?.message || 'Could not load the saved cart.';
+  }
+}
+
+async function deleteSavedCart(savedCartId) {
+  try {
+    await retentionAPI.deleteSavedCart(appStore.storeId, savedCartId);
+    savedCartSuccess.value = true;
+    savedCartMessage.value = 'Saved cart removed.';
+    await loadSavedCarts();
+  } catch (error) {
+    savedCartSuccess.value = false;
+    savedCartMessage.value = error.response?.data?.message || 'Could not delete the saved cart.';
+  }
 }
 </script>

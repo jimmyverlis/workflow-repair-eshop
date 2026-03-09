@@ -146,6 +146,17 @@
                     {{ isCompared ? 'Added to compare' : 'Compare' }}
                   </button>
                   <button
+                    v-if="!isService && appStore.wishlistEnabled"
+                    type="button"
+                    class="rounded-2xl border px-5 py-3 text-sm font-semibold transition"
+                    :class="isWishlisted
+                      ? 'border-rose-500 bg-rose-50 text-rose-700'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-rose-600'"
+                    @click="toggleWishlist"
+                  >
+                    {{ isWishlisted ? 'Saved to wishlist' : 'Save to wishlist' }}
+                  </button>
+                  <button
                     v-if="!isService && stockState === 'out_of_stock'"
                     type="button"
                     class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800 transition hover:border-amber-300"
@@ -188,6 +199,20 @@
                     >
                       {{ notifySubmitting ? 'Saving request...' : 'Notify me' }}
                     </button>
+                  </div>
+                </div>
+
+                <div v-if="retentionHighlights.length" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Customer benefits</div>
+                  <div class="mt-4 grid gap-3 md:grid-cols-2">
+                    <div
+                      v-for="highlight in retentionHighlights"
+                      :key="highlight.title"
+                      class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <div class="text-sm font-bold text-slate-900">{{ highlight.title }}</div>
+                      <div class="mt-1 text-sm text-slate-500">{{ highlight.body }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -341,6 +366,7 @@ import ProductCard from '@/components/catalog/ProductCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
 import { useCompareStore } from '@/stores/compare';
+import { useWishlistStore } from '@/stores/wishlist';
 import { useSeo } from '@/composables/useSeo';
 import { useAnalytics } from '@/composables/useAnalytics';
 import { backInStockAPI } from '@/services/api/backInStock';
@@ -365,6 +391,7 @@ const route = useRoute();
 const appStore = useAppStore();
 const cartStore = useCartStore();
 const compareStore = useCompareStore();
+const wishlistStore = useWishlistStore();
 const seo = useSeo();
 const analytics = useAnalytics();
 
@@ -441,6 +468,41 @@ const availabilityLabel = computed(() => {
   return getAvailabilityLabel(product.value || {}, appStore.lowStockThreshold);
 });
 const isCompared = computed(() => compareStore.hasProduct(product.value || {}));
+const isWishlisted = computed(() => wishlistStore.hasProduct(product.value || {}));
+const estimatedPoints = computed(() => {
+  if (!appStore.loyaltyEnabled || isService.value) return 0;
+  return Math.max(0, Math.round(displayPrice.value * appStore.loyaltyPointsPerCurrency));
+});
+const retentionHighlights = computed(() => {
+  const highlights = [];
+
+  if (!isService.value && appStore.loyaltyEnabled && estimatedPoints.value > 0) {
+    highlights.push({
+      title: `Earn about ${estimatedPoints.value} loyalty points`,
+      body: 'Points are awarded after successful payment and appear inside the customer account.',
+    });
+  }
+
+  if (!isService.value && appStore.referralsEnabled && appStore.referralRewardPoints > 0) {
+    highlights.push({
+      title: `Referral rewards available`,
+      body: `Customers can invite friends and unlock ${appStore.referralRewardPoints} bonus points after a first paid order.`,
+    });
+  }
+
+  if (!isService.value && appStore.returnRequestsEnabled) {
+    const windowCopy = appStore.returnWindowDays > 0
+      ? `Return requests can be submitted within ${appStore.returnWindowDays} days.`
+      : 'Return requests are enabled for eligible orders.';
+
+    highlights.push({
+      title: 'Store-managed returns',
+      body: appStore.returnInstructions || windowCopy,
+    });
+  }
+
+  return highlights;
+});
 
 watch(
   () => appStore.currentUser,
@@ -600,6 +662,10 @@ function addToCart() {
 
 function toggleCompare() {
   compareStore.toggleProduct(product.value || {});
+}
+
+async function toggleWishlist() {
+  await wishlistStore.toggleProduct(product.value || {});
 }
 
 function addSpecificToCart(candidate) {
