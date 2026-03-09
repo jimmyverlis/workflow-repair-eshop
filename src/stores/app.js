@@ -8,6 +8,63 @@ import {
   createStoreLogoPlaceholder,
 } from '@/utils/brandPlaceholders'
 
+const defaultFooterColumns = () => ([
+  {
+    title: 'Shop',
+    links: [
+      { label: 'All products', url: '/products', openInNewTab: false },
+      { label: 'Repairs', url: '/repair-booking', openInNewTab: false },
+    ],
+  },
+  {
+    title: 'Support',
+    links: [
+      { label: 'Shipping', url: '/shipping', openInNewTab: false },
+      { label: 'Returns', url: '/returns', openInNewTab: false },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', url: '/about', openInNewTab: false },
+      { label: 'Privacy', url: '/privacy', openInNewTab: false },
+    ],
+  },
+])
+
+const defaultStoreHours = () => ([
+  { label: 'Mon - Fri', hours: '09:00 - 18:00' },
+  { label: 'Saturday', hours: '10:00 - 14:00' },
+])
+
+const defaultTrustBadges = () => ([
+  { title: 'Secure checkout', subtitle: 'Protected payments and trusted processing.', icon: 'shield' },
+  { title: 'Fast delivery', subtitle: 'Quick dispatch for in-stock orders.', icon: 'truck' },
+  { title: 'Repair expertise', subtitle: 'Devices, parts and service from one team.', icon: 'sparkles' },
+])
+
+const defaultHomeSections = () => ['hero', 'promo_banners', 'featured_categories', 'top_products', 'discounts', 'trust_badges']
+
+const defaultFeaturedCategories = () => ([
+  { label: 'Devices', url: '/products?type=device', description: 'New and used devices ready to buy.' },
+  { label: 'Parts', url: '/products?type=part', description: 'Batteries, screens and repair components.' },
+  { label: 'Accessories', url: '/products?type=general_product', description: 'Chargers, cases and everyday essentials.' },
+])
+
+const defaultHeroButtons = () => ([
+  { label: 'Explore products', url: '/products', style: 'primary', openInNewTab: false },
+  { label: 'Book a repair', url: '/repair-booking', style: 'secondary', openInNewTab: false },
+])
+
+const defaultPageContent = () => ({
+  about: { title: 'About Us', body: '' },
+  contact: { title: 'Contact Us', body: '' },
+  shipping: { title: 'Shipping Information', body: '' },
+  returns: { title: 'Returns Policy', body: '' },
+  privacy: { title: 'Privacy Policy', body: '' },
+  terms: { title: 'Terms of Service', body: '' },
+})
+
 export const useAppStore = defineStore('app', () => {
   // ── Resolution state ──────────────────────────────────────────────────────
   const resolvedType = ref(null)  // 'store' | 'error'
@@ -98,6 +155,103 @@ export const useAppStore = defineStore('app', () => {
     return normalized.length
       ? normalized
       : createDefaultPromoBanners({ storeName: storeName.value, primaryColor })
+  })
+  const footerDescription = computed(() => (
+    storeConfig.value?.footer_description || 'Premium devices, trusted repairs and fast support.'
+  ))
+  const footerColumns = computed(() => {
+    const columns = Array.isArray(storeConfig.value?.footer_columns) ? storeConfig.value.footer_columns : []
+    const normalized = columns
+      .map(column => ({
+        title: column.title || '',
+        links: Array.isArray(column.links)
+          ? column.links
+              .map(link => ({
+                label: link.label || '',
+                url: link.url || '',
+                openInNewTab: !!(link.open_in_new_tab ?? link.openInNewTab),
+              }))
+              .filter(link => link.label && link.url)
+          : [],
+      }))
+      .filter(column => column.title && column.links.length)
+
+    return normalized.length ? normalized : defaultFooterColumns()
+  })
+  const socialLinks = computed(() => {
+    const links = Array.isArray(storeConfig.value?.social_links) ? storeConfig.value.social_links : []
+    return links
+      .map(link => ({
+        label: link.label || '',
+        url: link.url || '',
+      }))
+      .filter(link => link.label && link.url)
+  })
+  const storeHours = computed(() => {
+    const hours = Array.isArray(storeConfig.value?.store_hours) ? storeConfig.value.store_hours : []
+    const normalized = hours
+      .map(entry => ({
+        label: entry.label || '',
+        hours: entry.hours || '',
+      }))
+      .filter(entry => entry.label && entry.hours)
+
+    return normalized.length ? normalized : defaultStoreHours()
+  })
+  const trustBadges = computed(() => {
+    const badges = Array.isArray(storeConfig.value?.trust_badges) ? storeConfig.value.trust_badges : []
+    const normalized = badges
+      .map(badge => ({
+        title: badge.title || '',
+        subtitle: badge.subtitle || '',
+        icon: badge.icon || 'shield',
+      }))
+      .filter(badge => badge.title)
+
+    return normalized.length ? normalized : defaultTrustBadges()
+  })
+  const homeSections = computed(() => {
+    const sections = Array.isArray(storeConfig.value?.home_sections) ? storeConfig.value.home_sections : []
+    return sections.length ? sections : defaultHomeSections()
+  })
+  const featuredCategories = computed(() => {
+    const categories = Array.isArray(storeConfig.value?.featured_categories) ? storeConfig.value.featured_categories : []
+    const normalized = categories
+      .map(category => ({
+        label: category.label || '',
+        url: category.url || '',
+        description: category.description || '',
+        imageUrl: category.image_url ?? category.imageUrl ?? '',
+      }))
+      .filter(category => category.label && category.url)
+
+    return normalized.length ? normalized : defaultFeaturedCategories()
+  })
+  const heroCtaButtons = computed(() => {
+    const buttons = Array.isArray(storeConfig.value?.cta_buttons) ? storeConfig.value.cta_buttons : []
+    const normalized = buttons
+      .map(button => ({
+        label: button.label || '',
+        url: button.url || '',
+        style: button.style || 'primary',
+        openInNewTab: !!(button.open_in_new_tab ?? button.openInNewTab),
+      }))
+      .filter(button => button.label && button.url)
+
+    return normalized.length ? normalized.slice(0, 2) : defaultHeroButtons()
+  })
+  const pageContent = computed(() => {
+    const configured = storeConfig.value?.page_content || {}
+    const defaults = defaultPageContent()
+
+    return Object.keys(defaults).reduce((accumulator, key) => {
+      accumulator[key] = {
+        title: configured?.[key]?.title || defaults[key].title,
+        body: configured?.[key]?.body || '',
+      }
+
+      return accumulator
+    }, {})
   })
 
   const storeSelected = computed(() => !!storeId.value)
@@ -219,6 +373,15 @@ export const useAppStore = defineStore('app', () => {
     requireAuthForRepairBooking,
     navigationItems,
     promoBanners,
+    footerDescription,
+    footerColumns,
+    socialLinks,
+    storeHours,
+    trustBadges,
+    homeSections,
+    featuredCategories,
+    heroCtaButtons,
+    pageContent,
     isAuthenticated,
     userEmail,
     userName,
