@@ -138,8 +138,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { ordersAPI } from '@/services/api/orders';
 import { appointmentsAPI } from '@/services/api/appointments';
@@ -148,9 +148,10 @@ import {
 } from 'lucide-vue-next';
 
 const router = useRouter();
+const route = useRoute();
 const appStore = useAppStore();
 
-const activeTab = ref('orders');
+const activeTab = ref(route.query.tab || 'orders');
 
 const orders = ref([]);
 const repairs = ref([]);
@@ -265,5 +266,11 @@ onMounted(() => {
   loadOrders();
   loadRepairs();
   loadAppointments();
+});
+
+watch(() => route.query.tab, value => {
+  if (value) {
+    activeTab.value = value;
+  }
 });
 </script>

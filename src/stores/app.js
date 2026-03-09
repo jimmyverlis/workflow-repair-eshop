@@ -35,6 +35,24 @@ export const useAppStore = defineStore('app', () => {
     logo: storeConfig.value?.logo || null,
   }))
 
+  const storeDetails = computed(() => ({
+    address: storeConfig.value?.store_address || '',
+    phone: storeConfig.value?.store_phone || '',
+    email: storeConfig.value?.store_email || '',
+  }))
+
+  const homeContent = computed(() => ({
+    title: storeConfig.value?.home_title || '',
+    subtitle: storeConfig.value?.home_subtitle || '',
+  }))
+
+  const searchVisible = computed(() => storeConfig.value?.show_search !== false)
+  const allowRegistration = computed(() => storeConfig.value?.allow_registration !== false)
+  const requireAuthForCheckout = computed(() => !!storeConfig.value?.require_auth_for_checkout)
+  const requireAuthForRepairBooking = computed(() => !!storeConfig.value?.require_auth_for_repair_booking)
+  const navigationItems = computed(() => Array.isArray(storeConfig.value?.nav_items) ? storeConfig.value.nav_items : [])
+  const promoBanners = computed(() => Array.isArray(storeConfig.value?.promo_banners) ? storeConfig.value.promo_banners : [])
+
   const storeSelected = computed(() => !!storeId.value)
   const isChainMode = computed(() => false)
 
@@ -146,6 +164,14 @@ export const useAppStore = defineStore('app', () => {
     // Computed
     storeName,
     branding,
+    storeDetails,
+    homeContent,
+    searchVisible,
+    allowRegistration,
+    requireAuthForCheckout,
+    requireAuthForRepairBooking,
+    navigationItems,
+    promoBanners,
     isAuthenticated,
     userEmail,
     userName,

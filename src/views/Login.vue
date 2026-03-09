@@ -5,7 +5,7 @@
         <!-- Header -->
         <div class="text-center mb-8">
           <div class="text-4xl mb-2">🔧</div>
-          <h1 class="text-2xl font-bold">{{ isRegister ? 'Δημιουργία Λογαριασμού' : 'Σύνδεση' }}</h1>
+          <h1 class="text-2xl font-bold">{{ isRegister ? 'Δημιουργία Λογαριασμού' : 'Σύνδεση στον λογαριασμό σας' }}</h1>
           <p class="text-gray-500 text-sm mt-1">{{ appStore.storeName }}</p>
         </div>
 
@@ -26,6 +26,10 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Επώνυμο</label>
                 <input v-model="form.lastName" type="text" placeholder="Παπαδόπουλος" class="input" required />
               </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Τηλέφωνο</label>
+              <input v-model="form.phone" type="tel" placeholder="+30 6912345678" class="input" />
             </div>
           </template>
 
@@ -77,7 +81,7 @@
         </form>
 
         <!-- Toggle register/login -->
-        <div class="text-center mt-6 text-sm text-gray-600">
+        <div v-if="appStore.allowRegistration" class="text-center mt-6 text-sm text-gray-600">
           <span v-if="isRegister">Έχετε ήδη λογαριασμό; </span>
           <span v-else>Δεν έχετε λογαριασμό; </span>
           <button
@@ -90,7 +94,7 @@
 
         <!-- Guest checkout hint -->
         <div class="mt-4 p-3 bg-gray-50 rounded-lg text-center text-sm text-gray-500">
-          Μπορείτε να αγοράσετε και χωρίς λογαριασμό κατά το checkout.
+          {{ appStore.requireAuthForCheckout ? 'Απαιτείται λογαριασμός για checkout.' : 'Μπορείτε να αγοράσετε και χωρίς λογαριασμό κατά το checkout.' }}
         </div>
       </div>
     </div>
@@ -98,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 
@@ -106,13 +110,14 @@ const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
 
-const isRegister = ref(false);
+const isRegister = ref(route.query.mode === 'register' && appStore.allowRegistration);
 const loading = ref(false);
 const errorMsg = ref('');
 
 const form = ref({
   firstName: '',
   lastName: '',
+  phone: '',
   email: '',
   password: '',
   passwordConfirm: '',
@@ -128,6 +133,7 @@ function getApiError(err) {
 }
 
 function toggleMode() {
+  if (!appStore.allowRegistration) return;
   isRegister.value = !isRegister.value;
   errorMsg.value = '';
 }
@@ -143,6 +149,7 @@ async function handleSubmit() {
         form.value.email,
         form.value.password,
         form.value.passwordConfirm,
+        form.value.phone,
       );
     } else {
       await appStore.login(form.value.email, form.value.password);
@@ -154,4 +161,10 @@ async function handleSubmit() {
     loading.value = false;
   }
 }
+
+onMounted(() => {
+  if (appStore.isAuthenticated) {
+    router.replace(route.query.redirect || '/account');
+  }
+})
 </script>

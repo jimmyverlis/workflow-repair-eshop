@@ -285,8 +285,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { RouterLink } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { repairsAPI } from '@/services/api/repairs';
 import { storeConfig } from '@/config/store';
@@ -295,6 +295,7 @@ import {
   Truck, Store, Package, User
 } from 'lucide-vue-next';
 
+const router = useRouter();
 const appStore = useAppStore();
 
 const step = ref(1);
@@ -389,4 +390,14 @@ async function submitRepair() {
     submitting.value = false;
   }
 }
+
+onMounted(() => {
+  if (appStore.requireAuthForRepairBooking && !appStore.isAuthenticated) {
+    router.replace({ path: '/login', query: { redirect: '/repair-booking' } });
+  }
+
+  if (appStore.currentUser?.phone && !customer.value.phone) {
+    customer.value.phone = appStore.currentUser.phone;
+  }
+})
 </script>

@@ -42,7 +42,7 @@
 
       <!-- Filters & Search -->
       <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <!-- Search -->
           <div class="md:col-span-2">
             <input
@@ -61,6 +61,12 @@
               <option value="device">Συσκευές</option>
               <option value="service">Υπηρεσίες</option>
               <option value="general_product">Αξεσουάρ</option>
+            </select>
+          </div>
+          <div>
+            <select v-model="selectedCategory" class="input">
+              <option value="">All categories</option>
+              <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
             </select>
           </div>
 
@@ -94,7 +100,7 @@
             @click="goToProduct(product)"
           >
             <!-- Product Image -->
-            <div class="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <div class="relative aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
               <img
                 v-if="product.images && product.images[0]"
                 :src="product.images[0]"
@@ -103,6 +109,12 @@
               />
               <Wrench v-else-if="product._productType === 'service'" class="w-16 h-16 text-gray-400" />
               <Package v-else class="w-16 h-16 text-gray-400" />
+              <div
+                v-if="product.discountPercentage"
+                class="absolute left-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[11px] font-bold text-white shadow-sm"
+              >
+                -{{ product.discountPercentage }}%
+              </div>
             </div>
 
             <!-- Product Info -->
@@ -146,8 +158,13 @@
 
               <!-- Price -->
               <div class="flex items-center justify-between">
-                <div class="text-2xl font-bold text-primary-600">
-                  {{ getPrice(product).toFixed(2) }}€
+                <div>
+                  <div class="text-2xl font-bold text-primary-600">
+                    {{ getPrice(product).toFixed(2) }}€
+                  </div>
+                  <div v-if="product.compareAtPrice" class="text-xs text-gray-400 line-through">
+                    {{ product.compareAtPrice.toFixed(2) }}€
+                  </div>
                 </div>
 
                 <!-- Stock Badge -->
@@ -193,7 +210,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { useCartStore } from '@/stores/cart';
@@ -207,8 +224,9 @@ const cartStore = useCartStore();
 
 const products = ref([]);
 const loading = ref(true);
-const searchQuery = ref('');
+const searchQuery = ref(route.query.q || '');
 const selectedType = ref(route.query.type || '');
+const selectedCategory = ref(route.query.category || '');
 const sortBy = ref('name');
 const selectedBrand = ref('');
 const selectedModel = ref('');
@@ -237,6 +255,10 @@ function normalizeProduct(product) {
     price: toNumber(price),
     eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
     sellPrice: sellPrice == null ? null : toNumber(sellPrice),
+    compareAtPrice: (product.compareAtPrice ?? product.compare_at_price) == null
+      ? null
+      : toNumber(product.compareAtPrice ?? product.compare_at_price),
+    discountPercentage: Number(product.discountPercentage ?? product.discount_percentage ?? 0),
   };
 }
 
@@ -351,6 +373,17 @@ const models = computed(() => {
   return [...modelSet].sort();
 });
 
+const availableCategories = computed(() => {
+  const categories = new Set();
+  products.value.forEach(product => {
+    const category = String(product.category ?? '').trim();
+    if (category) {
+      categories.add(category);
+    }
+  });
+  return [...categories].sort((a, b) => a.localeCompare(b));
+});
+
 // Filtered products
 const filteredProducts = computed(() => {
   let filtered = products.value;
@@ -370,6 +403,10 @@ const filteredProducts = computed(() => {
   // Filter by type
   if (selectedType.value) {
     filtered = filtered.filter(p => p._productType === selectedType.value);
+  }
+
+  if (selectedCategory.value) {
+    filtered = filtered.filter(p => p.category === selectedCategory.value);
   }
 
   // Filter by search query
@@ -397,6 +434,14 @@ const filteredProducts = computed(() => {
 
   return filtered;
 });
+
+function syncFromRoute() {
+  searchQuery.value = route.query.q || '';
+  selectedType.value = route.query.type || '';
+  selectedCategory.value = route.query.category || '';
+}
+
+watch(() => route.query, syncFromRoute, { deep: true });
 
 function getPrice(product) {
   return toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0);

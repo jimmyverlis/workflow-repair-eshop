@@ -87,7 +87,7 @@
               </div>
             </label>
             <label
-              v-if="!cartStore.isServiceOnly"
+              v-if="!cartStore.isServiceOnly && canUseCourier"
               class="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors"
               :class="delivery.method === 'courier' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'"
             >
@@ -165,7 +165,7 @@
             </div>
             <div class="flex justify-between text-gray-600 mb-1">
               <span>Αποστολή</span>
-              <span>{{ delivery.method === 'courier' ? '5.00€' : 'Δωρεάν' }}</span>
+              <span>{{ delivery.method === 'courier' ? `${shippingCost.toFixed(2)}€` : 'Δωρεάν' }}</span>
             </div>
             <div class="flex justify-between font-bold text-lg border-t pt-2 mt-2">
               <span>Σύνολο</span>
@@ -231,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
 import { useAppStore } from '@/stores/app';
@@ -264,7 +264,19 @@ const delivery = ref({
   }
 });
 
-const shippingCost = computed(() => delivery.value.method === 'courier' ? 5 : 0);
+const canUseCourier = computed(() => appStore.storeConfig?.shipping_enabled !== false);
+const configuredShippingCost = computed(() => Number(appStore.storeConfig?.shipping_cost ?? 0));
+const freeShippingThreshold = computed(() => {
+  const threshold = appStore.storeConfig?.free_shipping_threshold;
+  return threshold == null ? null : Number(threshold);
+});
+const shippingCost = computed(() => {
+  if (delivery.value.method !== 'courier') return 0;
+  if (freeShippingThreshold.value != null && cartStore.subtotal >= freeShippingThreshold.value) {
+    return 0;
+  }
+  return configuredShippingCost.value;
+});
 const totalAmount = computed(() => cartStore.subtotal * 1.24 + shippingCost.value);
 
 function goToStep(target) {
@@ -291,7 +303,7 @@ async function placeOrder() {
         phone: customer.value.phone,
         isGuest: !appStore.isAuthenticated
       },
-      customerId: appStore.currentUser?.uid || null,
+      customerId: appStore.currentUser?.id || null,
       items: cartStore.items.map(item => ({
         type: item.type,
         itemId: item.inventoryId,
@@ -344,4 +356,14 @@ async function placeOrder() {
     submitting.value = false;
   }
 }
+
+onMounted(() => {
+  if (appStore.requireAuthForCheckout && !appStore.isAuthenticated) {
+    router.replace({ path: '/login', query: { redirect: '/checkout' } });
+  }
+
+  if (appStore.currentUser?.phone && !customer.value.phone) {
+    customer.value.phone = appStore.currentUser.phone;
+  }
+})
 </script>
