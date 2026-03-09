@@ -41,6 +41,18 @@
           <div class="text-xs text-gray-500 uppercase mb-1">{{ typeName }}</div>
           <h1 class="text-3xl font-bold mb-4">{{ productName }}</h1>
 
+          <div v-if="isDevice" class="flex flex-wrap gap-2 mb-4">
+            <span v-if="product.category" class="inline-block text-xs px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
+              {{ deviceStockLabel(product.category) }}
+            </span>
+            <span v-if="product.deviceType" class="inline-block text-xs px-2.5 py-1 bg-slate-50 text-slate-700 rounded-full border border-slate-200">
+              {{ product.deviceType }}
+            </span>
+            <span v-if="product.grade" class="inline-block text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+              Grade {{ product.grade }}
+            </span>
+          </div>
+
           <!-- Compatible devices -->
           <div v-if="product.compatibleDevices?.length" class="flex flex-wrap gap-2 mb-4">
             <span
@@ -84,9 +96,54 @@
           <div class="space-y-2 mb-6 text-sm text-gray-600">
             <p v-if="product.manufacturer"><span class="font-medium text-gray-800">Κατασκευαστής:</span> {{ product.manufacturer }}</p>
             <p v-if="product.brand && !isService"><span class="font-medium text-gray-800">Μάρκα:</span> {{ product.brand }}</p>
+            <p v-if="product.model && isDevice"><span class="font-medium text-gray-800">Μοντέλο:</span> {{ product.model }}</p>
+            <p v-if="product.deviceType"><span class="font-medium text-gray-800">Τύπος Συσκευής:</span> {{ product.deviceType }}</p>
+            <p v-if="product.grade"><span class="font-medium text-gray-800">Grade:</span> {{ product.grade }}</p>
             <p v-if="product.condition && product.condition !== 'new'"><span class="font-medium text-gray-800">Κατάσταση:</span> {{ conditionLabel }}</p>
             <p v-if="product.warranty"><span class="font-medium text-gray-800">Εγγύηση:</span> {{ product.warranty }}</p>
             <p v-if="product.partNumber"><span class="font-medium text-gray-800">Κωδικός:</span> {{ product.partNumber }}</p>
+          </div>
+
+          <div v-if="isDevice && specificationEntries.length" class="mb-6">
+            <h3 class="font-bold mb-3">Χαρακτηριστικά</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                v-for="spec in specificationEntries"
+                :key="`${spec.key}-${spec.value}`"
+                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+              >
+                <div class="text-[11px] font-medium uppercase tracking-wide text-gray-500">{{ humanizeKey(spec.key) }}</div>
+                <div class="text-sm font-semibold text-gray-900 break-words">{{ spec.value }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="isDevice && accessoryList.length" class="mb-6">
+            <h3 class="font-bold mb-3">Περιλαμβανόμενα</h3>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="accessory in accessoryList"
+                :key="accessory"
+                class="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+              >
+                {{ accessory }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="isDevice && defectList.length" class="mb-6">
+            <h3 class="font-bold mb-3">Σημεία Προσοχής</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li v-for="defect in defectList" :key="defect" class="flex items-start gap-2">
+                <span class="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500"></span>
+                <span>{{ defect }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="isDevice && additionalNotes" class="mb-6">
+            <h3 class="font-bold mb-2">Επιπλέον Πληροφορίες</h3>
+            <p class="text-gray-600 whitespace-pre-line">{{ additionalNotes }}</p>
           </div>
 
           <!-- Action -->
@@ -137,6 +194,73 @@ function toNumber(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
+function isSensitiveField(value) {
+  return /\b(?:imei|serial(?:\s+number)?|s\/n|sn)\b/i.test(String(value ?? ''));
+}
+
+function normalizeStringList(value) {
+  return Array.isArray(value)
+    ? value
+      .map(item => String(item ?? '').trim())
+      .filter(item => item && !isSensitiveField(item))
+    : [];
+}
+
+function normalizeSpecificationEntries(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap(entry => {
+      if (!entry) return [];
+
+      if (typeof entry === 'string') {
+        const normalized = entry.trim();
+        return normalized && !isSensitiveField(normalized)
+          ? [{ key: 'details', value: normalized }]
+          : [];
+      }
+
+      if (typeof entry === 'object') {
+        if ('key' in entry || 'value' in entry) {
+          const key = String(entry.key ?? 'details').trim() || 'details';
+          const entryValue = String(entry.value ?? '').trim();
+
+          if (!entryValue || isSensitiveField(key) || isSensitiveField(entryValue)) {
+            return [];
+          }
+
+          return [{ key, value: entryValue }];
+        }
+
+        return Object.entries(entry)
+          .filter(([key, entryValue]) => {
+            if (entryValue === null || entryValue === undefined) return false;
+
+            const normalized = String(entryValue).trim();
+            return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
+          })
+          .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
+      }
+
+      const normalized = String(entry).trim();
+      return normalized && !isSensitiveField(normalized)
+        ? [{ key: 'details', value: normalized }]
+        : [];
+    });
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .filter(([key, entryValue]) => {
+        if (entryValue === null || entryValue === undefined) return false;
+
+        const normalized = String(entryValue).trim();
+        return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
+      })
+      .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
+  }
+
+  return [];
+}
+
 function normalizeProduct(data = {}) {
   const eshopPrice = data.eshopPrice ?? data.eshop_price;
   const sellPrice = data.sellPrice ?? data.sell_price ?? data.price;
@@ -150,15 +274,29 @@ function normalizeProduct(data = {}) {
     eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
     sellPrice: sellPrice == null ? null : toNumber(sellPrice),
     compatibleDevices: data.compatible_devices ?? data.compatibleDevices ?? [],
+    deviceType: data.deviceType ?? data.device_type ?? '',
+    grade: data.grade ?? '',
+    specifications: normalizeSpecificationEntries(data.specifications),
+    defects: normalizeStringList(data.defects),
+    includedAccessories: normalizeStringList(data.included_accessories ?? data.includedAccessories),
+    notes: typeof data.notes === 'string' ? data.notes.trim() : '',
   };
 }
 
 const activeImage = computed(() => product.value?.images?.[activeImageIndex.value] || null);
-const productName = computed(() => product.value?.name || '');
+const productName = computed(() => product.value?.name || [product.value?.brand, product.value?.model].filter(Boolean).join(' '));
 const isService = computed(() => product.value?.type === 'service');
+const isDevice = computed(() => product.value?.type === 'device');
 const displayPrice = computed(() => toNumber(product.value?.price));
 const description = computed(() => product.value?.description || '');
 const stock = computed(() => isService.value ? Infinity : toNumber(product.value?.quantity));
+const specificationEntries = computed(() => product.value?.specifications ?? []);
+const defectList = computed(() => product.value?.defects ?? []);
+const accessoryList = computed(() => product.value?.includedAccessories ?? []);
+const additionalNotes = computed(() => {
+  const notes = product.value?.notes?.trim?.() ?? '';
+  return notes && notes !== description.value ? notes : '';
+});
 
 const typeName = computed(() => {
   const type = product.value?.type;
@@ -173,6 +311,15 @@ const conditionLabel = computed(() => {
   const map = { new: 'Καινούργιο', used: 'Μεταχειρισμένο', refurbished: 'Ανακατασκευασμένο' };
   return map[product.value?.condition] || product.value?.condition || '';
 });
+
+function deviceStockLabel(category) {
+  return category === 'used' ? 'Μεταχειρισμένο' : category === 'new' ? 'Καινούριο' : category;
+}
+
+function humanizeKey(key) {
+  const normalized = String(key ?? '').replace(/[_-]+/g, ' ').trim();
+  return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : 'Details';
+}
 
 onMounted(async () => {
   try {

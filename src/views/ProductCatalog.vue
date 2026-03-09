@@ -114,6 +114,22 @@
                 {{ product.name || (product.brand + ' ' + product.model) }}
               </h3>
 
+              <div v-if="isDeviceProduct(product)" class="flex flex-wrap gap-1 mb-2">
+                <span v-if="product.category" class="inline-block text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
+                  {{ deviceStockLabel(product.category) }}
+                </span>
+                <span v-if="product.deviceType" class="inline-block text-[10px] px-1.5 py-0.5 bg-slate-50 text-slate-700 rounded-full border border-slate-200">
+                  {{ product.deviceType }}
+                </span>
+                <span v-if="product.grade" class="inline-block text-[10px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+                  Grade {{ product.grade }}
+                </span>
+              </div>
+
+              <p v-if="isDeviceProduct(product) && devicePreview(product)" class="text-xs text-gray-500 line-clamp-2 mb-2">
+                {{ devicePreview(product) }}
+              </p>
+
               <!-- Compatible devices badges -->
               <div v-if="product.compatibleDevices?.length" class="flex flex-wrap gap-1 mb-2">
                 <span
@@ -211,11 +227,80 @@ function normalizeProduct(product) {
     ...product,
     source: product.source ?? 'inventory',
     compatibleDevices: product.compatible_devices ?? product.compatibleDevices ?? [],
+    deviceType: product.deviceType ?? product.device_type ?? '',
+    grade: product.grade ?? '',
+    specifications: normalizeListOrObject(product.specifications),
+    defects: normalizeStringList(product.defects),
+    includedAccessories: normalizeStringList(product.included_accessories ?? product.includedAccessories),
+    notes: product.notes ?? '',
     quantity: toNumber(product.quantity),
     price: toNumber(price),
     eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
     sellPrice: sellPrice == null ? null : toNumber(sellPrice),
   };
+}
+
+function isSensitiveField(value) {
+  return /\b(?:imei|serial(?:\s+number)?|s\/n|sn)\b/i.test(String(value ?? ''));
+}
+
+function normalizeListOrObject(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap(entry => {
+      if (!entry) return [];
+
+      if (typeof entry === 'string') {
+        const normalized = entry.trim();
+        return normalized && !isSensitiveField(normalized) ? [normalized] : [];
+      }
+
+      if (typeof entry === 'object') {
+        if ('key' in entry || 'value' in entry) {
+          const key = String(entry.key ?? '').trim();
+          const entryValue = String(entry.value ?? '').trim();
+
+          if (!entryValue || isSensitiveField(key) || isSensitiveField(entryValue)) {
+            return [];
+          }
+
+          return [{ key, value: entryValue }];
+        }
+
+        return Object.entries(entry)
+          .filter(([key, entryValue]) => {
+            if (entryValue === null || entryValue === undefined) return false;
+
+            const normalized = String(entryValue).trim();
+            return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
+          })
+          .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
+      }
+
+      const normalized = String(entry).trim();
+      return normalized && !isSensitiveField(normalized) ? [normalized] : [];
+    });
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .filter(([key, entryValue]) => {
+        if (entryValue === null || entryValue === undefined) return false;
+
+        const normalized = String(entryValue).trim();
+        return normalized !== '' && !isSensitiveField(key) && !isSensitiveField(normalized);
+      })
+      .map(([key, entryValue]) => ({ key, value: String(entryValue).trim() }));
+  }
+
+  return [];
+}
+
+function normalizeStringList(value) {
+  return Array.isArray(value)
+    ? value
+      .map(item => String(item ?? '').trim())
+      .filter(item => item && !isSensitiveField(item))
+    : [];
 }
 
 onMounted(async () => {
@@ -335,6 +420,27 @@ function getTypeName(type) {
     general_product: 'Αξεσουάρ'
   };
   return types[type] || type;
+}
+
+function isDeviceProduct(product) {
+  return product._productType === 'device';
+}
+
+function deviceStockLabel(category) {
+  return category === 'used' ? 'Μεταχειρισμένο' : category === 'new' ? 'Καινούριο' : category;
+}
+
+function summarizeSpecValue(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && 'value' in value) return value.value;
+  return String(value);
+}
+
+function devicePreview(product) {
+  const specification = (product.specifications || [])[0];
+  const specValue = summarizeSpecValue(specification);
+  return product.condition || specValue || product.notes || '';
 }
 
 function goToProduct(product) {
