@@ -144,6 +144,7 @@ function normalizeProduct(data = {}) {
 
   return {
     ...data,
+    source: data.source ?? 'inventory',
     quantity: toNumber(data.quantity),
     price: toNumber(price),
     eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
@@ -164,6 +165,7 @@ const typeName = computed(() => {
   if (type === 'service') return 'Υπηρεσία';
   if (type === 'part') return 'Ανταλλακτικό';
   if (type === 'device') return 'Συσκευή';
+  if (type === 'general' || type === 'general_product') return 'Αξεσουάρ';
   return 'Προϊόν';
 });
 
@@ -174,7 +176,9 @@ const conditionLabel = computed(() => {
 
 onMounted(async () => {
   try {
-    const { data } = await api.get(`/eshop/${appStore.storeId}/products/${route.params.id}`);
+    const { data } = await api.get(`/eshop/${appStore.storeId}/products/${route.params.id}`, {
+      params: { source: route.query.source }
+    });
     product.value = normalizeProduct(data.data);
   } catch (error) {
     console.error('Error loading product:', error);
@@ -188,7 +192,7 @@ function addToCart() {
     ...product.value,
     eshopPrice: product.value.eshopPrice ?? product.value.price,
     sellPrice: product.value.sellPrice ?? product.value.price,
-    _collection: 'inventory',
+    _collection: product.value.source ?? route.query.source ?? 'inventory',
   }, 1);
 }
 

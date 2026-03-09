@@ -209,6 +209,7 @@ function normalizeProduct(product) {
 
   return {
     ...product,
+    source: product.source ?? 'inventory',
     compatibleDevices: product.compatible_devices ?? product.compatibleDevices ?? [],
     quantity: toNumber(product.quantity),
     price: toNumber(price),
@@ -225,9 +226,9 @@ onMounted(async () => {
     });
     products.value = (data.data || []).map(p => ({
       ...normalizeProduct(p),
-      _source: 'inventory',
-      _productType: p.type || 'general_product',
-      _uid: `inv_${p.id}`,
+      _source: p.source || 'inventory',
+      _productType: p.type === 'general' ? 'general_product' : (p.type || 'general_product'),
+      _uid: `${p.source || 'inventory'}_${p.id}`,
     }));
   } catch (error) {
     console.error('Error loading products:', error);
@@ -330,6 +331,7 @@ function getTypeName(type) {
     part: 'Ανταλλακτικό',
     device: 'Συσκευή',
     service: 'Υπηρεσία',
+    general: 'Αξεσουάρ',
     general_product: 'Αξεσουάρ'
   };
   return types[type] || type;
