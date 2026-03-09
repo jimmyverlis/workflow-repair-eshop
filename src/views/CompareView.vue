@@ -107,7 +107,7 @@ import { computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ChevronRight, Package, Scale } from 'lucide-vue-next';
 import { useCompareStore } from '@/stores/compare';
-import { getCompareAtPrice, getConditionLabel, getDisplayPrice, getProductName, getStock, getTypeLabel } from '@/utils/catalog';
+import { getAvailabilityLabel, getCompareAtPrice, getConditionLabel, getDisplayPrice, getProductName, getTypeLabel } from '@/utils/catalog';
 
 const router = useRouter();
 const compareStore = useCompareStore();
@@ -127,7 +127,7 @@ const rows = computed(() => [
     label: 'Availability',
     value: product => product._productType === 'service'
       ? 'Bookable service'
-      : (getStock(product) > 0 ? `${getStock(product)} in stock` : 'Out of stock'),
+      : getAvailabilityLabel(product),
   },
   {
     key: 'brand',

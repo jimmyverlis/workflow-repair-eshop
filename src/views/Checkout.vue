@@ -222,7 +222,7 @@
               <button type="button" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700" @click="step = 2">
                 Back
               </button>
-              <button type="button" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="submitting" @click="placeOrder">
+              <button type="button" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="submitting || cartStore.hasStockIssues" @click="placeOrder">
                 {{ submitButtonLabel }}
               </button>
             </div>
@@ -239,12 +239,18 @@
                 <div>
                   <div class="font-semibold text-slate-900">{{ item.name }}</div>
                   <div class="mt-1 text-sm text-slate-500">{{ item.quantity }} x EUR {{ item.unitPrice.toFixed(2) }}</div>
+                  <div v-if="!item.isService && cartStore.getMaxQuantity(item) <= 0" class="mt-1 text-xs font-semibold text-rose-600">
+                    Currently out of stock
+                  </div>
                 </div>
                 <div class="text-sm font-semibold text-slate-900">EUR {{ (item.unitPrice * item.quantity).toFixed(2) }}</div>
               </div>
             </div>
 
             <div class="mt-5 space-y-3 text-sm text-slate-600">
+              <div v-if="cartStore.hasStockIssues" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
+                Review the cart before checkout. At least one item is no longer available in the requested quantity.
+              </div>
               <div class="flex items-center justify-between gap-3">
                 <span>Subtotal</span>
                 <span class="font-semibold text-slate-900">EUR {{ orderTotals.subtotal.toFixed(2) }}</span>
@@ -413,6 +419,10 @@ onMounted(async () => {
   customer.value.email = appStore.userEmail || '';
   customer.value.phone = appStore.currentUser?.phone || '';
 
+  if (appStore.storeId) {
+    await cartStore.refreshItems(appStore.storeId);
+  }
+
   if (cartStore.isServiceOnly) {
     delivery.value.method = 'store_pickup';
   }
@@ -527,6 +537,19 @@ async function placeOrder() {
   errorMsg.value = '';
 
   try {
+    if (appStore.storeId) {
+      await cartStore.refreshItems(appStore.storeId);
+    }
+
+    if (cartStore.promotion?.promotion?.code) {
+      promoCode.value = cartStore.promotion.promotion.code;
+      await applyDiscountCode(true);
+    }
+
+    if (cartStore.hasStockIssues) {
+      throw new Error('Some cart items are no longer available in the requested quantity.');
+    }
+
     const orderData = {
       storeId: appStore.storeId,
       customer: {

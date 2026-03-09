@@ -52,12 +52,27 @@
                   <div class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
                     <button type="button" class="h-8 w-8 rounded-xl bg-white text-lg font-bold text-slate-700 shadow-sm" @click="cartStore.updateQuantity(item._key, item.quantity - 1)">-</button>
                     <span class="min-w-[24px] text-center text-sm font-semibold text-slate-900">{{ item.quantity }}</span>
-                    <button type="button" class="h-8 w-8 rounded-xl bg-white text-lg font-bold text-slate-700 shadow-sm" @click="cartStore.updateQuantity(item._key, item.quantity + 1)">+</button>
+                    <button
+                      type="button"
+                      class="h-8 w-8 rounded-xl bg-white text-lg font-bold text-slate-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                      :disabled="!item.isService && item.quantity >= cartStore.getMaxQuantity(item)"
+                      @click="cartStore.updateQuantity(item._key, item.quantity + 1)"
+                    >
+                      +
+                    </button>
                   </div>
                   <div class="text-right">
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Line total</div>
                     <div class="mt-1 text-xl font-black text-slate-900">EUR {{ (item.unitPrice * item.quantity).toFixed(2) }}</div>
                   </div>
+                </div>
+
+                <div
+                  v-if="stockMessage(item)"
+                  class="mt-3 rounded-2xl border px-4 py-3 text-sm font-medium"
+                  :class="cartStore.getMaxQuantity(item) <= 0 ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-amber-200 bg-amber-50 text-amber-800'"
+                >
+                  {{ stockMessage(item) }}
                 </div>
               </div>
             </div>
@@ -225,7 +240,20 @@
                 </div>
               </div>
 
-              <RouterLink to="/checkout" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
+              <div
+                v-if="cartStore.hasStockIssues"
+                class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              >
+                One or more items are no longer available in the requested quantity. Update the cart before checkout.
+              </div>
+
+              <RouterLink
+                to="/checkout"
+                class="mt-5 inline-flex w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition"
+                :class="cartStore.hasStockIssues
+                  ? 'pointer-events-none bg-slate-200 text-slate-500'
+                  : 'bg-primary-600 text-white hover:bg-primary-700'"
+              >
                 Continue to checkout
               </RouterLink>
             </section>
@@ -280,6 +308,10 @@ watch(cartSignature, async () => {
 });
 
 onMounted(async () => {
+  if (appStore.storeId) {
+    await cartStore.refreshItems(appStore.storeId);
+  }
+
   if (cartStore.promotion?.promotion?.code) {
     promoCode.value = cartStore.promotion.promotion.code;
     await applyDiscountCode(true);
@@ -295,6 +327,27 @@ onMounted(async () => {
     await loadSavedCarts();
   }
 });
+
+function stockMessage(item) {
+  if (item.isService) {
+    return '';
+  }
+
+  const maxQuantity = cartStore.getMaxQuantity(item);
+  if (maxQuantity <= 0) {
+    return 'This item is currently out of stock. Remove it from the cart or wait for stock to return.';
+  }
+
+  if (item.quantity >= maxQuantity) {
+    return `Maximum available right now: ${maxQuantity}.`;
+  }
+
+  if (maxQuantity <= Math.max(1, Number(appStore.lowStockThreshold ?? 5))) {
+    return `Only ${maxQuantity} available right now.`;
+  }
+
+  return '';
+}
 
 function buildBaseTotals(subtotal, shippingCost, rate) {
   const totalAmount = Number(subtotal) + Number(shippingCost);

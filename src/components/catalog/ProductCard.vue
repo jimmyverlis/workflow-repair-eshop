@@ -147,8 +147,8 @@ import {
   getCompareAtPrice,
   getDisplayPrice,
   getProductName,
+  getPurchasableStock,
   getProductSummary,
-  getStock,
   getStockState,
   getTypeLabel,
 } from '@/utils/catalog';
@@ -199,7 +199,7 @@ const badges = computed(() => buildProductBadges(props.product, {
 const productName = computed(() => getProductName(props.product));
 const displayPrice = computed(() => getDisplayPrice(props.product));
 const compareAtPrice = computed(() => getCompareAtPrice(props.product));
-const stock = computed(() => getStock(props.product));
+const stock = computed(() => getPurchasableStock(props.product));
 const stockState = computed(() => getStockState(props.product, appStore.lowStockThreshold));
 const availabilityLabel = computed(() => getAvailabilityLabel(props.product, appStore.lowStockThreshold));
 const typeLabel = computed(() => getTypeLabel(props.product._productType ?? props.product.type));

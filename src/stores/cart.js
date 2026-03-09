@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import api from '@/services/api';
+import { getDisplayPrice, getPurchasableStock, getProductName, normalizeProduct } from '@/utils/catalog';
 
 export const useCartStore = defineStore('cart', () => {
   // State
@@ -11,12 +13,37 @@ export const useCartStore = defineStore('cart', () => {
     return Number.isFinite(numeric) ? numeric : fallback;
   }
 
+  function normalizeQuantity(value, fallback = 1) {
+    return Math.max(1, Math.floor(toNumber(value, fallback)));
+  }
+
+  function getMaxQuantity(item = {}) {
+    if (item.isService) {
+      return 1;
+    }
+
+    return Math.max(0, Math.floor(toNumber(item.stock ?? item.quantity)));
+  }
+
+  function clampQuantity(item = {}, quantity = 1) {
+    if (item.isService) {
+      return 1;
+    }
+
+    const maxQuantity = getMaxQuantity(item);
+    if (maxQuantity <= 0) {
+      return 1;
+    }
+
+    return Math.min(maxQuantity, normalizeQuantity(quantity));
+  }
+
   function normalizeCartItem(item = {}) {
     const collection = item.collection || item._collection || item._source || 'inventory';
     const inventoryId = item.inventoryId || item.itemId || item.id;
     const isService = Boolean(item.isService || collection === 'services' || item.type === 'service' || item._productType === 'service');
-
-    return {
+    const stock = isService ? Infinity : Math.max(0, Math.floor(toNumber(item.stock ?? item.quantity)));
+    const normalized = {
       _key: item._key || `${collection}:${inventoryId}`,
       inventoryId,
       collection,
@@ -24,11 +51,15 @@ export const useCartStore = defineStore('cart', () => {
       isService,
       name: item.name || '',
       unitPrice: toNumber(item.unitPrice ?? item.eshopPrice ?? item.sellPrice ?? item.price),
-      quantity: isService ? 1 : Math.max(1, toNumber(item.quantity, 1)),
+      quantity: 1,
       image: item.image || item.images?.[0] || null,
       sku: item.sku || item.barcode || item.partNumber || '',
-      stock: isService ? Infinity : toNumber(item.stock ?? item.quantity),
+      stock,
     };
+
+    normalized.quantity = isService ? 1 : clampQuantity(normalized, item.quantity);
+
+    return normalized;
   }
 
   // Getters
@@ -47,12 +78,21 @@ export const useCartStore = defineStore('cart', () => {
 
   const hasServices = computed(() => items.value.some(item => item.isService));
   const isServiceOnly = computed(() => items.value.length > 0 && items.value.every(item => item.isService));
+  const hasStockIssues = computed(() =>
+    items.value.some(item => !item.isService && (getMaxQuantity(item) <= 0 || toNumber(item.quantity, 1) > getMaxQuantity(item)))
+  );
 
   // Actions
   function addItem(product, quantity = 1) {
     const itemId = product.id;
     const collection = product._collection || product._source || 'inventory';
     const isService = collection === 'services' || product.type === 'service' || product._productType === 'service';
+    const requestedQuantity = normalizeQuantity(quantity);
+    const availableQuantity = isService ? Infinity : getPurchasableStock(product);
+
+    if (!isService && availableQuantity <= 0) {
+      return false;
+    }
 
     // Use a composite key for uniqueness (collection + id)
     const uniqueKey = `${collection}:${itemId}`;
@@ -60,7 +100,8 @@ export const useCartStore = defineStore('cart', () => {
 
     if (existingItem) {
       if (!isService) {
-        existingItem.quantity += quantity;
+        existingItem.stock = availableQuantity;
+        existingItem.quantity = clampQuantity(existingItem, existingItem.quantity + requestedQuantity);
       }
     } else {
       items.value.push(normalizeCartItem({
@@ -71,14 +112,15 @@ export const useCartStore = defineStore('cart', () => {
         isService,
         name: product.name || `${product.brand || ''} ${product.model || ''}`.trim(),
         unitPrice: product.eshopPrice ?? product.sellPrice ?? product.price ?? 0,
-        quantity: isService ? 1 : quantity,
+        quantity: isService ? 1 : requestedQuantity,
         image: product.images?.[0] || null,
         sku: product.barcode || product.partNumber || '',
-        stock: isService ? Infinity : toNumber(product.quantity),
+        stock: isService ? Infinity : availableQuantity,
       }));
     }
 
     saveCart();
+    return true;
   }
 
   function removeItem(key) {
@@ -95,7 +137,7 @@ export const useCartStore = defineStore('cart', () => {
       if (quantity <= 0) {
         removeItem(key);
       } else {
-        item.quantity = quantity;
+        item.quantity = clampQuantity(item, quantity);
         saveCart();
       }
     }
@@ -129,6 +171,52 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     saveCart();
+  }
+
+  async function refreshItems(storeId) {
+    if (!storeId || items.value.length === 0) {
+      return items.value;
+    }
+
+    const refreshed = await Promise.all(items.value.map(async item => {
+      if (item.isService) {
+        return normalizeCartItem(item);
+      }
+
+      try {
+        const { data } = await api.get(`/eshop/${storeId}/products/${item.inventoryId}`, {
+          params: {
+            source: item.collection === 'parts' ? 'parts' : 'inventory',
+          },
+        });
+
+        const product = normalizeProduct(data?.data || {});
+        const availableQuantity = getPurchasableStock(product);
+
+        return normalizeCartItem({
+          ...item,
+          type: product._productType,
+          collection: product._source,
+          name: getProductName(product),
+          unitPrice: getDisplayPrice(product),
+          image: product.images?.[0] || null,
+          sku: product.barcode || product.partNumber || '',
+          stock: availableQuantity,
+          quantity: availableQuantity > 0 ? Math.min(item.quantity, availableQuantity) : 1,
+        });
+      } catch {
+        return normalizeCartItem({
+          ...item,
+          stock: 0,
+          quantity: 1,
+        });
+      }
+    }));
+
+    items.value = refreshed;
+    saveCart();
+
+    return refreshed;
   }
 
   function saveCart() {
@@ -169,6 +257,7 @@ export const useCartStore = defineStore('cart', () => {
     totalDiscount,
     hasServices,
     isServiceOnly,
+    hasStockIssues,
 
     // Actions
     addItem,
@@ -178,7 +267,9 @@ export const useCartStore = defineStore('cart', () => {
     setPromotion,
     clearPromotion,
     replaceCart,
+    refreshItems,
     saveCart,
-    loadCart
+    loadCart,
+    getMaxQuantity,
   };
 });

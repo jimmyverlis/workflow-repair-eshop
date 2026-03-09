@@ -1,9 +1,9 @@
 ﻿export const RECENTLY_VIEWED_STORAGE_KEY = 'eshop_recently_viewed_products';
 const RECENTLY_VIEWED_LIMIT = 8;
 
-export function toNumber(value) {
-  const numeric = Number(value ?? 0);
-  return Number.isFinite(numeric) ? numeric : 0;
+export function toNumber(value, fallback = 0) {
+  const numeric = Number(value ?? fallback);
+  return Number.isFinite(numeric) ? numeric : fallback;
 }
 
 export function isSensitiveField(value) {
@@ -152,13 +152,23 @@ export function getStock(product = {}) {
   return toNumber(product.quantity);
 }
 
+export function getPurchasableStock(product = {}) {
+  const stock = getStock(product);
+
+  if (stock === Infinity) {
+    return Infinity;
+  }
+
+  return Math.max(0, Math.floor(stock));
+}
+
 export function getStockState(product = {}, lowStockThreshold = 5) {
   const type = product._productType ?? product.type;
   if (type === 'service') {
     return 'service';
   }
 
-  const stock = getStock(product);
+  const stock = getPurchasableStock(product);
   if (stock <= 0) {
     return 'out_of_stock';
   }
@@ -173,7 +183,7 @@ export function getStockState(product = {}, lowStockThreshold = 5) {
 
 export function getAvailabilityLabel(product = {}, lowStockThreshold = 5) {
   const stockState = getStockState(product, lowStockThreshold);
-  const stock = getStock(product);
+  const stock = getPurchasableStock(product);
 
   if (stockState === 'service') return 'Bookable';
   if (stockState === 'out_of_stock') return 'Out of stock';

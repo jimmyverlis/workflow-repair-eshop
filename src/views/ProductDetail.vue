@@ -117,7 +117,32 @@
                   </div>
                 </div>
 
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                  <div
+                    v-if="!isService && stock > 0"
+                    class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      class="h-9 w-9 rounded-xl bg-slate-50 text-lg font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      :disabled="selectedQuantity <= 1"
+                      @click="decrementQuantity"
+                    >
+                      -
+                    </button>
+                    <div class="min-w-[3rem] text-center">
+                      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qty</div>
+                      <div class="mt-1 text-base font-bold text-slate-900">{{ selectedQuantity }}</div>
+                    </div>
+                    <button
+                      type="button"
+                      class="h-9 w-9 rounded-xl bg-slate-50 text-lg font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      :disabled="selectedQuantity >= stock"
+                      @click="incrementQuantity"
+                    >
+                      +
+                    </button>
+                  </div>
                   <button
                     v-if="isService"
                     type="button"
@@ -132,7 +157,7 @@
                     class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
                     @click="addToCart"
                   >
-                    Add to cart
+                    Add {{ selectedQuantity }} to cart
                   </button>
                   <button
                     v-if="!isService"
@@ -378,9 +403,9 @@ import {
   getConditionLabel,
   getDisplayPrice,
   getProductName,
+  getPurchasableStock,
   getRecentlyViewedEntries,
   getStockState,
-  getStock,
   getTypeLabel,
   normalizeProduct,
   saveRecentlyViewedProduct,
@@ -405,6 +430,7 @@ const notifyFormOpen = ref(false);
 const notifySubmitting = ref(false);
 const notifyStatus = ref('');
 const notifyError = ref('');
+const selectedQuantity = ref(1);
 const notifyForm = ref({
   email: '',
   customer_name: '',
@@ -430,7 +456,7 @@ const isDevice = computed(() => product.value?._productType === 'device');
 const displayPrice = computed(() => getDisplayPrice(product.value || {}));
 const compareAtPrice = computed(() => getCompareAtPrice(product.value || {}));
 const description = computed(() => product.value?.description || '');
-const stock = computed(() => getStock(product.value || {}));
+const stock = computed(() => getPurchasableStock(product.value || {}));
 const stockState = computed(() => getStockState(product.value || {}, appStore.lowStockThreshold));
 const merchandisingBadges = computed(() => buildProductBadges(product.value || {}, {
   topSeller: isTopSeller(product.value),
@@ -526,6 +552,22 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => product.value?._uid,
+  () => {
+    selectedQuantity.value = 1;
+  },
+);
+
+watch(stock, value => {
+  if (!Number.isFinite(value) || value <= 0) {
+    selectedQuantity.value = 1;
+    return;
+  }
+
+  selectedQuantity.value = Math.min(Math.max(1, selectedQuantity.value), value);
+});
+
 async function loadProduct() {
   loading.value = true;
   activeImageIndex.value = 0;
@@ -568,7 +610,7 @@ async function loadProduct() {
         '@type': 'Offer',
         priceCurrency: appStore.storeConfig?.currency || 'EUR',
         price: normalizedProduct.eshop_price || normalizedProduct.price || 0,
-        availability: (normalizedProduct.quantity > 0)
+        availability: (getPurchasableStock(normalizedProduct) > 0)
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
         url: window.location.href,
@@ -648,16 +690,25 @@ function humanizeKey(key) {
 }
 
 function addToCart() {
-  if (!product.value) return;
+  if (!product.value || stock.value <= 0) return;
 
   cartStore.addItem({
     ...product.value,
     eshopPrice: product.value.eshopPrice ?? product.value.price,
     sellPrice: product.value.sellPrice ?? product.value.price,
     _collection: product.value._source,
-  }, 1);
+  }, selectedQuantity.value);
 
-  analytics.trackAddToCart(product.value, 1);
+  analytics.trackAddToCart(product.value, selectedQuantity.value);
+}
+
+function incrementQuantity() {
+  if (stock.value <= 0) return;
+  selectedQuantity.value = Math.min(stock.value, selectedQuantity.value + 1);
+}
+
+function decrementQuantity() {
+  selectedQuantity.value = Math.max(1, selectedQuantity.value - 1);
 }
 
 function toggleCompare() {

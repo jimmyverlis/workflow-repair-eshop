@@ -289,7 +289,7 @@ import {
   getDiscountPercentage,
   getDisplayPrice,
   getProductName,
-  getStock,
+  getPurchasableStock,
   getTypeLabel,
   normalizeProduct,
   safeParseCatalogUrl,
@@ -574,11 +574,11 @@ const filteredProducts = computed(() => {
   }
 
   if (selectedAvailability.value === 'in_stock') {
-    filtered = filtered.filter(product => getStock(product) > 0 || product._productType === 'service');
+    filtered = filtered.filter(product => getPurchasableStock(product) > 0 || product._productType === 'service');
   }
 
   if (selectedAvailability.value === 'out_of_stock') {
-    filtered = filtered.filter(product => product._productType !== 'service' && getStock(product) <= 0);
+    filtered = filtered.filter(product => product._productType !== 'service' && getPurchasableStock(product) <= 0);
   }
 
   if (selectedCondition.value) {
@@ -801,7 +801,7 @@ function featuredSortScore(product) {
 
   if (topSellerKeySet.value.has(buildProductKey(product))) score += 50;
   if (getDiscountPercentage(product) > 0) score += 20;
-  if (getStock(product) > 0 || product._productType === 'service') score += 10;
+  if (getPurchasableStock(product) > 0 || product._productType === 'service') score += 10;
   if (product._productType === 'device') score += 4;
 
   return score;
