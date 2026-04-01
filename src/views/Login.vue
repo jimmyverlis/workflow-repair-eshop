@@ -6,7 +6,7 @@
           <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
             <UserRound class="h-7 w-7" />
           </div>
-          <h1 class="mt-5 text-3xl font-black text-slate-900">{{ isRegister ? 'Create account' : 'Sign in' }}</h1>
+          <h1 class="mt-5 text-3xl font-black text-slate-900">{{ isRegister ? 'Δημιουργία λογαριασμού' : 'Σύνδεση' }}</h1>
           <p class="mt-2 text-sm text-slate-500">{{ appStore.storeName }}</p>
         </div>
 
@@ -18,17 +18,17 @@
           <template v-if="isRegister">
             <div class="grid gap-4 md:grid-cols-2">
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">First name</label>
-                <input v-model.trim="form.firstName" type="text" class="input" placeholder="Alex" required />
+                <label class="mb-1 block text-sm font-medium text-slate-700">Όνομα</label>
+                <input v-model.trim="form.firstName" type="text" class="input" placeholder="Αλέξης" required />
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Last name</label>
-                <input v-model.trim="form.lastName" type="text" class="input" placeholder="Johnson" required />
+                <label class="mb-1 block text-sm font-medium text-slate-700">Επώνυμο</label>
+                <input v-model.trim="form.lastName" type="text" class="input" placeholder="Παπαδόπουλος" required />
               </div>
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Phone</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Τηλέφωνο</label>
               <input v-model.trim="form.phone" type="tel" class="input" placeholder="6900000000" />
             </div>
           </template>
@@ -39,20 +39,20 @@
               v-model.trim="form.email"
               type="email"
               class="input"
-              placeholder="you@example.com"
+              placeholder="πελάτης@example.com"
               autocomplete="email"
               required
             />
           </div>
 
           <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Κωδικός</label>
             <input
               v-model="form.password"
               :autocomplete="isRegister ? 'new-password' : 'current-password'"
               type="password"
               class="input"
-              placeholder="Minimum 8 characters"
+              placeholder="Τουλάχιστον 8 χαρακτήρες"
               minlength="8"
               required
             />
@@ -60,31 +60,31 @@
 
           <template v-if="isRegister">
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Επιβεβαίωση κωδικού</label>
               <input
                 v-model="form.passwordConfirm"
                 type="password"
                 class="input"
-                placeholder="Repeat password"
+                placeholder="Επαναλάβετε τον κωδικό"
                 minlength="8"
                 required
               />
             </div>
 
             <div v-if="appStore.referralsEnabled">
-              <label class="mb-1 block text-sm font-medium text-slate-700">Referral code</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Κωδικός σύστασης</label>
               <input
                 v-model.trim="form.referralCode"
                 type="text"
                 class="input uppercase"
-                placeholder="Optional referral code"
+                placeholder="Προαιρετικός κωδικός σύστασης"
               />
-              <p class="mt-1 text-xs text-slate-500">Invite flow is enabled for this storefront. Add a code if someone referred you.</p>
+              <p class="mt-1 text-xs text-slate-500">Η ροή συστάσεων είναι ενεργή για αυτό το κατάστημα. Προσθέστε κωδικό αν σας σύστησε κάποιος.</p>
             </div>
 
             <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <input v-model="form.marketingOptIn" type="checkbox" class="mt-1 rounded border-slate-300 text-primary-600" />
-              <span class="text-sm text-slate-600">Send me new product drops, repair offers, and store updates by email.</span>
+              <span class="text-sm text-slate-600">Στείλτε μου νέα προϊόντα, προσφορές επισκευών και ενημερώσεις καταστήματος μέσω email.</span>
             </label>
           </template>
 
@@ -93,29 +93,29 @@
             :disabled="loading"
             class="w-full rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {{ loading ? (isRegister ? 'Creating account...' : 'Signing in...') : (isRegister ? 'Create account' : 'Sign in') }}
+            {{ loading ? (isRegister ? 'Δημιουργία λογαριασμού...' : 'Σύνδεση...') : (isRegister ? 'Δημιουργία λογαριασμού' : 'Σύνδεση') }}
           </button>
         </form>
 
         <div v-if="!isRegister" class="mt-4 text-center text-sm">
           <RouterLink to="/forgot-password" class="font-medium text-slate-500 hover:text-primary-600 hover:underline">
-            Forgot your password?
+            Ξεχάσατε τον κωδικό σας;
           </RouterLink>
         </div>
 
         <div v-if="appStore.allowRegistration" class="mt-6 text-center text-sm text-slate-600">
-          <span>{{ isRegister ? 'Already have an account?' : 'Need an account?' }}</span>
+          <span>{{ isRegister ? 'Έχετε ήδη λογαριασμό;' : 'Χρειάζεστε λογαριασμό;' }}</span>
           <button type="button" class="ml-1 font-semibold text-primary-600 hover:underline" @click="toggleMode">
-            {{ isRegister ? 'Sign in' : 'Register' }}
+            {{ isRegister ? 'Σύνδεση' : 'Εγγραφή' }}
           </button>
         </div>
 
         <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm text-slate-500">
           <template v-if="appStore.requireAuthForCheckout || !appStore.allowGuestCheckout">
-            An account is required before checkout.
+            Απαιτείται λογαριασμός πριν από την ολοκλήρωση αγοράς.
           </template>
           <template v-else>
-            Guest checkout is allowed, but an account keeps orders, wishlist, loyalty points, and saved carts in sync.
+            Επιτρέπεται αγορά ως επισκέπτης, αλλά ο λογαριασμός κρατά συγχρονισμένα παραγγελίες, λίστα επιθυμιών, πόντους πιστότητας και αποθηκευμένα καλάθια.
           </template>
         </div>
       </div>
@@ -160,7 +160,7 @@ function getApiError(err) {
   if (errors) {
     return Object.values(errors).flat().join(' ');
   }
-  return message || 'Authentication failed. Try again.';
+  return message || 'Η πιστοποίηση απέτυχε. Προσπαθήστε ξανά.';
 }
 
 function toggleMode() {

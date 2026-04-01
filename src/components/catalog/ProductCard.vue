@@ -83,10 +83,10 @@
           </div>
         </div>
         <div class="text-right text-xs font-semibold">
-          <span v-if="stockState === 'service'" class="text-sky-600">Service</span>
-          <span v-else-if="stockState === 'in_stock'" class="text-emerald-600">In stock</span>
-          <span v-else-if="stockState === 'low_stock'" class="text-amber-600">Low stock</span>
-          <span v-else class="text-rose-600">Out of stock</span>
+          <span v-if="stockState === 'service'" class="text-sky-600">Υπηρεσία</span>
+          <span v-else-if="stockState === 'in_stock'" class="text-emerald-600">Σε απόθεμα</span>
+          <span v-else-if="stockState === 'low_stock'" class="text-amber-600">Χαμηλό απόθεμα</span>
+          <span v-else class="text-rose-600">Εξαντλημένο</span>
         </div>
       </div>
 
@@ -100,7 +100,7 @@
         class="mt-4 w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
         @click.stop="$emit('book-service', product)"
       >
-        Book service
+        Κράτηση υπηρεσίας
       </button>
       <button
         v-else-if="stock > 0"
@@ -108,7 +108,7 @@
         class="mt-4 w-full rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
         @click.stop="$emit('add-to-cart', product)"
       >
-        Add to cart
+        Προσθήκη στο καλάθι
       </button>
       <button
         v-else
@@ -116,7 +116,7 @@
         class="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-500"
         @click.stop="$emit('select', product)"
       >
-        View details
+        Λεπτομέρειες
       </button>
 
       <div class="mt-3 flex items-center gap-2">
@@ -128,7 +128,7 @@
             : 'border-slate-200 text-slate-700 hover:border-primary-200 hover:text-primary-700'"
           @click.stop="toggleCompare"
         >
-          {{ isCompared ? 'Added to compare' : 'Compare' }}
+          {{ isCompared ? 'Προστέθηκε για σύγκριση' : 'Σύγκριση' }}
         </button>
       </div>
     </div>

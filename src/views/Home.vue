@@ -10,7 +10,7 @@
             <div>
               <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
                 <Sparkles class="h-4 w-4" />
-                Online store and repair booking
+                Ηλεκτρονικό κατάστημα και κράτηση επισκευών
               </div>
               <h1 class="mt-5 text-4xl font-black leading-tight md:text-5xl">
                 {{ heroTitle }}
@@ -39,11 +39,11 @@
                   <input
                     v-model.trim="heroSearch"
                     type="text"
-                    placeholder="Search parts, devices, services..."
+                    placeholder="Αναζήτηση ανταλλακτικών, συσκευών, υπηρεσιών..."
                     class="flex-1 rounded-xl border border-white/15 bg-white px-4 py-3 text-slate-900 outline-none"
                   />
                   <button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-800">
-                    Search
+                    Αναζήτηση
                   </button>
                 </form>
               </div>
@@ -51,17 +51,17 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-                <div class="text-sm text-white/70">Top products</div>
+                <div class="text-sm text-white/70">Κορυφαία προϊόντα</div>
                 <div class="mt-2 text-3xl font-black">{{ topProducts.length }}</div>
-                <div class="mt-1 text-sm text-white/70">Best-selling picks</div>
+                <div class="mt-1 text-sm text-white/70">Κορυφαίες επιλογές</div>
               </div>
               <div class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-                <div class="text-sm text-white/70">Deals live</div>
+                <div class="text-sm text-white/70">Ενεργές προσφορές</div>
                 <div class="mt-2 text-3xl font-black">{{ discountedProducts.length }}</div>
-                <div class="mt-1 text-sm text-white/70">Discounted products</div>
+                <div class="mt-1 text-sm text-white/70">Προϊόντα σε έκπτωση</div>
               </div>
               <div class="col-span-2 rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-                <div class="text-sm text-white/70">Quick links</div>
+                <div class="text-sm text-white/70">Γρήγοροι σύνδεσμοι</div>
                 <div class="mt-3 flex flex-wrap gap-2">
                   <button
                     v-for="item in quickLinks"
@@ -106,7 +106,7 @@
                 </div>
                 <div v-if="activeBannerCountdown" class="mt-4 inline-flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 text-sm font-semibold backdrop-blur">
                   <Clock3 class="h-4 w-4 flex-shrink-0" />
-                  <span>Ends in {{ activeBannerCountdown }}</span>
+                  <span>Λήγει σε {{ activeBannerCountdown }}</span>
                   <span v-if="activeBannerPromo?.code" class="font-mono opacity-75">· {{ activeBannerPromo.code }}</span>
                 </div>
               </div>
@@ -137,8 +137,8 @@
       <section v-else-if="section === 'featured_categories'" class="py-14">
         <div class="container mx-auto px-4">
           <div class="mb-6">
-            <h2 class="text-3xl font-black">Featured categories</h2>
-            <p class="mt-1 text-gray-500">Guide customers to the categories that matter most right now.</p>
+            <h2 class="text-3xl font-black">Προτεινόμενες κατηγορίες</h2>
+            <p class="mt-1 text-gray-500">Κατευθύνετε τους πελάτες στις πιο σημαντικές κατηγορίες.</p>
           </div>
 
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -154,9 +154,9 @@
               </div>
               <h3 class="mt-5 text-2xl font-black text-slate-900 group-hover:text-primary-700">{{ category.label }}</h3>
               <p class="mt-2 text-sm leading-6 text-slate-500">
-                {{ category.description || 'Curated products from this storefront section.' }}
+                {{ category.description || 'Επιλεγμένα προϊόντα από αυτή την ενότητα.' }}
               </p>
-              <div class="mt-6 text-sm font-semibold text-primary-600">Explore category</div>
+              <div class="mt-6 text-sm font-semibold text-primary-600">Εξερευνήστε κατηγορία</div>
             </button>
           </div>
         </div>
@@ -165,8 +165,8 @@
       <section v-else-if="section === 'featured_brands'" class="bg-slate-50 py-14">
         <div class="container mx-auto px-4">
           <div class="mb-6">
-            <h2 class="text-3xl font-black">Featured brands</h2>
-            <p class="mt-1 text-gray-500">Dedicated storefront entry points for the brands customers ask for most.</p>
+            <h2 class="text-3xl font-black">Προτεινόμενες μάρκες</h2>
+            <p class="mt-1 text-gray-500">Αφιερωμένες σελίδες για τις μάρκες που ζητούν περισσότερο οι πελάτες.</p>
           </div>
 
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -182,13 +182,13 @@
                   <img v-if="brand.imageUrl" :src="brand.imageUrl" :alt="brand.name" class="h-full w-full object-cover" />
                   <Package v-else class="h-7 w-7" />
                 </div>
-                <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Brand</div>
+                <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Μάρκα</div>
               </div>
               <h3 class="mt-5 text-2xl font-black text-slate-900 group-hover:text-primary-700">{{ brand.name }}</h3>
               <p class="mt-2 text-sm leading-6 text-slate-500">
-                {{ brand.description || 'Browse this brand across devices, parts and accessories.' }}
+                {{ brand.description || 'Περιηγηθείτε σε αυτή τη μάρκα σε συσκευές, ανταλλακτικά και αξεσουάρ.' }}
               </p>
-              <div class="mt-6 text-sm font-semibold text-primary-600">Browse {{ brand.name }}</div>
+              <div class="mt-6 text-sm font-semibold text-primary-600">Περιήγηση {{ brand.name }}</div>
             </button>
           </div>
         </div>
@@ -198,11 +198,11 @@
         <div class="container mx-auto px-4">
           <div class="mb-6 flex items-center justify-between gap-4">
             <div>
-              <h2 class="text-3xl font-black">Top products</h2>
-              <p class="mt-1 text-gray-500">Best-selling products from the store.</p>
+              <h2 class="text-3xl font-black">Κορυφαία προϊόντα</h2>
+              <p class="mt-1 text-gray-500">Τα καλύτερα πωλούμενα προϊόντα.</p>
             </div>
             <RouterLink to="/products" class="text-sm font-semibold text-primary-600 hover:text-primary-700">
-              View all
+              Προβολή όλων
             </RouterLink>
           </div>
 
@@ -222,14 +222,14 @@
               </div>
               <div class="text-xs uppercase tracking-wide text-gray-400">{{ productTypeLabel(product.type) }}</div>
               <h3 class="mt-1 line-clamp-2 text-lg font-bold">{{ product.name }}</h3>
-              <p class="mt-2 line-clamp-2 text-sm text-gray-500">{{ product.description || 'Available now in the store.' }}</p>
+              <p class="mt-2 line-clamp-2 text-sm text-gray-500">{{ product.description || 'Διαθέσιμο τώρα στο κατάστημα.' }}</p>
               <div class="mt-4 flex items-end justify-between gap-3">
                 <div>
                   <div class="text-2xl font-black text-primary-600">{{ productPrice(product).toFixed(2) }}EUR</div>
                   <div v-if="product.compare_at_price" class="text-xs text-gray-400 line-through">{{ Number(product.compare_at_price).toFixed(2) }}EUR</div>
                 </div>
                 <button type="button" class="rounded-xl bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700">
-                  View
+                  Προβολή
                 </button>
               </div>
             </article>
@@ -241,11 +241,11 @@
         <div class="container mx-auto px-4">
           <div class="mb-6 flex items-center justify-between gap-4">
             <div>
-              <h2 class="text-3xl font-black">Deals and discounts</h2>
-              <p class="mt-1 text-gray-500">Products currently on offer.</p>
+              <h2 class="text-3xl font-black">Προσφορές και εκπτώσεις</h2>
+              <p class="mt-1 text-gray-500">Προϊόντα σε ισχύουσα προσφορά.</p>
             </div>
             <RouterLink to="/products?q=deal" class="text-sm font-semibold text-primary-600 hover:text-primary-700">
-              Explore offers
+              Εξερευνήστε προσφορές
             </RouterLink>
           </div>
 
@@ -259,20 +259,20 @@
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <div class="inline-flex rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">
-                    Save {{ product.discount_percentage }}%
+                    Έκπτωση {{ product.discount_percentage }}%
                   </div>
                   <h3 class="mt-4 text-xl font-bold">{{ product.name }}</h3>
                 </div>
                 <Tag class="h-5 w-5 text-rose-500" />
               </div>
-              <p class="mt-3 line-clamp-2 text-sm text-gray-500">{{ product.description || 'Special pricing available now.' }}</p>
+              <p class="mt-3 line-clamp-2 text-sm text-gray-500">{{ product.description || 'Ειδική τιμή διαθέσιμη τώρα.' }}</p>
               <div class="mt-5 flex items-end justify-between gap-3">
                 <div>
                   <div class="text-3xl font-black text-rose-600">{{ productPrice(product).toFixed(2) }}EUR</div>
                   <div class="text-sm text-gray-400 line-through">{{ Number(product.compare_at_price).toFixed(2) }}EUR</div>
                 </div>
                 <button type="button" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-                  Shop deal
+                  Αγορά
                 </button>
               </div>
             </article>
@@ -281,11 +281,11 @@
           <div v-if="activePromotions.length" class="mt-10 rounded-[2rem] border border-primary-100 bg-white p-6 shadow-sm">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h3 class="text-2xl font-black text-slate-900">Live promo codes</h3>
-                <p class="text-sm text-slate-500">Use these checkout codes while they are active.</p>
+                <h3 class="text-2xl font-black text-slate-900">Ενεργοί κωδικοί προσφοράς</h3>
+                <p class="text-sm text-slate-500">Χρησιμοποιήστε αυτούς τους κωδικούς κατά την αγορά ενόσω είναι ενεργοί.</p>
               </div>
               <RouterLink to="/checkout" class="text-sm font-semibold text-primary-600 hover:text-primary-700">
-                Go to checkout
+                Μετάβαση στο checkout
               </RouterLink>
             </div>
 
@@ -297,7 +297,7 @@
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <div class="text-xs font-bold uppercase tracking-[0.2em] text-primary-600">Promo code</div>
+                    <div class="text-xs font-bold uppercase tracking-[0.2em] text-primary-600">Κωδικός προσφοράς</div>
                     <div class="mt-2 text-2xl font-black text-slate-900">{{ promotion.code }}</div>
                   </div>
                   <Tag class="h-5 w-5 text-primary-600" />
@@ -312,7 +312,7 @@
                 </div>
 
                 <div v-if="promotion.minimum_subtotal" class="mt-2 text-xs text-slate-500">
-                  Minimum order: {{ Number(promotion.minimum_subtotal).toFixed(2) }}EUR
+                  Ελάχιστη παραγγελία: {{ Number(promotion.minimum_subtotal).toFixed(2) }}EUR
                 </div>
               </article>
             </div>
@@ -339,7 +339,7 @@
                 class="mt-6 text-sm font-semibold text-primary-600 hover:text-primary-700"
                 @click="navigateToUrl(block.linkUrl)"
               >
-                {{ block.linkLabel || 'Learn more' }}
+                {{ block.linkLabel || 'Μάθετε περισσότερα' }}
               </button>
             </article>
           </div>
@@ -349,8 +349,8 @@
       <section v-else-if="section === 'testimonials'" class="bg-slate-50 py-14">
         <div class="container mx-auto px-4">
           <div class="mb-6">
-            <h2 class="text-3xl font-black">What customers say</h2>
-            <p class="mt-1 text-gray-500">Merchandising social proof directly from ERP-managed testimonials.</p>
+            <h2 class="text-3xl font-black">Τι λένε οι πελάτες</h2>
+            <p class="mt-1 text-gray-500">Κοινωνική απόδειξη απευθείας από μαρτυρίες διαχειριζόμενες από το ERP.</p>
           </div>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             <article
@@ -372,8 +372,8 @@
       <section v-else-if="section === 'faq'" class="py-14">
         <div class="container mx-auto px-4">
           <div class="mb-6">
-            <h2 class="text-3xl font-black">Frequently asked questions</h2>
-            <p class="mt-1 text-gray-500">Answer the pre-purchase questions before they turn into support tickets.</p>
+            <h2 class="text-3xl font-black">Συχνές ερωτήσεις</h2>
+            <p class="mt-1 text-gray-500">Απαντήστε στις ερωτήσεις πριν την αγορά πριν γίνουν αιτήματα υποστήριξης.</p>
           </div>
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <article
@@ -403,10 +403,10 @@
 
               <div class="mt-6 flex flex-wrap gap-3 text-sm text-white/70">
                 <span v-if="appStore.loyaltyEnabled" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                  Loyalty enabled
+                  Πόντοι πιστότητας ενεργοί
                 </span>
                 <span v-if="appStore.referralsEnabled" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                  Referral rewards available
+                  Ανταμοιβές σύστασης διαθέσιμες
                 </span>
               </div>
             </div>
@@ -414,8 +414,8 @@
             <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur">
               <form class="space-y-4" @submit.prevent="submitNewsletter">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-white/80">Name</label>
-                  <input v-model.trim="newsletterForm.name" type="text" class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none" placeholder="Your name" />
+                  <label class="mb-1 block text-sm font-medium text-white/80">Όνομα</label>
+                  <input v-model.trim="newsletterForm.name" type="text" class="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none" placeholder="Το όνομά σας" />
                 </div>
                 <div>
                   <label class="mb-1 block text-sm font-medium text-white/80">Email</label>
@@ -426,7 +426,7 @@
                   class="w-full rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="newsletterSubmitting"
                 >
-                  {{ newsletterSubmitting ? 'Subscribing...' : 'Subscribe' }}
+                  {{ newsletterSubmitting ? 'Εγγραφή...' : 'Εγγραφή' }}
                 </button>
               </form>
 
@@ -444,8 +444,8 @@
       <section v-else-if="section === 'trust_badges'" class="py-16">
         <div class="container mx-auto px-4">
           <div class="mb-6">
-            <h2 class="text-3xl font-black">Why customers choose this store</h2>
-            <p class="mt-1 text-gray-500">Surface the trust signals that matter before the customer reaches checkout.</p>
+            <h2 class="text-3xl font-black">Γιατί οι πελάτες επιλέγουν αυτό το κατάστημα</h2>
+            <p class="mt-1 text-gray-500">Αναδείξτε τα σήματα εμπιστοσύνης πριν ο πελάτης φτάσει στο checkout.</p>
           </div>
           <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
             <div
@@ -497,7 +497,7 @@ let bannerTimer = null;
 let countdownTimer = null;
 
 const heroTitle = computed(() => appStore.homeContent.title || `Welcome to ${appStore.storeName}`);
-const heroSubtitle = computed(() => appStore.homeContent.subtitle || 'Parts, devices, services and repair support in one storefront.');
+const heroSubtitle = computed(() => appStore.homeContent.subtitle || 'Ανταλλακτικά, συσκευές, υπηρεσίες και υποστήριξη επισκευών σε ένα κατάστημα.');
 const promoBanners = computed(() => appStore.promoBanners);
 const quickLinks = computed(() => {
   if (appStore.navigationItems.length) {
@@ -505,10 +505,10 @@ const quickLinks = computed(() => {
   }
 
   return [
-    { label: 'Products', url: '/products' },
-    { label: 'Parts', url: '/products?type=part' },
-    { label: 'Devices', url: '/products?type=device' },
-    { label: 'Repairs', url: '/repair-booking' },
+    { label: 'Προϊόντα', url: '/products' },
+    { label: 'Ανταλλακτικά', url: '/products?type=part' },
+    { label: 'Συσκευές', url: '/products?type=device' },
+    { label: 'Επισκευές', url: '/repair-booking' },
   ];
 });
 const heroButtons = computed(() => appStore.heroCtaButtons);
@@ -602,24 +602,24 @@ function productPrice(product) {
 }
 
 function productTypeLabel(type) {
-  if (type === 'part') return 'Part';
-  if (type === 'device') return 'Device';
-  if (type === 'service') return 'Service';
-  if (type === 'general' || type === 'general_product') return 'Accessory';
-  return 'Product';
+  if (type === 'part') return 'Ανταλλακτικό';
+  if (type === 'device') return 'Συσκευή';
+  if (type === 'service') return 'Υπηρεσία';
+  if (type === 'general' || type === 'general_product') return 'Αξεσουάρ';
+  return 'Προϊόν';
 }
 
 function promotionSummary(promotion) {
   if (promotion.type === 'free_shipping') {
-    return 'Free shipping';
+    return 'Δωρεάν αποστολή';
   }
 
   const value = Number(promotion.value || 0);
   if (promotion.type === 'fixed_amount') {
-    return `${value.toFixed(2)}EUR off`;
+    return `Έκπτωση ${value.toFixed(2)}EUR`;
   }
 
-  return `${value}% off`;
+  return `Έκπτωση ${value}%`;
 }
 
 async function loadHighlights() {
@@ -654,9 +654,9 @@ async function submitNewsletter() {
       source: 'home',
     });
 
-    newsletterStatus.value = 'You are subscribed. The store can now reach you with launches and offers.';
+    newsletterStatus.value = 'Εγγραφήκατε επιτυχώς. Το κατάστημα μπορεί πλέον να επικοινωνεί μαζί σας.';
   } catch (error) {
-    newsletterError.value = error.response?.data?.message || 'Newsletter signup failed.';
+    newsletterError.value = error.response?.data?.message || 'Η εγγραφή στο newsletter απέτυχε.';
   } finally {
     newsletterSubmitting.value = false;
   }

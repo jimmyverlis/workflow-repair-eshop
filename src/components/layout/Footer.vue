@@ -7,7 +7,7 @@
             <img :src="appStore.branding.logo" :alt="appStore.storeName" class="h-12 w-auto rounded-xl bg-white/5 p-1" />
             <div>
               <div class="text-lg font-black">{{ appStore.storeName }}</div>
-              <div class="text-xs uppercase tracking-[0.22em] text-white/45">E-Shop</div>
+              <div class="text-xs uppercase tracking-[0.22em] text-white/45">Ηλεκτρονικό κατάστημα</div>
             </div>
           </div>
 
@@ -63,7 +63,7 @@
 
         <div class="space-y-4">
           <div>
-            <h3 class="text-sm font-bold uppercase tracking-[0.18em] text-white/55">Store Hours</h3>
+            <h3 class="text-sm font-bold uppercase tracking-[0.18em] text-white/55">Ώρες λειτουργίας</h3>
             <div class="mt-3 space-y-2">
               <div
                 v-for="entry in appStore.storeHours"
@@ -83,8 +83,8 @@
 
       <div class="mt-10 border-t border-white/10 pt-6 text-sm text-white/45">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {{ new Date().getFullYear() }} {{ appStore.storeName }}. All rights reserved.</p>
-          <p>Configured from ERP E-Shop settings.</p>
+          <p>&copy; {{ new Date().getFullYear() }} {{ appStore.storeName }}. Με επιφύλαξη παντός δικαιώματος.</p>
+          <p>Διαμορφώνεται από τις ρυθμίσεις ERP.</p>
         </div>
       </div>
     </div>

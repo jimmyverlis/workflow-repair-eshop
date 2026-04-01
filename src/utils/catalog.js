@@ -116,7 +116,7 @@ export function buildProductKey(product = {}) {
 }
 
 export function getProductName(product = {}) {
-  return product.name || [product.brand, product.model].filter(Boolean).join(' ') || 'Product';
+  return product.name || [product.brand, product.model].filter(Boolean).join(' ') || 'Προϊόν';
 }
 
 export function getDisplayPrice(product = {}) {
@@ -185,36 +185,36 @@ export function getAvailabilityLabel(product = {}, lowStockThreshold = 5) {
   const stockState = getStockState(product, lowStockThreshold);
   const stock = getPurchasableStock(product);
 
-  if (stockState === 'service') return 'Bookable';
-  if (stockState === 'out_of_stock') return 'Out of stock';
-  if (stockState === 'low_stock') return `Low stock (${stock} left)`;
-  return 'In stock';
+  if (stockState === 'service') return 'Διαθέσιμο για κράτηση';
+  if (stockState === 'out_of_stock') return 'Εξαντλημένο';
+  if (stockState === 'low_stock') return `Χαμηλό απόθεμα (${stock} διαθέσιμα)`;
+  return 'Σε απόθεμα';
 }
 
 export function getTypeLabel(type = '') {
   const normalized = String(type ?? '').toLowerCase();
 
-  if (normalized === 'part') return 'Part';
-  if (normalized === 'device') return 'Device';
-  if (normalized === 'service') return 'Service';
-  if (normalized === 'general' || normalized === 'general_product') return 'Accessory';
-  return 'Product';
+  if (normalized === 'part') return 'Ανταλλακτικό';
+  if (normalized === 'device') return 'Συσκευή';
+  if (normalized === 'service') return 'Υπηρεσία';
+  if (normalized === 'general' || normalized === 'general_product') return 'Αξεσουάρ';
+  return 'Προϊόν';
 }
 
 export function getConditionLabel(condition = '') {
   const normalized = String(condition ?? '').toLowerCase();
 
-  if (normalized === 'new') return 'New';
-  if (normalized === 'used') return 'Used';
-  if (normalized === 'refurbished') return 'Refurbished';
+  if (normalized === 'new') return 'Καινούριο';
+  if (normalized === 'used') return 'Μεταχειρισμένο';
+  if (normalized === 'refurbished') return 'Ανακατασκευασμένο';
   return condition || '';
 }
 
 export function deviceStockLabel(category = '') {
   const normalized = String(category ?? '').toLowerCase();
 
-  if (normalized === 'used') return 'Used';
-  if (normalized === 'new') return 'New';
+  if (normalized === 'used') return 'Μεταχειρισμένο';
+  if (normalized === 'new') return 'Καινούριο';
   return category || '';
 }
 
@@ -225,7 +225,7 @@ export function buildProductBadges(product = {}, options = {}) {
   const stockState = getStockState(product, options.lowStockThreshold ?? 5);
 
   if (options.topSeller) {
-    badges.push({ label: 'Top seller', tone: 'indigo' });
+    badges.push({ label: 'Κορυφαίο προϊόν', tone: 'indigo' });
   }
 
   if (discountPercentage > 0) {
@@ -237,7 +237,7 @@ export function buildProductBadges(product = {}, options = {}) {
   }
 
   if (type === 'service') {
-    badges.push({ label: 'Bookable', tone: 'sky' });
+    badges.push({ label: 'Διαθέσιμο για κράτηση', tone: 'sky' });
   }
 
   if (type === 'part' && product.category) {
@@ -253,11 +253,11 @@ export function buildProductBadges(product = {}, options = {}) {
   }
 
   if (product.grade) {
-    badges.push({ label: `Grade ${product.grade}`, tone: 'emerald' });
+    badges.push({ label: `Βαθμός ${product.grade}`, tone: 'emerald' });
   }
 
   if (stockState === 'low_stock') {
-    badges.push({ label: 'Low stock', tone: 'amber' });
+    badges.push({ label: 'Χαμηλό απόθεμα', tone: 'amber' });
   }
 
   return badges.slice(0, 4);

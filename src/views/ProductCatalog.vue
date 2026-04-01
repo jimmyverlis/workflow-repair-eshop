@@ -2,7 +2,7 @@
   <div class="bg-slate-50">
     <div class="container mx-auto px-4 py-8">
       <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-        <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Home</RouterLink>
+        <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Αρχική</RouterLink>
         <ChevronRight class="h-4 w-4" />
         <span class="font-medium text-slate-900">{{ catalogTitle }}</span>
       </nav>
@@ -11,7 +11,7 @@
         <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div class="max-w-3xl space-y-4">
             <div class="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700">
-              Catalog
+              Κατάλογος
             </div>
             <div>
               <h1 class="text-3xl font-black text-slate-900 md:text-5xl">{{ catalogTitle }}</h1>
@@ -23,15 +23,15 @@
 
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Results</div>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Αποτελέσματα</div>
               <div class="mt-2 text-2xl font-black text-slate-900">{{ filteredProducts.length }}</div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">On sale</div>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Σε έκπτωση</div>
               <div class="mt-2 text-2xl font-black text-slate-900">{{ discountedProductsCount }}</div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 col-span-2 sm:col-span-1">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Categories</div>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Κατηγορίες</div>
               <div class="mt-2 text-2xl font-black text-slate-900">{{ availableCategories.length }}</div>
             </div>
           </div>
@@ -73,11 +73,11 @@
           <div>
             <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary-700">
               <Smartphone class="h-4 w-4" />
-              Compatibility finder
+              Εύρεση συμβατότητας
             </div>
-            <h2 class="mt-2 text-2xl font-black text-slate-900">Find parts for a specific device</h2>
+            <h2 class="mt-2 text-2xl font-black text-slate-900">Βρείτε ανταλλακτικά για συγκεκριμένη συσκευή</h2>
             <p class="mt-2 max-w-2xl text-sm text-slate-600">
-              Narrow the catalog by compatible device brand and model without losing the rest of the storefront filters.
+              Περιορίστε τον κατάλογο ανά συμβατή μάρκα και μοντέλο συσκευής.
             </p>
           </div>
           <button
@@ -87,29 +87,29 @@
             @click="clearCompatibilityFilter"
           >
             <X class="h-4 w-4" />
-            Clear compatibility filter
+            Εκκαθάριση φίλτρου συμβατότητας
           </button>
         </div>
 
         <div class="mt-5 grid gap-4 md:grid-cols-3">
           <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Device brand</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Μάρκα συσκευής</label>
             <select v-model="compatibilityBrand" class="input">
-              <option value="">All brands</option>
+              <option value="">Όλες οι μάρκες</option>
               <option v-for="brand in compatibleBrands" :key="brand" :value="brand">{{ brand }}</option>
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Device model</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700">Μοντέλο συσκευής</label>
             <select v-model="compatibilityModel" class="input" :disabled="!compatibilityBrand">
-              <option value="">All models</option>
+              <option value="">Όλα τα μοντέλα</option>
               <option v-for="model in compatibleModels" :key="model" :value="model">{{ model }}</option>
             </select>
           </div>
           <div class="rounded-2xl border border-primary-100 bg-white px-4 py-4 text-sm text-slate-600">
-            <div class="font-semibold text-slate-900">Compatibility matches</div>
+            <div class="font-semibold text-slate-900">Αποτελέσματα συμβατότητας</div>
             <div class="mt-2 text-2xl font-black text-primary-700">{{ compatibilityMatchesCount }}</div>
-            <div class="mt-1">Products compatible with the selected device filters.</div>
+            <div class="mt-1">Προϊόντα συμβατά με τα επιλεγμένα φίλτρα συσκευής.</div>
           </div>
         </div>
       </section>
@@ -119,85 +119,85 @@
           <section class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               <SlidersHorizontal class="h-4 w-4" />
-              Filters
+              Φίλτρα
             </div>
 
             <div class="mt-5 space-y-4">
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Search</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Αναζήτηση</label>
                 <div class="flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-3">
                   <Search class="h-4 w-4 text-slate-400" />
-                  <input v-model.trim="searchQuery" type="text" placeholder="Search products, brands or notes" class="w-full bg-transparent px-3 py-3 text-sm text-slate-900 outline-none" />
+                  <input v-model.trim="searchQuery" type="text" placeholder="Αναζήτηση προϊόντων, μαρκών ή σημειώσεων" class="w-full bg-transparent px-3 py-3 text-sm text-slate-900 outline-none" />
                 </div>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Type</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Τύπος</label>
                 <select v-model="selectedType" class="input">
-                  <option value="">All types</option>
-                  <option value="part">Parts</option>
-                  <option value="device">Devices</option>
-                  <option value="service">Services</option>
-                  <option value="general_product">Accessories</option>
+                  <option value="">Όλοι οι τύποι</option>
+                  <option value="part">Ανταλλακτικά</option>
+                  <option value="device">Συσκευές</option>
+                  <option value="service">Υπηρεσίες</option>
+                  <option value="general_product">Αξεσουάρ</option>
                 </select>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Category</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Κατηγορία</label>
                 <select v-model="selectedCategory" class="input">
-                  <option value="">All categories</option>
+                  <option value="">Όλες οι κατηγορίες</option>
                   <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
                 </select>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Brand / manufacturer</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Μάρκα / κατασκευαστής</label>
                 <select v-model="selectedBrand" class="input">
-                  <option value="">All brands</option>
+                  <option value="">Όλες οι μάρκες</option>
                   <option v-for="brand in availableBrands" :key="brand" :value="brand">{{ brand }}</option>
                 </select>
               </div>
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Min price</label>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Ελάχ. τιμή</label>
                   <input v-model="minPrice" type="number" min="0" step="0.01" placeholder="0" class="input" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Max price</label>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Μέγ. τιμή</label>
                   <input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="999" class="input" />
                 </div>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Availability</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Διαθεσιμότητα</label>
                 <select v-model="selectedAvailability" class="input">
-                  <option value="all">All stock states</option>
-                  <option value="in_stock">In stock only</option>
-                  <option value="out_of_stock">Out of stock only</option>
+                  <option value="all">Όλες οι καταστάσεις</option>
+                  <option value="in_stock">Μόνο διαθέσιμα</option>
+                  <option value="out_of_stock">Μόνο εξαντλημένα</option>
                 </select>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Condition</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Κατάσταση</label>
                 <select v-model="selectedCondition" class="input">
-                  <option value="">All conditions</option>
+                  <option value="">Όλες οι καταστάσεις</option>
                   <option v-for="condition in availableConditions" :key="condition" :value="condition">{{ condition }}</option>
                 </select>
               </div>
 
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Sort by</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Ταξινόμηση</label>
                 <select v-model="sortBy" class="input">
-                  <option value="featured">Featured</option>
-                  <option value="name">Name</option>
-                  <option value="price_asc">Price: low to high</option>
-                  <option value="price_desc">Price: high to low</option>
+                  <option value="featured">Προτεινόμενα</option>
+                  <option value="name">Όνομα</option>
+                  <option value="price_asc">Τιμή: χαμηλή προς υψηλή</option>
+                  <option value="price_desc">Τιμή: υψηλή προς χαμηλή</option>
                 </select>
               </div>
 
               <label class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                <span class="font-medium">Show discounts only</span>
+                <span class="font-medium">Μόνο προϊόντα με έκπτωση</span>
                 <input v-model="discountsOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
               </label>
             </div>
@@ -207,7 +207,7 @@
               class="mt-5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700"
               @click="clearAllFilters"
             >
-              Reset all filters
+              Επαναφορά φίλτρων
             </button>
           </section>
         </aside>
@@ -228,17 +228,17 @@
 
           <div class="flex flex-col gap-3 rounded-[2rem] border border-slate-200 bg-white px-6 py-5 shadow-sm md:flex-row md:items-center md:justify-between">
             <div>
-              <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Catalog view</div>
-              <div class="mt-1 text-lg font-bold text-slate-900">{{ filteredProducts.length }} products found</div>
+              <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Προβολή καταλόγου</div>
+              <div class="mt-1 text-lg font-bold text-slate-900">Βρέθηκαν {{ filteredProducts.length }} προϊόντα</div>
             </div>
             <p class="max-w-xl text-sm text-slate-500">
-              Browse devices, parts, accessories and services with category filters, price ranges and storefront merchandising badges.
+              Περιηγηθείτε σε συσκευές, ανταλλακτικά, αξεσουάρ και υπηρεσίες.
             </p>
           </div>
 
           <div v-if="loading" class="rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
             <div class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
-            <p class="mt-4 text-sm text-slate-500">Loading storefront catalog...</p>
+            <p class="mt-4 text-sm text-slate-500">Φόρτωση καταλόγου...</p>
           </div>
 
           <div v-else-if="filteredProducts.length" class="grid gap-6 sm:grid-cols-2 2xl:grid-cols-3">
@@ -256,16 +256,16 @@
 
           <div v-else class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
             <Filter class="mx-auto h-14 w-14 text-slate-300" />
-            <h2 class="mt-4 text-2xl font-black text-slate-900">No products match these filters</h2>
+            <h2 class="mt-4 text-2xl font-black text-slate-900">Δεν βρέθηκαν προϊόντα με αυτά τα φίλτρα</h2>
             <p class="mt-3 text-sm text-slate-500">
-              Adjust the active filters, remove the compatibility constraint, or return to the full catalog.
+              Προσαρμόστε τα φίλτρα, αφαιρέστε τον περιορισμό συμβατότητας ή επιστρέψτε στον πλήρη κατάλογο.
             </p>
             <button
               type="button"
               class="mt-6 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
               @click="clearAllFilters"
             >
-              Show all products
+              Εμφάνιση όλων των προϊόντων
             </button>
           </div>
         </section>
@@ -336,7 +336,7 @@ watch(
 );
 
 onMounted(() => {
-  seo.apply({ title: 'Products' })
+  seo.apply({ title: 'Προϊόντα' })
 });
 
 watch(
@@ -397,12 +397,12 @@ const activeFeaturedCategory = computed(() => {
 const catalogTitle = computed(() => {
   if (isCompatibilityLanding.value && compatibilityBrand.value) {
     return compatibilityModel.value
-      ? `${compatibilityBrand.value} ${compatibilityModel.value} compatibility`
-      : `${compatibilityBrand.value} compatibility`;
+      ? `Συμβατότητα ${compatibilityBrand.value} ${compatibilityModel.value}`
+      : `Συμβατότητα ${compatibilityBrand.value}`;
   }
 
   if (isBrandLanding.value && selectedBrand.value) {
-    return `${selectedBrand.value} catalog`;
+    return `Κατάλογος ${selectedBrand.value}`;
   }
 
   if (activeFeaturedCategory.value?.label) {
@@ -421,18 +421,18 @@ const catalogTitle = computed(() => {
     return getPluralTypeLabel(selectedType.value);
   }
 
-  return 'Storefront catalog';
+  return 'Κατάλογος καταστήματος';
 });
 
 const catalogDescription = computed(() => {
   if (isCompatibilityLanding.value && compatibilityBrand.value) {
     return compatibilityModel.value
-      ? `Products and parts compatible with ${compatibilityBrand.value} ${compatibilityModel.value}, with the full storefront filters still available.`
-      : `Products and parts compatible with ${compatibilityBrand.value} devices.`;
+      ? `Προϊόντα και ανταλλακτικά συμβατά με ${compatibilityBrand.value} ${compatibilityModel.value}.`
+      : `Προϊόντα και ανταλλακτικά συμβατά με συσκευές ${compatibilityBrand.value}.`;
   }
 
   if (isBrandLanding.value && selectedBrand.value) {
-    return `Browse ${selectedBrand.value} products, parts and accessories available in this storefront.`;
+    return `Περιηγηθείτε σε προϊόντα, ανταλλακτικά και αξεσουάρ ${selectedBrand.value} διαθέσιμα στο κατάστημα.`;
   }
 
   if (activeFeaturedCategory.value?.description) {
@@ -440,14 +440,14 @@ const catalogDescription = computed(() => {
   }
 
   if (selectedCategory.value) {
-    return `Browsing the ${selectedCategory.value} catalog with live storefront filters and merchandising badges.`;
+    return `Περιήγηση στον κατάλογο ${selectedCategory.value} με ενεργά φίλτρα και σήματα.`;
   }
 
   if (selectedType.value) {
-    return `Browse all ${getPluralTypeLabel(selectedType.value).toLowerCase()} available in this storefront.`;
+    return `Περιηγηθείτε σε όλα τα ${getPluralTypeLabel(selectedType.value).toLowerCase()} του καταστήματος.`;
   }
 
-  return 'Browse the full storefront catalog with richer filtering for price, condition, category, compatibility and promotions.';
+  return 'Περιηγηθείτε στον πλήρη κατάλογο με φίλτρα τιμής, κατάστασης, κατηγορίας, συμβατότητας και προσφορών.';
 });
 
 const discountedProductsCount = computed(() => filteredProducts.value.filter(product => getDiscountPercentage(product) > 0).length);
@@ -636,37 +636,37 @@ const activeFilterChips = computed(() => {
   const chips = [];
 
   if (searchQuery.value) {
-    chips.push({ key: 'q', label: `Search: ${searchQuery.value}`, clear: () => { searchQuery.value = ''; } });
+    chips.push({ key: 'q', label: `Αναζήτηση: ${searchQuery.value}`, clear: () => { searchQuery.value = ''; } });
   }
   if (selectedType.value) {
-    chips.push({ key: 'type', label: `Type: ${getPluralTypeLabel(selectedType.value)}`, clear: () => { selectedType.value = ''; } });
+    chips.push({ key: 'type', label: `Τύπος: ${getPluralTypeLabel(selectedType.value)}`, clear: () => { selectedType.value = ''; } });
   }
   if (selectedCategory.value) {
-    chips.push({ key: 'category', label: `Category: ${selectedCategory.value}`, clear: () => { selectedCategory.value = ''; } });
+    chips.push({ key: 'category', label: `Κατηγορία: ${selectedCategory.value}`, clear: () => { selectedCategory.value = ''; } });
   }
   if (selectedBrand.value) {
-    chips.push({ key: 'brand', label: `Brand: ${selectedBrand.value}`, clear: () => { selectedBrand.value = ''; } });
+    chips.push({ key: 'brand', label: `Μάρκα: ${selectedBrand.value}`, clear: () => { selectedBrand.value = ''; } });
   }
   if (selectedCondition.value) {
-    chips.push({ key: 'condition', label: `Condition: ${selectedCondition.value}`, clear: () => { selectedCondition.value = ''; } });
+    chips.push({ key: 'condition', label: `Κατάσταση: ${selectedCondition.value}`, clear: () => { selectedCondition.value = ''; } });
   }
   if (selectedAvailability.value !== 'all') {
-    chips.push({ key: 'availability', label: `Availability: ${selectedAvailability.value.replace('_', ' ')}`, clear: () => { selectedAvailability.value = 'all'; } });
+    chips.push({ key: 'availability', label: `Διαθεσιμότητα: ${selectedAvailability.value.replace('_', ' ')}`, clear: () => { selectedAvailability.value = 'all'; } });
   }
   if (discountsOnly.value) {
-    chips.push({ key: 'sale', label: 'Discounts only', clear: () => { discountsOnly.value = false; } });
+    chips.push({ key: 'sale', label: 'Μόνο εκπτώσεις', clear: () => { discountsOnly.value = false; } });
   }
   if (minPrice.value !== '') {
-    chips.push({ key: 'min_price', label: `Min EUR ${minPrice.value}`, clear: () => { minPrice.value = ''; } });
+    chips.push({ key: 'min_price', label: `Ελάχ. EUR ${minPrice.value}`, clear: () => { minPrice.value = ''; } });
   }
   if (maxPrice.value !== '') {
-    chips.push({ key: 'max_price', label: `Max EUR ${maxPrice.value}`, clear: () => { maxPrice.value = ''; } });
+    chips.push({ key: 'max_price', label: `Μέγ. EUR ${maxPrice.value}`, clear: () => { maxPrice.value = ''; } });
   }
   if (compatibilityBrand.value) {
-    chips.push({ key: 'device_brand', label: `Device brand: ${compatibilityBrand.value}`, clear: () => { clearCompatibilityFilter(); } });
+    chips.push({ key: 'device_brand', label: `Μάρκα συσκευής: ${compatibilityBrand.value}`, clear: () => { clearCompatibilityFilter(); } });
   }
   if (compatibilityModel.value) {
-    chips.push({ key: 'device_model', label: `Device model: ${compatibilityModel.value}`, clear: () => { compatibilityModel.value = ''; } });
+    chips.push({ key: 'device_model', label: `Μοντέλο συσκευής: ${compatibilityModel.value}`, clear: () => { compatibilityModel.value = ''; } });
   }
 
   return chips;
@@ -789,10 +789,10 @@ function buildRouteLocation(query) {
 }
 
 function getPluralTypeLabel(type) {
-  if (type === 'part') return 'Parts';
-  if (type === 'device') return 'Devices';
-  if (type === 'service') return 'Services';
-  if (type === 'general_product') return 'Accessories';
+  if (type === 'part') return 'Ανταλλακτικά';
+  if (type === 'device') return 'Συσκευές';
+  if (type === 'service') return 'Υπηρεσίες';
+  if (type === 'general_product') return 'Αξεσουάρ';
   return getTypeLabel(type);
 }
 

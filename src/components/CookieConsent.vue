@@ -12,13 +12,13 @@
             class="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
             :style="{ background: 'var(--color-primary, #3b82f6)' }"
           >
-            Accept
+            Αποδοχή
           </button>
           <button
             @click="decline"
             class="px-5 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm font-semibold transition-colors"
           >
-            Decline
+            Απόρριψη
           </button>
         </div>
       </div>
@@ -37,7 +37,7 @@ const visible = ref(false)
 
 const text = computed(() =>
   appStore.cookieConsentText ||
-  'We use cookies to improve your experience and analyze site traffic. By accepting, you agree to our use of cookies.'
+  'Χρησιμοποιούμε cookies για να βελτιώσουμε την εμπειρία σας και να αναλύσουμε την επισκεψιμότητα. Αποδεχόμενοι, συμφωνείτε με τη χρήση cookies από εμάς.'
 )
 
 // Watch because storeConfig loads asynchronously — cookieConsentEnabled is false on mount

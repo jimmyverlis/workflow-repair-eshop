@@ -3,9 +3,9 @@
     <div class="container mx-auto px-4 py-8">
       <div class="mx-auto max-w-7xl">
         <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Home</RouterLink>
+          <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Αρχική</RouterLink>
           <ChevronRight class="h-4 w-4" />
-          <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="font-medium text-slate-600 hover:text-primary-600">Products</RouterLink>
+          <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="font-medium text-slate-600 hover:text-primary-600">Προϊόντα</RouterLink>
           <template v-if="typeCrumbLabel">
             <ChevronRight class="h-4 w-4" />
             <RouterLink :to="{ path: '/products', query: typeCatalogQuery }" class="font-medium text-slate-600 hover:text-primary-600">{{ typeCrumbLabel }}</RouterLink>
@@ -20,12 +20,12 @@
 
         <button type="button" class="mb-6 inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-primary-200 hover:text-primary-700" @click="router.back()">
           <ArrowLeft class="h-4 w-4" />
-          Back
+          Πίσω
         </button>
 
         <div v-if="loading" class="rounded-[2rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
           <div class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
-          <p class="mt-4 text-sm text-slate-500">Loading product details...</p>
+          <p class="mt-4 text-sm text-slate-500">Φόρτωση στοιχείων προϊόντος...</p>
         </div>
 
         <template v-else-if="product">
@@ -83,37 +83,37 @@
                   <span v-if="product.model && isDevice" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">{{ product.model }}</span>
                   <span v-if="product.deviceType" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">{{ product.deviceType }}</span>
                   <span v-if="product.warranty" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">Warranty: {{ product.warranty }}</span>
-                  <span v-if="product.partNumber" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">Part no: {{ product.partNumber }}</span>
+                  <span v-if="product.partNumber" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">Κωδ. ανταλλακτικού: {{ product.partNumber }}</span>
                 </div>
 
                 <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
                   <div class="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Storefront price</div>
+                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Τιμή καταστήματος</div>
                       <div class="mt-2 text-4xl font-black text-primary-600">EUR {{ displayPrice.toFixed(2) }}</div>
                       <div v-if="compareAtPrice" class="mt-2 text-sm text-slate-400 line-through">EUR {{ compareAtPrice.toFixed(2) }}</div>
                     </div>
                     <div class="text-right text-sm font-semibold">
-                      <span v-if="isService" class="rounded-full bg-sky-100 px-4 py-2 text-sky-700">Bookable service</span>
-                      <span v-else-if="stockState === 'in_stock'" class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-700">In stock now</span>
-                      <span v-else-if="stockState === 'low_stock'" class="rounded-full bg-amber-100 px-4 py-2 text-amber-700">Low stock</span>
-                      <span v-else class="rounded-full bg-rose-100 px-4 py-2 text-rose-700">Out of stock</span>
+                      <span v-if="isService" class="rounded-full bg-sky-100 px-4 py-2 text-sky-700">Υπηρεσία με κράτηση</span>
+                      <span v-else-if="stockState === 'in_stock'" class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-700">Σε απόθεμα</span>
+                      <span v-else-if="stockState === 'low_stock'" class="rounded-full bg-amber-100 px-4 py-2 text-amber-700">Χαμηλό απόθεμα</span>
+                      <span v-else class="rounded-full bg-rose-100 px-4 py-2 text-rose-700">Εξαντλημένο</span>
                     </div>
                   </div>
 
                   <div class="mt-5 grid gap-3 sm:grid-cols-2">
                     <div class="rounded-2xl border border-white bg-white px-4 py-3">
-                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Category</div>
+                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Κατηγορία</div>
                       <div class="mt-2 text-lg font-bold text-slate-900">{{ product.category || typeLabel }}</div>
                     </div>
                     <div class="rounded-2xl border border-white bg-white px-4 py-3">
-                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Availability</div>
+                      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Διαθεσιμότητα</div>
                       <div class="mt-2 text-lg font-bold text-slate-900">{{ availabilityLabel }}</div>
                     </div>
                   </div>
 
                   <div v-if="stockState === 'low_stock' && !isService" class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-                    {{ availabilityLabel }}. Order soon before this item sells out.
+                    {{ availabilityLabel }}. Παραγγείλτε σύντομα πριν εξαντληθεί.
                   </div>
                 </div>
 
@@ -131,7 +131,7 @@
                       -
                     </button>
                     <div class="min-w-[3rem] text-center">
-                      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qty</div>
+                      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Ποσ.</div>
                       <div class="mt-1 text-base font-bold text-slate-900">{{ selectedQuantity }}</div>
                     </div>
                     <button
@@ -149,7 +149,7 @@
                     class="rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
                     @click="bookService"
                   >
-                    Book service
+                    Κράτηση υπηρεσίας
                   </button>
                   <button
                     v-else-if="stock > 0"
@@ -157,7 +157,7 @@
                     class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
                     @click="addToCart"
                   >
-                    Add {{ selectedQuantity }} to cart
+                    Προσθήκη {{ selectedQuantity }} στο καλάθι
                   </button>
                   <button
                     v-if="!isService"
@@ -168,7 +168,7 @@
                       : 'border-slate-200 bg-white text-slate-700 hover:border-primary-200 hover:text-primary-700'"
                     @click="toggleCompare"
                   >
-                    {{ isCompared ? 'Added to compare' : 'Compare' }}
+                    {{ isCompared ? 'Προστέθηκε για σύγκριση' : 'Σύγκριση' }}
                   </button>
                   <button
                     v-if="!isService && appStore.wishlistEnabled"
@@ -179,7 +179,7 @@
                       : 'border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-rose-600'"
                     @click="toggleWishlist"
                   >
-                    {{ isWishlisted ? 'Saved to wishlist' : 'Save to wishlist' }}
+                    {{ isWishlisted ? 'Αποθηκεύτηκε στη λίστα επιθυμιών' : 'Αποθήκευση στη λίστα επιθυμιών' }}
                   </button>
                   <button
                     v-if="!isService && stockState === 'out_of_stock'"
@@ -187,25 +187,25 @@
                     class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800 transition hover:border-amber-300"
                     @click="notifyFormOpen = !notifyFormOpen"
                   >
-                    {{ notifyFormOpen ? 'Hide notify form' : 'Notify me when available' }}
+                    {{ notifyFormOpen ? 'Απόκρυψη φόρμας ειδοποίησης' : 'Ειδοποιήστε με όταν είναι διαθέσιμο' }}
                   </button>
                   <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700">
-                    Browse similar products
+                    Περιήγηση σε παρόμοια προϊόντα
                   </RouterLink>
                 </div>
 
                 <div v-if="notifyFormOpen && !isService && stockState === 'out_of_stock'" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-                  <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Back in stock</div>
-                  <h2 class="mt-2 text-xl font-black text-slate-900">Get notified when this item returns</h2>
+                  <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Επιστροφή σε απόθεμα</div>
+                  <h2 class="mt-2 text-xl font-black text-slate-900">Λάβετε ειδοποίηση όταν επιστρέψει αυτό το προϊόν</h2>
                   <p class="mt-2 text-sm text-slate-500">
-                    Leave your contact details and the store can follow up when this product is available again.
+                    Αφήστε τα στοιχεία επικοινωνίας σας και το κατάστημα θα επικοινωνήσει μαζί σας.
                   </p>
 
                   <div class="mt-4 grid gap-3 md:grid-cols-2">
-                    <input v-model="notifyForm.customer_name" type="text" placeholder="Your name" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
-                    <input v-model="notifyForm.email" type="email" placeholder="Email address" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
-                    <input v-model="notifyForm.phone" type="text" placeholder="Phone (optional)" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2" />
-                    <textarea v-model="notifyForm.notes" rows="3" placeholder="Optional note" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2"></textarea>
+                    <input v-model="notifyForm.customer_name" type="text" placeholder="Το όνομά σας" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
+                    <input v-model="notifyForm.email" type="email" placeholder="Διεύθυνση email" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300" />
+                    <input v-model="notifyForm.phone" type="text" placeholder="Τηλέφωνο (προαιρετικό)" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2" />
+                    <textarea v-model="notifyForm.notes" rows="3" placeholder="Προαιρετική σημείωση" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300 md:col-span-2"></textarea>
                   </div>
 
                   <div v-if="notifyError" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -222,13 +222,13 @@
                       :disabled="notifySubmitting"
                       @click="submitBackInStockRequest"
                     >
-                      {{ notifySubmitting ? 'Saving request...' : 'Notify me' }}
+                      {{ notifySubmitting ? 'Αποθήκευση...' : 'Ειδοποίησέ με' }}
                     </button>
                   </div>
                 </div>
 
                 <div v-if="retentionHighlights.length" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Customer benefits</div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Πλεονεκτήματα πελάτη</div>
                   <div class="mt-4 grid gap-3 md:grid-cols-2">
                     <div
                       v-for="highlight in retentionHighlights"
@@ -247,7 +247,7 @@
           <section class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div class="space-y-8">
               <div v-if="product.compatibleDevices?.length" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Compatible devices</h2>
+                <h2 class="text-xl font-black text-slate-900">Συμβατές συσκευές</h2>
                 <div class="mt-4 flex flex-wrap gap-2">
                   <span
                     v-for="compatibleDevice in product.compatibleDevices"
@@ -260,7 +260,7 @@
               </div>
 
               <div v-if="specificationEntries.length" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Specifications</h2>
+                <h2 class="text-xl font-black text-slate-900">Χαρακτηριστικά</h2>
                 <div class="mt-5 grid gap-3 sm:grid-cols-2">
                   <div
                     v-for="specification in specificationEntries"
@@ -274,7 +274,7 @@
               </div>
 
               <div v-if="accessoryList.length" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Included accessories</h2>
+                <h2 class="text-xl font-black text-slate-900">Συμπεριλαμβανόμενα αξεσουάρ</h2>
                 <div class="mt-4 flex flex-wrap gap-2">
                   <span
                     v-for="accessory in accessoryList"
@@ -287,7 +287,7 @@
               </div>
 
               <div v-if="defectList.length" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Condition notes</h2>
+                <h2 class="text-xl font-black text-slate-900">Σημειώσεις κατάστασης</h2>
                 <ul class="mt-4 space-y-3 text-sm text-slate-600">
                   <li v-for="defect in defectList" :key="defect" class="flex items-start gap-3">
                     <span class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-amber-500"></span>
@@ -297,33 +297,33 @@
               </div>
 
               <div v-if="additionalNotes" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Additional notes</h2>
+                <h2 class="text-xl font-black text-slate-900">Πρόσθετες σημειώσεις</h2>
                 <p class="mt-4 whitespace-pre-line text-sm leading-7 text-slate-600">{{ additionalNotes }}</p>
               </div>
             </div>
 
             <aside class="space-y-6 lg:sticky lg:top-24 lg:self-start">
               <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Quick facts</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Γρήγορα στοιχεία</div>
                 <div class="mt-5 space-y-4 text-sm text-slate-600">
                   <div v-if="product.manufacturer" class="flex items-center justify-between gap-4">
-                    <span>Manufacturer</span>
+                    <span>Κατασκευαστής</span>
                     <span class="font-semibold text-slate-900">{{ product.manufacturer }}</span>
                   </div>
                   <div v-if="product.condition" class="flex items-center justify-between gap-4">
-                    <span>Condition</span>
+                    <span>Κατάσταση</span>
                     <span class="font-semibold text-slate-900">{{ conditionLabel }}</span>
                   </div>
                   <div v-if="product.grade" class="flex items-center justify-between gap-4">
-                    <span>Grade</span>
+                    <span>Βαθμός</span>
                     <span class="font-semibold text-slate-900">{{ product.grade }}</span>
                   </div>
                   <div v-if="product.deviceType" class="flex items-center justify-between gap-4">
-                    <span>Device type</span>
+                    <span>Τύπος συσκευής</span>
                     <span class="font-semibold text-slate-900">{{ product.deviceType }}</span>
                   </div>
                   <div class="flex items-center justify-between gap-4">
-                    <span>Product type</span>
+                    <span>Τύπος προϊόντος</span>
                     <span class="font-semibold text-slate-900">{{ typeLabel }}</span>
                   </div>
                 </div>
@@ -334,10 +334,10 @@
           <section v-if="relatedProducts.length" class="mt-10 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-end justify-between gap-4">
               <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">More to explore</div>
-                <h2 class="mt-2 text-2xl font-black text-slate-900">Related products</h2>
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Εξερευνήστε περισσότερα</div>
+                <h2 class="mt-2 text-2xl font-black text-slate-900">Σχετικά προϊόντα</h2>
               </div>
-              <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="text-sm font-semibold text-primary-600 hover:text-primary-700">View all</RouterLink>
+              <RouterLink :to="{ path: '/products', query: detailCatalogQuery }" class="text-sm font-semibold text-primary-600 hover:text-primary-700">Προβολή όλων</RouterLink>
             </div>
             <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               <ProductCard
@@ -355,8 +355,8 @@
 
           <section v-if="recentlyViewedProducts.length" class="mt-10 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div>
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Your history</div>
-              <h2 class="mt-2 text-2xl font-black text-slate-900">Recently viewed</h2>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ιστορικό σας</div>
+              <h2 class="mt-2 text-2xl font-black text-slate-900">Πρόσφατα προβλήθηκαν</h2>
             </div>
             <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               <ProductCard
@@ -374,8 +374,8 @@
         </template>
 
         <div v-else class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
-          <p class="text-lg font-semibold text-slate-700">The requested product could not be found.</p>
-          <RouterLink to="/products" class="mt-6 inline-flex rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">Return to catalog</RouterLink>
+          <p class="text-lg font-semibold text-slate-700">Το ζητούμενο προϊόν δεν βρέθηκε.</p>
+          <RouterLink to="/products" class="mt-6 inline-flex rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">Επιστροφή στον κατάλογο</RouterLink>
         </div>
       </div>
     </div>
@@ -484,10 +484,10 @@ const detailCatalogQuery = computed(() => {
 });
 const typeCrumbLabel = computed(() => {
   if (!product.value?._productType) return '';
-  if (product.value._productType === 'general_product') return 'Accessories';
-  if (product.value._productType === 'device') return 'Devices';
-  if (product.value._productType === 'part') return 'Parts';
-  if (product.value._productType === 'service') return 'Services';
+  if (product.value._productType === 'general_product') return 'Αξεσουάρ';
+  if (product.value._productType === 'device') return 'Συσκευές';
+  if (product.value._productType === 'part') return 'Ανταλλακτικά';
+  if (product.value._productType === 'service') return 'Υπηρεσίες';
   return typeLabel.value;
 });
 const availabilityLabel = computed(() => {
@@ -504,25 +504,25 @@ const retentionHighlights = computed(() => {
 
   if (!isService.value && appStore.loyaltyEnabled && estimatedPoints.value > 0) {
     highlights.push({
-      title: `Earn about ${estimatedPoints.value} loyalty points`,
-      body: 'Points are awarded after successful payment and appear inside the customer account.',
+      title: `Κερδίστε περίπου ${estimatedPoints.value} πόντους πιστότητας`,
+      body: 'Οι πόντοι χορηγούνται μετά την επιτυχή πληρωμή και εμφανίζονται στον λογαριασμό του πελάτη.',
     });
   }
 
   if (!isService.value && appStore.referralsEnabled && appStore.referralRewardPoints > 0) {
     highlights.push({
-      title: `Referral rewards available`,
-      body: `Customers can invite friends and unlock ${appStore.referralRewardPoints} bonus points after a first paid order.`,
+      title: `Ανταμοιβές σύστασης διαθέσιμες`,
+      body: `Οι πελάτες μπορούν να προσκαλούν φίλους και να ξεκλειδώνουν ${appStore.referralRewardPoints} επιπλέον πόντους μετά την πρώτη παραγγελία.`,
     });
   }
 
   if (!isService.value && appStore.returnRequestsEnabled) {
     const windowCopy = appStore.returnWindowDays > 0
-      ? `Return requests can be submitted within ${appStore.returnWindowDays} days.`
-      : 'Return requests are enabled for eligible orders.';
+      ? `Αιτήματα επιστροφής μπορούν να υποβληθούν εντός ${appStore.returnWindowDays} ημερών.`
+      : 'Τα αιτήματα επιστροφής είναι ενεργά για επιλέξιμες παραγγελίες.';
 
     highlights.push({
-      title: 'Store-managed returns',
+      title: 'Επιστροφές διαχειριζόμενες από το κατάστημα',
       body: appStore.returnInstructions || windowCopy,
     });
   }
@@ -763,7 +763,7 @@ async function submitBackInStockRequest() {
 
     notifyStatus.value = response?.message || 'Your request was saved.';
   } catch (error) {
-    notifyError.value = error?.response?.data?.message || 'Could not save the request.';
+    notifyError.value = error?.response?.data?.message || 'Δεν ήταν δυνατή η αποθήκευση του αιτήματος.';
   } finally {
     notifySubmitting.value = false;
   }

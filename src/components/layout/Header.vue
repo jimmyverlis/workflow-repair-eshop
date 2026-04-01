@@ -54,11 +54,11 @@
             <input
               v-model.trim="searchTerm"
               type="text"
-              placeholder="Search products..."
+              placeholder="Αναζήτηση προϊόντων..."
               class="w-full bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none"
             />
             <button type="submit" class="mr-1 rounded-xl bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-700">
-              Search
+              Αναζήτηση
             </button>
           </div>
         </form>
@@ -106,7 +106,7 @@
                 @click="accountOpen = !accountOpen"
               >
                 <User class="h-5 w-5" />
-                <span class="max-w-[140px] truncate">{{ appStore.userName || 'Account' }}</span>
+                <span class="max-w-[140px] truncate">{{ appStore.userName || 'Λογαριασμός' }}</span>
                 <ChevronDown class="h-4 w-4" />
               </button>
 
@@ -116,33 +116,33 @@
               >
                 <button type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="goToAccount">
                   <User class="h-4 w-4" />
-                  My account
+                  Ο λογαριασμός μου
                 </button>
                 <button type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="goToOrders">
                   <Package class="h-4 w-4" />
-                  Orders
+                  Παραγγελίες
                 </button>
                 <button type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="goToRepairs">
                   <Wrench class="h-4 w-4" />
-                  Repairs
+                  Επισκευές
                 </button>
                 <button type="button" class="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50" @click="handleSignOut">
                   <LogOut class="h-4 w-4" />
-                  Sign out
+                  Αποσύνδεση
                 </button>
               </div>
             </template>
 
             <div v-else class="flex items-center gap-2">
               <RouterLink to="/login" class="rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                Login
+                Σύνδεση
               </RouterLink>
               <RouterLink
                 v-if="appStore.allowRegistration"
                 to="/login?mode=register"
                 class="rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
               >
-                Register
+                Εγγραφή
               </RouterLink>
             </div>
           </div>
@@ -165,7 +165,7 @@
             <input
               v-model.trim="searchTerm"
               type="text"
-              placeholder="Search products..."
+              placeholder="Αναζήτηση προϊόντων..."
               class="w-full bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none"
             />
           </div>
@@ -184,7 +184,7 @@
           </button>
 
           <RouterLink to="/compare" class="rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileMenuOpen = false">
-            Compare<span v-if="compareStore.count"> ({{ compareStore.count }})</span>
+            Σύγκριση<span v-if="compareStore.count"> ({{ compareStore.count }})</span>
           </RouterLink>
           <RouterLink
             v-if="appStore.wishlistEnabled"
@@ -192,25 +192,25 @@
             class="rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
             @click="mobileMenuOpen = false"
           >
-            Wishlist<span v-if="wishlistStore.count"> ({{ wishlistStore.count }})</span>
+            Λίστα επιθυμιών<span v-if="wishlistStore.count"> ({{ wishlistStore.count }})</span>
           </RouterLink>
 
           <div class="mt-3 border-t border-gray-200 pt-3">
             <template v-if="appStore.isAuthenticated">
-              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('account')">My account</button>
-              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('orders')">Orders</button>
-              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('repairs')">Repairs</button>
-              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50" @click="handleSignOut">Sign out</button>
+              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('account')">Ο λογαριασμός μου</button>
+              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('orders')">Παραγγελίες</button>
+              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileAccount('repairs')">Επισκευές</button>
+              <button type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50" @click="handleSignOut">Αποσύνδεση</button>
             </template>
             <template v-else>
-              <RouterLink to="/login" class="block rounded-xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileMenuOpen = false">Login</RouterLink>
+              <RouterLink to="/login" class="block rounded-xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" @click="mobileMenuOpen = false">Σύνδεση</RouterLink>
               <RouterLink
                 v-if="appStore.allowRegistration"
                 to="/login?mode=register"
                 class="mt-2 block rounded-xl bg-primary-600 px-3 py-2 text-sm font-semibold text-white"
                 @click="mobileMenuOpen = false"
               >
-                Register
+                Εγγραφή
               </RouterLink>
             </template>
           </div>
@@ -258,11 +258,11 @@ const navItems = computed(() => {
   }
 
   return [
-    { label: 'Products', url: '/products' },
-    { label: 'Parts', url: '/products?type=part' },
-    { label: 'Devices', url: '/products?type=device' },
-    { label: 'Accessories', url: '/products?type=general_product' },
-    { label: 'Repairs', url: '/repair-booking', highlight: true },
+    { label: 'Προϊόντα', url: '/products' },
+    { label: 'Ανταλλακτικά', url: '/products?type=part' },
+    { label: 'Συσκευές', url: '/products?type=device' },
+    { label: 'Αξεσουάρ', url: '/products?type=general_product' },
+    { label: 'Επισκευές', url: '/repair-booking', highlight: true },
   ];
 });
 

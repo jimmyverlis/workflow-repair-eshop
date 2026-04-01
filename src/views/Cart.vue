@@ -3,21 +3,21 @@
     <div class="container mx-auto px-4 py-8">
       <div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Checkout prep</div>
-          <h1 class="mt-2 text-4xl font-black text-slate-900">Shopping cart</h1>
-          <p class="mt-2 text-sm text-slate-500">Review quantities, apply a promo code, and continue to checkout.</p>
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Προετοιμασία παραγγελίας</div>
+          <h1 class="mt-2 text-4xl font-black text-slate-900">Καλάθι αγορών</h1>
+          <p class="mt-2 text-sm text-slate-500">Ελέγξτε ποσότητες, εφαρμόστε κωδικό προσφοράς και συνεχίστε στην ολοκλήρωση αγοράς.</p>
         </div>
         <RouterLink to="/products" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-primary-200 hover:text-primary-700">
-          Continue shopping
+          Συνέχεια αγορών
         </RouterLink>
       </div>
 
       <div v-if="cartStore.isEmpty" class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
         <ShoppingCart class="mx-auto h-16 w-16 text-slate-300" />
-        <h2 class="mt-4 text-2xl font-black text-slate-900">Your cart is empty</h2>
-        <p class="mt-3 text-sm text-slate-500">Add products, accessories or services from the storefront catalog to continue.</p>
+        <h2 class="mt-4 text-2xl font-black text-slate-900">Το καλάθι σας είναι κενό</h2>
+        <p class="mt-3 text-sm text-slate-500">Προσθέστε προϊόντα, αξεσουάρ ή υπηρεσίες από τον κατάλογο για να συνεχίσετε.</p>
         <RouterLink to="/products" class="mt-6 inline-flex rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
-          Browse products
+          Περιήγηση προϊόντων
         </RouterLink>
       </div>
 
@@ -40,11 +40,11 @@
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <h2 class="text-lg font-bold text-slate-900">{{ item.name }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">EUR {{ item.unitPrice.toFixed(2) }} each</p>
+                    <p class="mt-1 text-sm text-slate-500">EUR {{ item.unitPrice.toFixed(2) }} το τεμάχιο</p>
                     <p v-if="item.sku" class="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">{{ item.sku }}</p>
                   </div>
                   <button type="button" class="text-sm font-semibold text-rose-600 hover:text-rose-700" @click="cartStore.removeItem(item._key)">
-                    Remove
+                    Αφαίρεση
                   </button>
                 </div>
 
@@ -62,7 +62,7 @@
                     </button>
                   </div>
                   <div class="text-right">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Line total</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Σύνολο γραμμής</div>
                     <div class="mt-1 text-xl font-black text-slate-900">EUR {{ (item.unitPrice * item.quantity).toFixed(2) }}</div>
                   </div>
                 </div>
@@ -84,8 +84,8 @@
             <section v-if="appStore.savedCartsEnabled" class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Retention</div>
-                  <h2 class="mt-2 text-xl font-black text-slate-900">Saved carts</h2>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Αποθήκευση</div>
+                  <h2 class="mt-2 text-xl font-black text-slate-900">Αποθηκευμένα καλάθια</h2>
                 </div>
                 <button
                   v-if="appStore.isAuthenticated"
@@ -93,7 +93,7 @@
                   class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
                   @click="loadSavedCarts"
                 >
-                  Refresh
+                  Ανανέωση
                 </button>
               </div>
 
@@ -102,7 +102,7 @@
                   <input
                     v-model.trim="savedCartName"
                     type="text"
-                    placeholder="Name this cart"
+                    placeholder="Ονομάστε αυτό το καλάθι"
                     class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-300"
                   />
                   <button
@@ -111,7 +111,7 @@
                     :disabled="savedCartLoading || !savedCartName"
                     @click="saveCurrentCart"
                   >
-                    {{ savedCartLoading ? 'Saving...' : 'Save' }}
+                    {{ savedCartLoading ? 'Αποθήκευση...' : 'Αποθήκευση' }}
                   </button>
                 </div>
 
@@ -128,14 +128,14 @@
                     <div class="flex items-start justify-between gap-3">
                       <div>
                         <div class="font-semibold text-slate-900">{{ saved.name }}</div>
-                        <div class="mt-1 text-xs text-slate-500">{{ saved.item_count }} items · EUR {{ Number(saved.subtotal || 0).toFixed(2) }}</div>
+                        <div class="mt-1 text-xs text-slate-500">{{ saved.item_count }} είδη · EUR {{ Number(saved.subtotal || 0).toFixed(2) }}</div>
                       </div>
                       <button
                         type="button"
                         class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-600 hover:text-rose-700"
                         @click="deleteSavedCart(saved.id)"
                       >
-                        Delete
+                        Διαγραφή
                       </button>
                     </div>
 
@@ -145,13 +145,13 @@
                         class="rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-700"
                         @click="loadSavedCartIntoCart(saved)"
                       >
-                        Load cart
+                        Φόρτωση καλαθιού
                       </button>
                       <RouterLink
                         :to="{ path: '/account', query: { tab: 'saved-carts' } }"
                         class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
                       >
-                        Manage in account
+                        Διαχείριση στον λογαριασμό
                       </RouterLink>
                     </div>
                   </article>
@@ -159,12 +159,12 @@
               </template>
 
               <template v-else>
-                <p class="mt-4 text-sm text-slate-500">Sign in to save this cart and restore it later from any device.</p>
+                <p class="mt-4 text-sm text-slate-500">Συνδεθείτε για να αποθηκεύσετε αυτό το καλάθι και να το επαναφέρετε αργότερα από οποιαδήποτε συσκευή.</p>
                 <RouterLink
                   :to="{ path: '/login', query: { redirect: '/cart' } }"
                   class="mt-4 inline-flex rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
                 >
-                  Sign in to save carts
+                  Σύνδεση για αποθήκευση καλαθιών
                 </RouterLink>
               </template>
             </section>
@@ -172,15 +172,15 @@
             <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Promotions</div>
-                  <h2 class="mt-2 text-xl font-black text-slate-900">Apply a promo code</h2>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Προσφορές</div>
+                  <h2 class="mt-2 text-xl font-black text-slate-900">Εφαρμογή κωδικού προσφοράς</h2>
                 </div>
               </div>
 
               <div class="mt-4 flex gap-2">
-                <input v-model.trim="promoCode" type="text" placeholder="Enter code" class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium uppercase text-slate-900 outline-none focus:border-primary-300" />
+                <input v-model.trim="promoCode" type="text" placeholder="Εισάγετε κωδικό" class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium uppercase text-slate-900 outline-none focus:border-primary-300" />
                 <button type="button" class="rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="promoLoading || !promoCode" @click="applyDiscountCode()">
-                  {{ promoLoading ? 'Applying...' : 'Apply' }}
+                  {{ promoLoading ? 'Εφαρμογή...' : 'Εφαρμογή' }}
                 </button>
               </div>
 
@@ -191,7 +191,7 @@
               <!-- Promo suggestions -->
               <div v-if="suggestions.length && !cartStore.promotion?.promotion" class="mt-4">
                 <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-slate-400 mb-2">
-                  <Tag class="h-3 w-3" /> Available offers
+                  <Tag class="h-3 w-3" /> Διαθέσιμες προσφορές
                 </div>
                 <div class="flex flex-wrap gap-2">
                   <button
@@ -212,30 +212,30 @@
                 <div class="font-semibold">{{ cartStore.promotion.promotion.code }}</div>
                 <div v-if="cartStore.promotion.promotion.description" class="mt-1">{{ cartStore.promotion.promotion.description }}</div>
                 <button type="button" class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-rose-600 hover:text-rose-700" @click="removeDiscountCode">
-                  Remove code
+                  Αφαίρεση κωδικού
                 </button>
               </div>
             </section>
 
             <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Order summary</div>
-              <h2 class="mt-2 text-xl font-black text-slate-900">Cart totals</h2>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Σύνοψη παραγγελίας</div>
+              <h2 class="mt-2 text-xl font-black text-slate-900">Σύνολα καλαθιού</h2>
 
               <div class="mt-5 space-y-3 text-sm text-slate-600">
                 <div class="flex items-center justify-between gap-3">
-                  <span>Subtotal</span>
+                  <span>Υποσύνολο</span>
                   <span class="font-semibold text-slate-900">EUR {{ totals.subtotal.toFixed(2) }}</span>
                 </div>
                 <div v-if="totals.total_discount > 0" class="flex items-center justify-between gap-3 text-emerald-700">
-                  <span>Discount</span>
+                  <span>Έκπτωση</span>
                   <span class="font-semibold">-EUR {{ totals.total_discount.toFixed(2) }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-3">
-                  <span>VAT included</span>
+                  <span>Συμπεριλαμβάνεται ΦΠΑ</span>
                   <span class="font-semibold text-slate-900">EUR {{ totals.vat_amount.toFixed(2) }}</span>
                 </div>
                 <div class="border-t border-slate-200 pt-3 flex items-center justify-between gap-3 text-lg font-black text-slate-900">
-                  <span>Total</span>
+                  <span>Σύνολο</span>
                   <span>EUR {{ totals.total_amount.toFixed(2) }}</span>
                 </div>
               </div>
@@ -244,7 +244,7 @@
                 v-if="cartStore.hasStockIssues"
                 class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
               >
-                One or more items are no longer available in the requested quantity. Update the cart before checkout.
+                Ένα ή περισσότερα αντικείμενα δεν είναι πλέον διαθέσιμα στην ζητούμενη ποσότητα. Ενημερώστε το καλάθι πριν την ολοκλήρωση.
               </div>
 
               <RouterLink
@@ -254,7 +254,7 @@
                   ? 'pointer-events-none bg-slate-200 text-slate-500'
                   : 'bg-primary-600 text-white hover:bg-primary-700'"
               >
-                Continue to checkout
+                Συνέχεια στην ολοκλήρωση
               </RouterLink>
             </section>
           </div>
@@ -335,15 +335,15 @@ function stockMessage(item) {
 
   const maxQuantity = cartStore.getMaxQuantity(item);
   if (maxQuantity <= 0) {
-    return 'This item is currently out of stock. Remove it from the cart or wait for stock to return.';
+    return 'Αυτό το προϊόν είναι αυτήν τη στιγμή εξαντλημένο. Αφαιρέστε το από το καλάθι ή περιμένετε να επαναφερθεί το απόθεμα.';
   }
 
   if (item.quantity >= maxQuantity) {
-    return `Maximum available right now: ${maxQuantity}.`;
+    return `Μέγιστη διαθέσιμη ποσότητα αυτή τη στιγμή: ${maxQuantity}.`;
   }
 
   if (maxQuantity <= Math.max(1, Number(appStore.lowStockThreshold ?? 5))) {
-    return `Only ${maxQuantity} available right now.`;
+    return `Μόνο ${maxQuantity} διαθέσιμα αυτή τη στιγμή.`;
   }
 
   return '';
@@ -400,18 +400,18 @@ async function applyDiscountCode(silent = false) {
     if (!preview.valid) {
       cartStore.clearPromotion();
       promoSuccess.value = false;
-      promoMessage.value = preview.message || 'Promo code could not be applied.';
+      promoMessage.value = preview.message || 'Δεν ήταν δυνατή η εφαρμογή του κωδικού προσφοράς.';
       return;
     }
 
     cartStore.setPromotion(preview);
     promoCode.value = preview.promotion?.code || promoCode.value.toUpperCase();
     promoSuccess.value = true;
-    promoMessage.value = silent ? '' : (preview.message || 'Promo code applied.');
+    promoMessage.value = silent ? '' : (preview.message || 'Ο κωδικός προσφοράς εφαρμόστηκε.');
   } catch (error) {
     cartStore.clearPromotion();
     promoSuccess.value = false;
-    promoMessage.value = error.response?.data?.message || 'Failed to validate promo code.';
+    promoMessage.value = error.response?.data?.message || 'Αποτυχία επαλήθευσης του κωδικού προσφοράς.';
   } finally {
     promoLoading.value = false;
   }
@@ -428,10 +428,10 @@ function roundCurrency(value) {
 }
 
 function promotionSummary(promo) {
-  if (promo.type === 'free_shipping') return 'Free shipping';
+  if (promo.type === 'free_shipping') return 'Δωρεάν αποστολή';
   const val = Number(promo.value || 0);
-  if (promo.type === 'fixed_amount') return `${val.toFixed(2)}€ off`;
-  return `${val}% off`;
+  if (promo.type === 'fixed_amount') return `${val.toFixed(2)}€ έκπτωση`;
+  return `${val}% έκπτωση`;
 }
 
 function applySuggestion(code) {
@@ -468,12 +468,12 @@ async function saveCurrentCart() {
     });
 
     savedCartSuccess.value = true;
-    savedCartMessage.value = 'Cart saved to your account.';
+    savedCartMessage.value = 'Το καλάθι αποθηκεύτηκε στον λογαριασμό σας.';
     savedCartName.value = '';
     await loadSavedCarts();
   } catch (error) {
     savedCartSuccess.value = false;
-    savedCartMessage.value = error.response?.data?.message || 'Could not save the cart.';
+    savedCartMessage.value = error.response?.data?.message || 'Δεν ήταν δυνατή η αποθήκευση του καλαθιού.';
   } finally {
     savedCartLoading.value = false;
   }
@@ -486,11 +486,11 @@ async function loadSavedCartIntoCart(savedCart) {
     promoMessage.value = '';
     promoCode.value = '';
     savedCartSuccess.value = true;
-    savedCartMessage.value = `Loaded "${payload.name}" into the cart.`;
+    savedCartMessage.value = `Το "${payload.name}" φορτώθηκε στο καλάθι.`;
     router.push('/cart');
   } catch (error) {
     savedCartSuccess.value = false;
-    savedCartMessage.value = error.response?.data?.message || 'Could not load the saved cart.';
+    savedCartMessage.value = error.response?.data?.message || 'Δεν ήταν δυνατή η φόρτωση του αποθηκευμένου καλαθιού.';
   }
 }
 
@@ -498,11 +498,11 @@ async function deleteSavedCart(savedCartId) {
   try {
     await retentionAPI.deleteSavedCart(appStore.storeId, savedCartId);
     savedCartSuccess.value = true;
-    savedCartMessage.value = 'Saved cart removed.';
+    savedCartMessage.value = 'Το αποθηκευμένο καλάθι διαγράφηκε.';
     await loadSavedCarts();
   } catch (error) {
     savedCartSuccess.value = false;
-    savedCartMessage.value = error.response?.data?.message || 'Could not delete the saved cart.';
+    savedCartMessage.value = error.response?.data?.message || 'Δεν ήταν δυνατή η διαγραφή του αποθηκευμένου καλαθιού.';
   }
 }
 </script>

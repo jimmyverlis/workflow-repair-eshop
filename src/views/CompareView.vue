@@ -2,23 +2,23 @@
   <div class="bg-slate-50">
     <div class="container mx-auto px-4 py-8">
       <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-        <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Home</RouterLink>
+        <RouterLink to="/" class="font-medium text-slate-600 hover:text-primary-600">Αρχική</RouterLink>
         <ChevronRight class="h-4 w-4" />
-        <span class="font-medium text-slate-900">Compare products</span>
+        <span class="font-medium text-slate-900">Σύγκριση προϊόντων</span>
       </nav>
 
       <section class="rounded-[2rem] border border-slate-200 bg-white px-6 py-8 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Comparison</div>
-            <h1 class="mt-2 text-3xl font-black text-slate-900 md:text-5xl">Compare products side by side</h1>
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Σύγκριση</div>
+            <h1 class="mt-2 text-3xl font-black text-slate-900 md:text-5xl">Συγκρίνετε προϊόντα δίπλα δίπλα</h1>
             <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-              Review price, availability, type, category, compatibility and notes before deciding what to add to cart.
+              Ελέγξτε τιμή, διαθεσιμότητα, τύπο, κατηγορία, συμβατότητα και σημειώσεις πριν αποφασίσετε τι θα προσθέσετε στο καλάθι.
             </p>
           </div>
           <div class="flex items-center gap-3">
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Selected</div>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Επιλεγμένα</div>
               <div class="mt-2 text-2xl font-black text-slate-900">{{ compareStore.count }}</div>
             </div>
             <button
@@ -27,7 +27,7 @@
               class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600"
               @click="compareStore.clear()"
             >
-              Clear compare
+              Καθαρισμός σύγκρισης
             </button>
           </div>
         </div>
@@ -38,7 +38,7 @@
           <table class="min-w-full divide-y divide-slate-200">
             <tbody class="divide-y divide-slate-200">
               <tr>
-                <th class="w-48 bg-slate-50 px-6 py-5 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Product</th>
+                <th class="w-48 bg-slate-50 px-6 py-5 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Προϊόν</th>
                 <td v-for="product in compareStore.items" :key="`head-${product._uid}`" class="min-w-[260px] px-6 py-5 align-top">
                   <div class="flex flex-col gap-4">
                     <div class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 aspect-square">
@@ -53,10 +53,10 @@
                     </div>
                     <div class="flex gap-2">
                       <button type="button" class="rounded-2xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700" @click="viewProduct(product)">
-                        View
+                        Προβολή
                       </button>
                       <button type="button" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600" @click="compareStore.removeProduct(product)">
-                        Remove
+                        Αφαίρεση
                       </button>
                     </div>
                   </div>
@@ -90,12 +90,12 @@
 
       <section v-else class="mt-8 rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
         <Scale class="mx-auto h-14 w-14 text-slate-300" />
-        <h2 class="mt-4 text-2xl font-black text-slate-900">No products selected for comparison</h2>
+        <h2 class="mt-4 text-2xl font-black text-slate-900">Δεν έχουν επιλεγεί προϊόντα για σύγκριση</h2>
         <p class="mt-3 text-sm text-slate-500">
-          Add products from the catalog or product detail pages. You can compare up to four products at once.
+          Προσθέστε προϊόντα από τον κατάλογο ή από τις σελίδες λεπτομερειών προϊόντος. Μπορείτε να συγκρίνετε έως τέσσερα προϊόντα ταυτόχρονα.
         </p>
         <RouterLink to="/products" class="mt-6 inline-flex rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
-          Browse products
+          Περιήγηση προϊόντων
         </RouterLink>
       </section>
     </div>
@@ -115,43 +115,43 @@ const compareStore = useCompareStore();
 const rows = computed(() => [
   {
     key: 'price',
-    label: 'Price',
+    label: 'Τιμή',
     value: product => {
       const price = `EUR ${getDisplayPrice(product).toFixed(2)}`;
       const compareAt = getCompareAtPrice(product);
-      return compareAt ? `${price} (was EUR ${compareAt.toFixed(2)})` : price;
+      return compareAt ? `${price} (πριν EUR ${compareAt.toFixed(2)})` : price;
     },
   },
   {
     key: 'availability',
-    label: 'Availability',
+    label: 'Διαθεσιμότητα',
     value: product => product._productType === 'service'
-      ? 'Bookable service'
+      ? 'Υπηρεσία με κράτηση'
       : getAvailabilityLabel(product),
   },
   {
     key: 'brand',
-    label: 'Brand',
+    label: 'Μάρκα',
     value: product => product.brand || product.manufacturer || '',
   },
   {
     key: 'category',
-    label: 'Category',
+    label: 'Κατηγορία',
     value: product => product.category || getTypeLabel(product._productType),
   },
   {
     key: 'condition',
-    label: 'Condition',
+    label: 'Κατάσταση',
     value: product => getConditionLabel(product.condition) || '',
   },
   {
     key: 'compatibleDevices',
-    label: 'Compatibility',
+    label: 'Συμβατότητα',
     value: () => '',
   },
   {
     key: 'summary',
-    label: 'Summary',
+    label: 'Περίληψη',
     value: product => product.description || product.notes || product.partNumber || '',
   },
 ]);

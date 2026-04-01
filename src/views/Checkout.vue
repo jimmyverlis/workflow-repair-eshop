@@ -3,17 +3,17 @@
     <div class="container mx-auto px-4 py-8">
       <div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Secure checkout</div>
-          <h1 class="mt-2 text-4xl font-black text-slate-900">Checkout</h1>
-          <p class="mt-2 text-sm text-slate-500">Confirm customer details, delivery method, and choose how the customer will pay.</p>
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ασφαλής αγορά</div>
+          <h1 class="mt-2 text-4xl font-black text-slate-900">Ολοκλήρωση αγοράς</h1>
+          <p class="mt-2 text-sm text-slate-500">Επιβεβαιώστε στοιχεία πελάτη, τρόπο παράδοσης και επιλέξτε τρόπο πληρωμής.</p>
         </div>
       </div>
 
       <div v-if="cartStore.isEmpty" class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
         <ShoppingCart class="mx-auto h-16 w-16 text-slate-300" />
-        <h2 class="mt-4 text-2xl font-black text-slate-900">Your cart is empty</h2>
+        <h2 class="mt-4 text-2xl font-black text-slate-900">Το καλάθι σας είναι κενό</h2>
         <RouterLink to="/products" class="mt-6 inline-flex rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
-          Browse products
+          Περιήγηση προϊόντων
         </RouterLink>
       </div>
 
@@ -36,23 +36,23 @@
           </div>
 
           <section v-if="step === 1" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-2xl font-black text-slate-900">Customer information</h2>
-            <p class="mt-2 text-sm text-slate-500">Use the contact details that will be attached to the order and payment session.</p>
+            <h2 class="text-2xl font-black text-slate-900">Στοιχεία πελάτη</h2>
+            <p class="mt-2 text-sm text-slate-500">Χρησιμοποιήστε τα στοιχεία επικοινωνίας που θα επισυναφθούν στην παραγγελία.</p>
 
             <form class="mt-6 space-y-4" @submit.prevent="goToStep(2)">
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Full name</label>
-                  <input v-model.trim="customer.name" type="text" required class="input" placeholder="Customer name" />
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Πλήρες όνομα</label>
+                  <input v-model.trim="customer.name" type="text" required class="input" placeholder="Όνομα πελάτη" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Phone</label>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Τηλέφωνο</label>
                   <input v-model.trim="customer.phone" type="tel" required class="input" placeholder="6900000000" />
                 </div>
               </div>
               <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                <input v-model.trim="customer.email" type="email" required class="input" placeholder="customer@example.com" />
+                <input v-model.trim="customer.email" type="email" required class="input" placeholder="πελάτης@example.com" />
               </div>
 
               <!-- Invoice / Company fields -->
@@ -64,7 +64,7 @@
                 <div v-if="invoice.wantsInvoice" class="space-y-3">
                   <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Επωνυμία Εταιρείας</label>
-                    <input v-model.trim="invoice.company_name" type="text" class="input" placeholder="My Company S.A." />
+                    <input v-model.trim="invoice.company_name" type="text" class="input" placeholder="Η εταιρεία μου Α.Ε." />
                   </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div>
@@ -81,59 +81,59 @@
 
               <div class="flex justify-end pt-2">
                 <button type="submit" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
-                  Continue
+                  Συνέχεια
                 </button>
               </div>
             </form>
           </section>
 
           <section v-if="step === 2" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-2xl font-black text-slate-900">Delivery method</h2>
-            <p class="mt-2 text-sm text-slate-500">Choose collection or courier delivery before final payment.</p>
+            <h2 class="text-2xl font-black text-slate-900">Τρόπος παράδοσης</h2>
+            <p class="mt-2 text-sm text-slate-500">Επιλέξτε παραλαβή ή αποστολή courier πριν την τελική πληρωμή.</p>
 
             <div v-if="cartStore.isServiceOnly" class="mt-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-              This cart contains services only, so the order will be handled as store pickup.
+              Αυτό το καλάθι περιέχει μόνο υπηρεσίες, οπότε η παραγγελία θα διεκπεραιωθεί ως παραλαβή από το κατάστημα.
             </div>
 
             <div class="mt-6 grid gap-4 md:grid-cols-2">
               <label class="cursor-pointer rounded-[1.5rem] border-2 p-4 transition"
                 :class="delivery.method === 'store_pickup' ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-white hover:border-primary-200'">
                 <input v-model="delivery.method" type="radio" value="store_pickup" class="sr-only" />
-                <div class="font-bold text-slate-900">Store pickup</div>
-                <div class="mt-1 text-sm text-slate-500">Collect from {{ appStore.storeName }}. No shipping fee.</div>
+                <div class="font-bold text-slate-900">Παραλαβή από κατάστημα</div>
+                <div class="mt-1 text-sm text-slate-500">Παραλαβή από {{ appStore.storeName }}. Χωρίς χρέωση αποστολής.</div>
               </label>
               <label v-if="!cartStore.isServiceOnly && canUseCourier" class="cursor-pointer rounded-[1.5rem] border-2 p-4 transition"
                 :class="delivery.method === 'courier' ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-white hover:border-primary-200'">
                 <input v-model="delivery.method" type="radio" value="courier" class="sr-only" />
-                <div class="font-bold text-slate-900">Courier delivery</div>
-                <div class="mt-1 text-sm text-slate-500">Configured shipping from ERP settings with free-shipping thresholds applied automatically.</div>
+                <div class="font-bold text-slate-900">Αποστολή με courier</div>
+                <div class="mt-1 text-sm text-slate-500">Αποστολή σύμφωνα με τις ρυθμίσεις ERP με αυτόματη εφαρμογή ορίων δωρεάν αποστολής.</div>
               </label>
             </div>
 
             <div v-if="delivery.method === 'courier'" class="mt-6 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="md:col-span-2">
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Street address</label>
-                  <input v-model.trim="delivery.address.street" type="text" class="input" placeholder="Main street 1" />
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Διεύθυνση</label>
+                  <input v-model.trim="delivery.address.street" type="text" class="input" placeholder="Κύρια οδός 1" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">City</label>
-                  <input v-model.trim="delivery.address.city" type="text" class="input" placeholder="Athens" />
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Πόλη</label>
+                  <input v-model.trim="delivery.address.city" type="text" class="input" placeholder="Αθήνα" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-700">Postal code</label>
+                  <label class="mb-1 block text-sm font-medium text-slate-700">Ταχυδρομικός κώδικας</label>
                   <input v-model.trim="delivery.address.postalCode" type="text" class="input" placeholder="11111" />
                 </div>
               </div>
               <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Delivery notes</label>
-                <input v-model.trim="delivery.address.notes" type="text" class="input" placeholder="Apartment, buzzer, landmark" />
+                <label class="mb-1 block text-sm font-medium text-slate-700">Σημειώσεις παράδοσης</label>
+                <input v-model.trim="delivery.address.notes" type="text" class="input" placeholder="Διαμέρισμα, κουδούνι, ορόσημο" />
               </div>
             </div>
 
             <div v-else class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
               <div class="font-semibold text-slate-900">{{ appStore.storeName }}</div>
-              <div class="mt-1">{{ appStore.storeDetails?.address || 'Store address available from storefront settings.' }}</div>
+              <div class="mt-1">{{ appStore.storeDetails?.address || 'Η διεύθυνση του καταστήματος είναι διαθέσιμη από τις ρυθμίσεις.' }}</div>
               <div v-if="appStore.pickupContent" class="mt-2 text-slate-500">{{ appStore.pickupContent }}</div>
             </div>
 
@@ -143,29 +143,29 @@
 
             <div class="mt-6 flex justify-between">
               <button type="button" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700" @click="step = 1">
-                Back
+                Πίσω
               </button>
               <button type="button" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700" @click="goToStep(3)">
-                Continue
+                Συνέχεια
               </button>
             </div>
           </section>
 
           <section v-if="step === 3" class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-2xl font-black text-slate-900">Review and payment</h2>
-            <p class="mt-2 text-sm text-slate-500">Apply a promo code if you have one, then confirm the payment method for this delivery.</p>
+            <h2 class="text-2xl font-black text-slate-900">Επισκόπηση και πληρωμή</h2>
+            <p class="mt-2 text-sm text-slate-500">Εφαρμόστε κωδικό προσφοράς εάν έχετε, στη συνέχεια επιβεβαιώστε τον τρόπο πληρωμής.</p>
 
             <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
               <div class="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Customer</div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Πελάτης</div>
                   <div class="mt-2 font-semibold text-slate-900">{{ customer.name }}</div>
                   <div class="mt-1">{{ customer.email }}</div>
                   <div class="mt-1">{{ customer.phone }}</div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Delivery</div>
-                  <div class="mt-2 font-semibold text-slate-900">{{ delivery.method === 'courier' ? 'Courier delivery' : 'Store pickup' }}</div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Παράδοση</div>
+                  <div class="mt-2 font-semibold text-slate-900">{{ delivery.method === 'courier' ? 'Αποστολή με courier' : 'Παραλαβή από κατάστημα' }}</div>
                   <div v-if="delivery.method === 'courier'" class="mt-1">
                     {{ [delivery.address.street, delivery.address.city, delivery.address.postalCode].filter(Boolean).join(', ') }}
                   </div>
@@ -174,8 +174,8 @@
             </div>
 
             <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-5">
-              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Payment method</div>
-              <h3 class="mt-2 text-lg font-bold text-slate-900">Choose how the customer will pay</h3>
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Τρόπος πληρωμής</div>
+              <h3 class="mt-2 text-lg font-bold text-slate-900">Επιλέξτε πώς θα πληρώσει ο πελάτης</h3>
               <div class="mt-4 grid gap-3">
                 <label
                   v-for="option in availablePaymentMethods"
@@ -193,15 +193,15 @@
             <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-5">
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Promotion</div>
-                  <h3 class="mt-2 text-lg font-bold text-slate-900">Apply promo code</h3>
+                  <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Προσφορά</div>
+                  <h3 class="mt-2 text-lg font-bold text-slate-900">Εφαρμογή κωδικού προσφοράς</h3>
                 </div>
               </div>
 
               <div class="mt-4 flex gap-2">
-                <input v-model.trim="promoCode" type="text" placeholder="Enter code" class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium uppercase text-slate-900 outline-none focus:border-primary-300" />
+                <input v-model.trim="promoCode" type="text" placeholder="Εισάγετε κωδικό" class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium uppercase text-slate-900 outline-none focus:border-primary-300" />
                 <button type="button" class="rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="promoLoading || !promoCode" @click="applyDiscountCode()">
-                  {{ promoLoading ? 'Applying...' : 'Apply' }}
+                  {{ promoLoading ? 'Εφαρμογή...' : 'Εφαρμογή' }}
                 </button>
               </div>
 
@@ -213,14 +213,14 @@
                 <div class="font-semibold">{{ cartStore.promotion.promotion.code }}</div>
                 <div v-if="cartStore.promotion.promotion.description" class="mt-1">{{ cartStore.promotion.promotion.description }}</div>
                 <button type="button" class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-rose-600 hover:text-rose-700" @click="removeDiscountCode">
-                  Remove code
+                  Αφαίρεση κωδικού
                 </button>
               </div>
             </div>
 
             <div class="mt-6 flex justify-between">
               <button type="button" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700" @click="step = 2">
-                Back
+                Πίσω
               </button>
               <button type="button" class="rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50" :disabled="submitting || cartStore.hasStockIssues" @click="placeOrder">
                 {{ submitButtonLabel }}
@@ -231,8 +231,8 @@
 
         <aside>
           <div class="sticky top-24 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Summary</div>
-            <h2 class="mt-2 text-xl font-black text-slate-900">Order overview</h2>
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Σύνοψη</div>
+            <h2 class="mt-2 text-xl font-black text-slate-900">Επισκόπηση παραγγελίας</h2>
 
             <div class="mt-5 space-y-3 divide-y divide-slate-100">
               <div v-for="item in cartStore.items" :key="item._key" class="flex items-start justify-between gap-3 pb-3">
@@ -240,7 +240,7 @@
                   <div class="font-semibold text-slate-900">{{ item.name }}</div>
                   <div class="mt-1 text-sm text-slate-500">{{ item.quantity }} x EUR {{ item.unitPrice.toFixed(2) }}</div>
                   <div v-if="!item.isService && cartStore.getMaxQuantity(item) <= 0" class="mt-1 text-xs font-semibold text-rose-600">
-                    Currently out of stock
+                    Αυτήν τη στιγμή εξαντλημένο
                   </div>
                 </div>
                 <div class="text-sm font-semibold text-slate-900">EUR {{ (item.unitPrice * item.quantity).toFixed(2) }}</div>
@@ -249,26 +249,26 @@
 
             <div class="mt-5 space-y-3 text-sm text-slate-600">
               <div v-if="cartStore.hasStockIssues" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
-                Review the cart before checkout. At least one item is no longer available in the requested quantity.
+                Ελέγξτε το καλάθι πριν την ολοκλήρωση. Τουλάχιστον ένα προϊόν δεν είναι πλέον διαθέσιμο στην ζητούμενη ποσότητα.
               </div>
               <div class="flex items-center justify-between gap-3">
-                <span>Subtotal</span>
+                <span>Υποσύνολο</span>
                 <span class="font-semibold text-slate-900">EUR {{ orderTotals.subtotal.toFixed(2) }}</span>
               </div>
               <div class="flex items-center justify-between gap-3">
-                <span>Shipping</span>
+                <span>Αποστολή</span>
                 <span class="font-semibold text-slate-900">EUR {{ orderTotals.shipping_cost.toFixed(2) }}</span>
               </div>
               <div v-if="orderTotals.total_discount > 0" class="flex items-center justify-between gap-3 text-emerald-700">
-                <span>Discount</span>
+                <span>Έκπτωση</span>
                 <span class="font-semibold">-EUR {{ orderTotals.total_discount.toFixed(2) }}</span>
               </div>
               <div class="flex items-center justify-between gap-3">
-                <span>VAT included</span>
+                <span>Συμπεριλαμβάνεται ΦΠΑ</span>
                 <span class="font-semibold text-slate-900">EUR {{ orderTotals.vat_amount.toFixed(2) }}</span>
               </div>
               <div class="border-t border-slate-200 pt-3 flex items-center justify-between gap-3 text-lg font-black text-slate-900">
-                <span>Total</span>
+                <span>Σύνολο</span>
                 <span>EUR {{ orderTotals.total_amount.toFixed(2) }}</span>
               </div>
             </div>
@@ -295,7 +295,7 @@ const cartStore = useCartStore();
 const appStore = useAppStore();
 const analytics = useAnalytics();
 
-const stepLabels = ['Customer', 'Delivery', 'Payment'];
+const stepLabels = ['Πελάτης', 'Παράδοση', 'Πληρωμή'];
 const step = ref(1);
 const submitting = ref(false);
 const errorMsg = ref('');
@@ -335,24 +335,24 @@ const availablePaymentMethods = computed(() => {
   const methods = [
     {
       value: 'viva_wallet',
-      label: 'Pay online',
-      description: 'Secure online payment through Viva Wallet before the order is confirmed.',
+      label: 'Πληρωμή online',
+      description: 'Ασφαλής ηλεκτρονική πληρωμή μέσω Viva Wallet πριν επιβεβαιωθεί η παραγγελία.',
     },
   ];
 
   if (delivery.value.method === 'store_pickup' && appStore.payAtStoreEnabled) {
     methods.push({
       value: 'pay_at_store',
-      label: 'Pay at the store',
-      description: 'The customer pays in store when collecting the order.',
+      label: 'Πληρωμή στο κατάστημα',
+      description: 'Ο πελάτης πληρώνει στο κατάστημα κατά την παραλαβή της παραγγελίας.',
     });
   }
 
   if (delivery.value.method === 'courier' && appStore.payAtCourierEnabled) {
     methods.push({
       value: 'pay_at_courier',
-      label: 'Pay at the courier',
-      description: 'The customer pays on delivery when the courier arrives.',
+      label: 'Αντικαταβολή',
+      description: 'Ο πελάτης πληρώνει κατά την παράδοση όταν φτάσει ο courier.',
     });
   }
 
@@ -370,12 +370,12 @@ const baseShippingCost = computed(() => {
 const cartSignature = computed(() => JSON.stringify(cartStore.items.map(item => ({ key: item._key, quantity: item.quantity, price: item.unitPrice }))));
 const submitButtonLabel = computed(() => {
   if (submitting.value) {
-    return selectedPaymentMethod.value === 'viva_wallet' ? 'Redirecting...' : 'Placing order...';
+    return selectedPaymentMethod.value === 'viva_wallet' ? 'Ανακατεύθυνση...' : 'Καταχώριση παραγγελίας...';
   }
 
   return selectedPaymentMethod.value === 'viva_wallet'
-    ? `Pay EUR ${orderTotals.value.total_amount.toFixed(2)}`
-    : 'Place order';
+    ? `Πληρωμή EUR ${orderTotals.value.total_amount.toFixed(2)}`
+    : 'Καταχώριση παραγγελίας';
 });
 const orderTotals = computed(() => {
   if (cartStore.promotion?.totals) {
@@ -484,18 +484,18 @@ async function applyDiscountCode(silent = false) {
     if (!preview.valid) {
       cartStore.clearPromotion();
       promoSuccess.value = false;
-      promoMessage.value = preview.message || 'Promo code could not be applied.';
+      promoMessage.value = preview.message || 'Δεν ήταν δυνατή η εφαρμογή του κωδικού προσφοράς.';
       return;
     }
 
     cartStore.setPromotion(preview);
     promoCode.value = preview.promotion?.code || promoCode.value.toUpperCase();
     promoSuccess.value = true;
-    promoMessage.value = silent ? '' : (preview.message || 'Promo code applied.');
+    promoMessage.value = silent ? '' : (preview.message || 'Ο κωδικός προσφοράς εφαρμόστηκε.');
   } catch (error) {
     cartStore.clearPromotion();
     promoSuccess.value = false;
-    promoMessage.value = error.response?.data?.message || 'Failed to validate promo code.';
+    promoMessage.value = error.response?.data?.message || 'Αποτυχία επαλήθευσης του κωδικού προσφοράς.';
   } finally {
     promoLoading.value = false;
   }
@@ -512,7 +512,7 @@ function goToStep(target) {
 
   if (target === 2) {
     if (!customer.value.name || !customer.value.email || !customer.value.phone) {
-      errorMsg.value = 'Complete all customer fields before continuing.';
+      errorMsg.value = 'Συμπληρώστε όλα τα στοιχεία πελάτη πριν συνεχίσετε.';
       return;
     }
   }
@@ -520,7 +520,7 @@ function goToStep(target) {
   if (target === 3 && delivery.value.method === 'courier') {
     const address = delivery.value.address;
     if (!address.street || !address.city || !address.postalCode) {
-      errorMsg.value = 'Complete the courier address before continuing.';
+      errorMsg.value = 'Συμπληρώστε τη διεύθυνση courier πριν συνεχίσετε.';
       return;
     }
   }
@@ -547,7 +547,7 @@ async function placeOrder() {
     }
 
     if (cartStore.hasStockIssues) {
-      throw new Error('Some cart items are no longer available in the requested quantity.');
+      throw new Error('Ορισμένα προϊόντα του καλαθιού δεν είναι πλέον διαθέσιμα στη ζητούμενη ποσότητα.');
     }
 
     const orderData = {
@@ -611,14 +611,14 @@ async function placeOrder() {
     });
 
     if (!paymentResult.paymentUrl) {
-      throw new Error('Failed to create payment session.');
+      throw new Error('Αποτυχία δημιουργίας συνεδρίας πληρωμής.');
     }
 
     cartStore.clearCart();
     window.location.href = paymentResult.paymentUrl;
   } catch (error) {
     console.error('Order error:', error);
-    errorMsg.value = error.response?.data?.message || error.message || 'Failed to place order.';
+    errorMsg.value = error.response?.data?.message || error.message || 'Αποτυχία καταχώρισης παραγγελίας.';
   } finally {
     submitting.value = false;
   }
