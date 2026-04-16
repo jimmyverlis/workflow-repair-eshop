@@ -136,10 +136,10 @@ export const useAppStore = defineStore('app', () => {
     const secondaryColor = storeConfig.value?.secondary_color || '#10b981'
     const accentColor = storeConfig.value?.accent_color || '#f59e0b'
     const headerBg = storeConfig.value?.header_bg || primaryColor
-    const headerBgOpacity = Number(storeConfig.value?.header_bg_opacity ?? 0.72)
+    const headerBgOpacity = storeConfig.value?.header_bg_opacity != null ? Number(storeConfig.value.header_bg_opacity) : 1
     const footerBg = storeConfig.value?.footer_bg || '#020617'
     const textColor = storeConfig.value?.text_color || '#0f172a'
-    const backgroundColor = storeConfig.value?.background_color || '#f9fafb'
+    const backgroundColor = storeConfig.value?.background_color || ''
     const logoScale = normalizeLogoScale(storeConfig.value?.logo_scale ?? storeConfig.value?.logoScale)
 
     return {

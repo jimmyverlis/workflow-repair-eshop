@@ -35,46 +35,24 @@ const analytics = useAnalytics()
 const seo = useSeo()
 const router = useRouter()
 
-function clampOpacity(value, fallback = 1) {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric)) return fallback
-  return Math.min(1, Math.max(0, numeric))
-}
-
-function normalizeHexColor(value, fallback) {
-  const color = typeof value === 'string' ? value.trim() : ''
-  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color)) {
-    if (color.length === 4) {
-      return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
-    }
-
-    return color
-  }
-
-  return fallback
-}
-
-function hexToRgbParts(value, fallback) {
-  const hex = normalizeHexColor(value, fallback).slice(1)
-
-  return {
-    r: Number.parseInt(hex.slice(0, 2), 16),
-    g: Number.parseInt(hex.slice(2, 4), 16),
-    b: Number.parseInt(hex.slice(4, 6), 16),
-  }
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return m ? `${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}` : null
 }
 
 // Override theme tokens at runtime so storefront branding updates without a rebuild.
 const cssVars = computed(() => {
-  const primary = normalizeHexColor(appStore.branding.primaryColor, '#3b82f6')
-  const secondary = normalizeHexColor(appStore.branding.secondaryColor, '#10b981')
-  const accent = normalizeHexColor(appStore.branding.accentColor, '#f59e0b')
-  const headerBase = normalizeHexColor(appStore.branding.headerBg || primary, primary)
-  const footerBg = normalizeHexColor(appStore.branding.footerBg, '#020617')
-  const textColor = normalizeHexColor(appStore.branding.textColor, '#0f172a')
-  const backgroundColor = normalizeHexColor(appStore.branding.backgroundColor, '#f9fafb')
-  const headerOpacity = clampOpacity(appStore.branding.headerBgOpacity, 0.72)
-  const { r, g, b } = hexToRgbParts(headerBase, primary)
+  const primary = appStore.branding.primaryColor || '#3b82f6'
+  const secondary = appStore.branding.secondaryColor || '#10b981'
+  const accent = appStore.branding.accentColor || '#f59e0b'
+  const headerBg = appStore.branding.headerBg || primary
+  const headerBgOpacity = appStore.branding.headerBgOpacity ?? 1
+  const footerBg = appStore.branding.footerBg || '#020617'
+  const textColor = appStore.branding.textColor || '#0f172a'
+  const backgroundColor = appStore.branding.backgroundColor
+
+  const headerBgRgb = hexToRgb(headerBg)
+  const headerBgRgba = headerBgRgb ? `rgba(${headerBgRgb}, ${headerBgOpacity})` : headerBg
 
   return {
     '--color-primary': primary,
@@ -85,14 +63,11 @@ const cssVars = computed(() => {
     '--color-primary-800': primary,
     '--color-secondary': secondary,
     '--color-accent': accent,
-    '--color-header-bg': `rgba(${r}, ${g}, ${b}, ${headerOpacity})`,
+    '--color-header-bg': headerBg,
+    '--color-header-bg-rgba': headerBgRgba,
     '--color-footer-bg': footerBg,
     '--color-text': textColor,
-    '--app-background': backgroundColor,
-    '--app-text': textColor,
-    '--app-header-bg': `rgba(${r}, ${g}, ${b}, ${headerOpacity})`,
-    '--app-header-border': `rgba(${r}, ${g}, ${b}, ${Math.min(1, headerOpacity + 0.16)})`,
-    '--app-footer-bg': footerBg,
+    ...(backgroundColor ? { backgroundColor } : {}),
   }
 })
 

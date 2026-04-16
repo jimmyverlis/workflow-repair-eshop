@@ -16,13 +16,7 @@
     <span v-else>{{ announcementData.text }}</span>
   </div>
 
-  <header
-    class="sticky top-0 z-50 border-b backdrop-blur"
-    :style="{
-      backgroundColor: 'var(--app-header-bg, var(--color-header-bg))',
-      borderColor: 'var(--app-header-border, rgba(15, 23, 42, 0.12))',
-    }"
-  >
+  <header class="sticky top-0 z-50 border-b border-gray-200 backdrop-blur" :style="{ backgroundColor: 'var(--color-header-bg-rgba)' }">
     <div class="container mx-auto px-4">
       <div class="flex items-center gap-4 py-4">
         <RouterLink to="/" class="flex shrink-0 items-center gap-3">
@@ -165,11 +159,7 @@
         </div>
       </div>
 
-      <div
-        v-if="mobileMenuOpen"
-        class="border-t py-4 md:hidden"
-        :style="{ borderColor: 'var(--app-header-border, rgba(15, 23, 42, 0.12))' }"
-      >
+      <div v-if="mobileMenuOpen" class="border-t border-gray-200 py-4 md:hidden">
         <form v-if="appStore.searchVisible" class="mb-4" @submit.prevent="submitSearchAndClose">
           <div class="flex items-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
             <Search class="ml-3 h-4 w-4 text-gray-400" />
