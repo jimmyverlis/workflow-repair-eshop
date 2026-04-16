@@ -24,7 +24,7 @@
   }
 
   body {
-    background-color: rgb(249 250 251);
+    background-color: var(--app-background, rgb(249 250 251));
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
   }

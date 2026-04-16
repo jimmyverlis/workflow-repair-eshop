@@ -1,5 +1,5 @@
 <template>
-  <footer class="mt-auto border-t border-slate-200 text-white" :style="{ backgroundColor: 'var(--color-footer-bg)' }">
+  <footer class="mt-auto border-t border-slate-200 text-white" :style="{ backgroundColor: 'var(--app-footer-bg, var(--color-footer-bg))' }">
     <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_1.8fr_1fr]">
         <div class="space-y-5">
