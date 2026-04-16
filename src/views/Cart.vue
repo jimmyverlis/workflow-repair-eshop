@@ -226,6 +226,10 @@
                   <span>Υποσύνολο</span>
                   <span class="font-semibold text-slate-900">EUR {{ totals.subtotal.toFixed(2) }}</span>
                 </div>
+                <div v-if="cartStore.estimatedWeight > 0" class="flex items-center justify-between gap-3">
+                  <span>Εκτ. βάρος</span>
+                  <span class="font-semibold text-slate-900">{{ cartStore.estimatedWeight.toFixed(3) }} kg</span>
+                </div>
                 <div v-if="totals.total_discount > 0" class="flex items-center justify-between gap-3 text-emerald-700">
                   <span>Έκπτωση</span>
                   <span class="font-semibold">-EUR {{ totals.total_discount.toFixed(2) }}</span>

@@ -37,15 +37,25 @@ const router = useRouter()
 
 // Override theme tokens at runtime so storefront branding updates without a rebuild.
 const cssVars = computed(() => {
-  const color = appStore.branding.primaryColor || '#3b82f6'
+  const primary = appStore.branding.primaryColor || '#3b82f6'
+  const secondary = appStore.branding.secondaryColor || '#10b981'
+  const accent = appStore.branding.accentColor || '#f59e0b'
+  const headerBg = appStore.branding.headerBg || primary
+  const footerBg = appStore.branding.footerBg || '#020617'
+  const textColor = appStore.branding.textColor || '#0f172a'
 
   return {
-    '--color-primary': color,
-    '--color-primary-400': color,
-    '--color-primary-500': color,
-    '--color-primary-600': color,
-    '--color-primary-700': color,
-    '--color-primary-800': color,
+    '--color-primary': primary,
+    '--color-primary-400': primary,
+    '--color-primary-500': primary,
+    '--color-primary-600': primary,
+    '--color-primary-700': primary,
+    '--color-primary-800': primary,
+    '--color-secondary': secondary,
+    '--color-accent': accent,
+    '--color-header-bg': headerBg,
+    '--color-footer-bg': footerBg,
+    '--color-text': textColor,
   }
 })
 

@@ -88,6 +88,21 @@ const defaultPageContent = () => ({
   terms: { title: 'Terms of Service', body: '' },
 })
 
+const normalizeLogoScale = (value) => {
+  const scale = Number(value)
+
+  if (!Number.isFinite(scale)) {
+    return 100
+  }
+
+  return Math.min(300, Math.max(50, Math.round(scale)))
+}
+
+const buildLogoHeight = (scale, baseHeight, minHeight, maxHeight) => {
+  const scaledHeight = Math.round(baseHeight * (scale / 100))
+  return `${Math.min(maxHeight, Math.max(minHeight, scaledHeight))}px`
+}
+
 export const useAppStore = defineStore('app', () => {
   // ── Resolution state ──────────────────────────────────────────────────────
   const resolvedType = ref(null)  // 'store' | 'error'
@@ -96,6 +111,7 @@ export const useAppStore = defineStore('app', () => {
   // ── Store state ───────────────────────────────────────────────────────────
   const storeId = ref(null)
   const storeConfig = ref(null)   // resolved from /eshop/resolve
+  const storeCategories = ref([])
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const currentUser = ref(null)
@@ -115,10 +131,28 @@ export const useAppStore = defineStore('app', () => {
     storeConfig.value?.store_name || storeConfig.value?.meta_title || 'E-Shop'
   )
 
-  const branding = computed(() => ({
-    primaryColor: storeConfig.value?.primary_color || '#3b82f6',
-    logo: storeConfig.value?.logo || createStoreLogoPlaceholder(storeName.value, storeConfig.value?.primary_color || '#3b82f6'),
-  }))
+  const branding = computed(() => {
+    const primaryColor = storeConfig.value?.primary_color || '#3b82f6'
+    const secondaryColor = storeConfig.value?.secondary_color || '#10b981'
+    const accentColor = storeConfig.value?.accent_color || '#f59e0b'
+    const headerBg = storeConfig.value?.header_bg || primaryColor
+    const footerBg = storeConfig.value?.footer_bg || '#020617'
+    const textColor = storeConfig.value?.text_color || '#0f172a'
+    const logoScale = normalizeLogoScale(storeConfig.value?.logo_scale ?? storeConfig.value?.logoScale)
+
+    return {
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      headerBg,
+      footerBg,
+      textColor,
+      logo: storeConfig.value?.logo || createStoreLogoPlaceholder(storeName.value, primaryColor),
+      logoScale,
+      headerLogoHeight: buildLogoHeight(logoScale, 40, 20, 96),
+      footerLogoHeight: buildLogoHeight(logoScale, 48, 24, 112),
+    }
+  })
 
   const storeDetails = computed(() => ({
     address: storeConfig.value?.store_address || '',
@@ -141,8 +175,16 @@ export const useAppStore = defineStore('app', () => {
   const payAtCourierEnabled = computed(() => !!storeConfig.value?.pay_at_courier_enabled)
   const pickupContent = computed(() => storeConfig.value?.pickup_content || '')
   const courierContent = computed(() => storeConfig.value?.courier_content || '')
-  const navigationItems = computed(() => (
-    Array.isArray(storeConfig.value?.nav_items)
+  const warehouseEnabled = computed(() => !!storeConfig.value?.warehouse_enabled)
+  const warehouseConfig = computed(() => ({
+    enabled: warehouseEnabled.value,
+    navLabel: storeConfig.value?.warehouse_nav_label || 'Warehouse',
+    description: storeConfig.value?.warehouse_description || 'Used and refurbished devices from the same catalog.',
+    showCondition: storeConfig.value?.warehouse_show_condition !== false,
+    showGrade: storeConfig.value?.warehouse_show_grade !== false,
+  }))
+  const navigationItems = computed(() => {
+    const items = Array.isArray(storeConfig.value?.nav_items)
       ? storeConfig.value.nav_items.map(item => ({
           label: item.label || '',
           url: item.url || '',
@@ -151,7 +193,19 @@ export const useAppStore = defineStore('app', () => {
           open_in_new_tab: !!(item.open_in_new_tab ?? item.openInNewTab),
         }))
       : []
-  ))
+
+    if (warehouseConfig.value.enabled && !items.some(item => item.url === '/warehouse')) {
+      items.push({
+        label: warehouseConfig.value.navLabel,
+        url: '/warehouse',
+        highlight: false,
+        openInNewTab: false,
+        open_in_new_tab: false,
+      })
+    }
+
+    return items
+  })
   const promoBanners = computed(() => {
     const primaryColor = storeConfig.value?.primary_color || '#3b82f6'
     const configured = Array.isArray(storeConfig.value?.promo_banners) ? storeConfig.value.promo_banners : []
@@ -244,6 +298,21 @@ export const useAppStore = defineStore('app', () => {
     const sections = Array.isArray(storeConfig.value?.home_sections) ? storeConfig.value.home_sections : []
     return sections.length ? sections : defaultHomeSections()
   })
+  const catalogCategories = computed(() => (
+    Array.isArray(storeCategories.value)
+      ? storeCategories.value
+          .map(category => ({
+            id: category.id,
+            name: category.name || '',
+            slug: category.slug || '',
+            description: category.description || '',
+            imageUrl: category.image_url ?? category.imageUrl ?? '',
+            isUsed: !!(category.is_used ?? category.isUsed),
+            parentId: category.parent_id ?? category.parentId ?? null,
+          }))
+          .filter(category => category.name)
+      : []
+  ))
   const featuredCategories = computed(() => {
     const categories = Array.isArray(storeConfig.value?.featured_categories) ? storeConfig.value.featured_categories : []
     const normalized = categories
@@ -255,8 +324,30 @@ export const useAppStore = defineStore('app', () => {
       }))
       .filter(category => category.label && category.url)
 
-    return normalized.length ? normalized : defaultFeaturedCategories()
+    if (normalized.length) {
+      return normalized
+    }
+
+    if (catalogCategories.value.length) {
+      return catalogCategories.value
+        .slice(0, 6)
+        .map(category => ({
+          label: category.name,
+          url: `/products?category=${encodeURIComponent(category.name)}`,
+          description: category.description,
+          imageUrl: category.imageUrl,
+          isUsed: category.isUsed,
+        }))
+    }
+
+    return defaultFeaturedCategories()
   })
+  const heroSettings = computed(() => ({
+    style: storeConfig.value?.hero_style || 'gradient',
+    imageUrl: storeConfig.value?.hero_image_url || '',
+    overlayOpacity: Number(storeConfig.value?.hero_overlay_opacity ?? 0.5),
+    minHeight: storeConfig.value?.hero_min_height || '520px',
+  }))
   const heroCtaButtons = computed(() => {
     const buttons = Array.isArray(storeConfig.value?.cta_buttons) ? storeConfig.value.cta_buttons : []
     const normalized = buttons
@@ -395,6 +486,7 @@ export const useAppStore = defineStore('app', () => {
       resolvedType.value = 'store'
       storeId.value = resolution.storeId
       storeConfig.value = resolution.config
+      await loadCategories()
 
       // Restore logged-in customer session if token exists
       const token = localStorage.getItem('eshop_customer_token')
@@ -408,6 +500,22 @@ export const useAppStore = defineStore('app', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  async function loadCategories() {
+    if (!storeId.value) {
+      storeCategories.value = []
+      return []
+    }
+
+    try {
+      const { data } = await api.get(`/eshop/${storeId.value}/categories`)
+      storeCategories.value = Array.isArray(data?.data) ? data.data : []
+    } catch {
+      storeCategories.value = []
+    }
+
+    return storeCategories.value
   }
 
   // ── Customer Auth ─────────────────────────────────────────────────────────
@@ -496,6 +604,7 @@ export const useAppStore = defineStore('app', () => {
     // Store
     storeId,
     storeConfig,
+    storeCategories,
 
     // Auth
     currentUser,
@@ -517,6 +626,8 @@ export const useAppStore = defineStore('app', () => {
     payAtCourierEnabled,
     pickupContent,
     courierContent,
+    warehouseEnabled,
+    warehouseConfig,
     navigationItems,
     promoBanners,
     footerDescription,
@@ -525,7 +636,9 @@ export const useAppStore = defineStore('app', () => {
     storeHours,
     trustBadges,
     homeSections,
+    catalogCategories,
     featuredCategories,
+    heroSettings,
     heroCtaButtons,
     announcementBar,
     featureBlocks,
@@ -562,6 +675,7 @@ export const useAppStore = defineStore('app', () => {
 
     // Actions
     initialize,
+    loadCategories,
     login,
     register,
     signOut,

@@ -37,7 +37,10 @@
                     v-if="activeImage"
                     :src="activeImage"
                     :alt="productName"
-                    class="h-full w-full object-cover"
+                    class="h-full w-full cursor-zoom-in object-cover"
+                    loading="eager"
+                    decoding="async"
+                    @click="lightboxOpen = true"
                   />
                   <div v-else class="flex h-full items-center justify-center text-slate-400">
                     <Wrench v-if="isService" class="h-24 w-24" />
@@ -66,7 +69,7 @@
                     :class="activeImageIndex === index ? 'border-primary-500' : 'border-slate-200 hover:border-primary-200'"
                     @click="activeImageIndex = index"
                   >
-                    <img :src="image" :alt="`${productName} ${index + 1}`" class="h-full w-full object-cover" />
+                    <img :src="image" :alt="`${productName} ${index + 1}`" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                   </button>
                 </div>
               </div>
@@ -318,6 +321,10 @@
                     <span>Βαθμός</span>
                     <span class="font-semibold text-slate-900">{{ product.grade }}</span>
                   </div>
+                  <div v-if="product.weight" class="flex items-center justify-between gap-4">
+                    <span>Βάρος</span>
+                    <span class="font-semibold text-slate-900">{{ Number(product.weight).toFixed(3) }} {{ product.weightUnit || 'kg' }}</span>
+                  </div>
                   <div v-if="product.deviceType" class="flex items-center justify-between gap-4">
                     <span>Τύπος συσκευής</span>
                     <span class="font-semibold text-slate-900">{{ product.deviceType }}</span>
@@ -379,6 +386,25 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="lightboxOpen && activeImage"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-4 py-8"
+      @click.self="lightboxOpen = false"
+    >
+      <button
+        type="button"
+        class="absolute right-4 top-4 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+        @click="lightboxOpen = false"
+      >
+        Κλείσιμο
+      </button>
+      <img
+        :src="activeImage"
+        :alt="productName"
+        class="max-h-full max-w-full rounded-3xl object-contain shadow-2xl"
+      />
+    </div>
   </div>
 </template>
 
@@ -423,6 +449,7 @@ const analytics = useAnalytics();
 const product = ref(null);
 const loading = ref(true);
 const activeImageIndex = ref(0);
+const lightboxOpen = ref(false);
 const relatedProducts = ref([]);
 const recentlyViewedProducts = ref([]);
 const topSellerKeys = ref([]);
@@ -571,6 +598,7 @@ watch(stock, value => {
 async function loadProduct() {
   loading.value = true;
   activeImageIndex.value = 0;
+  lightboxOpen.value = false;
   notifyFormOpen.value = false;
   notifyStatus.value = '';
   notifyError.value = '';

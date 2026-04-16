@@ -15,9 +15,17 @@
 }
 
 @layer base {
+  :root {
+    --color-secondary: #10b981;
+    --color-accent: #f59e0b;
+    --color-header-bg: #ffffff;
+    --color-footer-bg: #020617;
+    --color-text: #0f172a;
+  }
+
   body {
     background-color: rgb(249 250 251);
-    color: rgb(17 24 39);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
   }
 

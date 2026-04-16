@@ -16,17 +16,18 @@
     <span v-else>{{ announcementData.text }}</span>
   </div>
 
-  <header class="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur">
+  <header class="sticky top-0 z-50 border-b border-gray-200 backdrop-blur" :style="{ backgroundColor: 'color-mix(in srgb, var(--color-header-bg) 88%, white 12%)' }">
     <div class="container mx-auto px-4">
       <div class="flex items-center gap-4 py-4">
-        <RouterLink to="/" class="flex items-center gap-3 min-w-0">
+        <RouterLink to="/" class="flex shrink-0 items-center gap-3">
           <img
             v-if="appStore.branding.logo"
             :src="appStore.branding.logo"
             :alt="appStore.storeName"
-            class="h-10 w-auto object-contain"
+            class="block w-auto max-w-none shrink-0 object-contain object-left transition-[height] duration-200 ease-out"
+            :style="{ height: appStore.branding.headerLogoHeight }"
           />
-          <div v-else class="text-2xl font-bold text-primary-600 truncate">
+          <div v-else class="max-w-[220px] truncate text-2xl font-bold text-primary-600">
             {{ appStore.storeName }}
           </div>
         </RouterLink>

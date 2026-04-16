@@ -76,8 +76,8 @@ export function normalizeStructuredEntries(value) {
 export function normalizeProduct(raw = {}) {
   const source = raw.source ?? raw._source ?? 'inventory';
   const eshopPrice = raw.eshopPrice ?? raw.eshop_price;
-  const sellPrice = raw.sellPrice ?? raw.sell_price ?? raw.price;
-  const price = raw.price ?? eshopPrice ?? sellPrice ?? 0;
+  const sellPrice = raw.sellPrice ?? raw.sell_price ?? raw.net_sell_price ?? raw.price;
+  const price = raw.price ?? eshopPrice ?? sellPrice ?? raw.net_eshop_price ?? 0;
   const compareAtPrice = raw.compareAtPrice ?? raw.compare_at_price;
   const type = raw.type === 'general' ? 'general_product' : (raw.type ?? raw._productType ?? 'general_product');
   const name = raw.name || [raw.brand, raw.model].filter(Boolean).join(' ');
@@ -101,13 +101,18 @@ export function normalizeProduct(raw = {}) {
     price: toNumber(price),
     eshopPrice: eshopPrice == null ? null : toNumber(eshopPrice),
     sellPrice: sellPrice == null ? null : toNumber(sellPrice),
+    netEshopPrice: raw.netEshopPrice ?? raw.net_eshop_price ?? null,
+    netSellPrice: raw.netSellPrice ?? raw.net_sell_price ?? null,
     compareAtPrice: compareAtPrice == null ? null : toNumber(compareAtPrice),
     discountPercentage: Math.max(0, Math.round(toNumber(raw.discountPercentage ?? raw.discount_percentage ?? 0))),
     manufacturer: raw.manufacturer ?? raw.brand ?? '',
     description: raw.description ?? raw.eshop_description ?? '',
     condition: raw.condition ?? '',
+    categoryId: raw.categoryId ?? raw.category_id ?? null,
     partNumber: raw.partNumber ?? raw.part_number ?? '',
     images: Array.isArray(raw.images) ? raw.images : [],
+    weight: raw.weight == null ? null : toNumber(raw.weight),
+    weightUnit: raw.weightUnit ?? raw.weight_unit ?? 'kg',
   };
 }
 
@@ -120,7 +125,7 @@ export function getProductName(product = {}) {
 }
 
 export function getDisplayPrice(product = {}) {
-  return toNumber(product.eshopPrice ?? product.sellPrice ?? product.price ?? 0);
+  return toNumber(product.price ?? product.eshopPrice ?? product.sellPrice ?? 0);
 }
 
 export function getCompareAtPrice(product = {}) {

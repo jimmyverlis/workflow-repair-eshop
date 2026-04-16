@@ -259,6 +259,10 @@
                 <span>Αποστολή</span>
                 <span class="font-semibold text-slate-900">EUR {{ orderTotals.shipping_cost.toFixed(2) }}</span>
               </div>
+              <div v-if="delivery.method === 'courier' && cartStore.estimatedWeight > 0" class="flex items-center justify-between gap-3">
+                <span>Εκτ. βάρος</span>
+                <span class="font-semibold text-slate-900">{{ cartStore.estimatedWeight.toFixed(3) }} kg</span>
+              </div>
               <div v-if="orderTotals.total_discount > 0" class="flex items-center justify-between gap-3 text-emerald-700">
                 <span>Έκπτωση</span>
                 <span class="font-semibold">-EUR {{ orderTotals.total_discount.toFixed(2) }}</span>
@@ -362,9 +366,29 @@ const freeShippingThreshold = computed(() => {
   const threshold = appStore.storeConfig?.free_shipping_threshold;
   return threshold == null ? null : Number(threshold);
 });
+const shippingWeightRates = computed(() => {
+  return Array.isArray(appStore.storeConfig?.shipping_weight_rates)
+    ? appStore.storeConfig.shipping_weight_rates
+    : [];
+});
 const baseShippingCost = computed(() => {
   if (delivery.value.method !== 'courier') return 0;
   if (freeShippingThreshold.value != null && cartStore.subtotal >= freeShippingThreshold.value) return 0;
+  if (shippingWeightRates.value.length && cartStore.estimatedWeight > 0) {
+    const sortedRates = [...shippingWeightRates.value]
+      .filter(rate => rate && rate.max_weight != null && rate.cost != null)
+      .sort((left, right) => Number(left.max_weight) - Number(right.max_weight));
+
+    const match = sortedRates.find(rate => cartStore.estimatedWeight <= Number(rate.max_weight));
+    if (match) {
+      return Number(match.cost);
+    }
+
+    const lastRate = sortedRates[sortedRates.length - 1];
+    if (lastRate) {
+      return Number(lastRate.cost);
+    }
+  }
   return configuredShippingCost.value;
 });
 const cartSignature = computed(() => JSON.stringify(cartStore.items.map(item => ({ key: item._key, quantity: item.quantity, price: item.unitPrice }))));

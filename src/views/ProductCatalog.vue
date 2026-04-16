@@ -146,7 +146,7 @@
                 <label class="mb-1 block text-sm font-medium text-slate-700">Κατηγορία</label>
                 <select v-model="selectedCategory" class="input">
                   <option value="">Όλες οι κατηγορίες</option>
-                  <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
+                  <option v-for="category in availableCategoryOptions" :key="category.id || category.name" :value="category.name">{{ category.name }}</option>
                 </select>
               </div>
 
@@ -452,13 +452,30 @@ const catalogDescription = computed(() => {
 
 const discountedProductsCount = computed(() => filteredProducts.value.filter(product => getDiscountPercentage(product) > 0).length);
 
-const availableCategories = computed(() => {
+const availableCategoryOptions = computed(() => {
+  if (appStore.catalogCategories?.length) {
+    return appStore.catalogCategories
+      .map(category => ({
+        id: category.id || null,
+        name: category.name || '',
+        isUsed: !!category.isUsed,
+      }))
+      .filter(category => category.name);
+  }
+
   const categories = new Set();
   products.value.forEach(product => {
     const category = String(product.category ?? '').trim();
     if (category) categories.add(category);
   });
-  return [...categories].sort((left, right) => left.localeCompare(right));
+
+  return [...categories]
+    .sort((left, right) => left.localeCompare(right))
+    .map(category => ({ id: null, name: category, isUsed: false }));
+});
+
+const availableCategories = computed(() => {
+  return availableCategoryOptions.value.map(category => category.name);
 });
 
 const availableBrands = computed(() => {
@@ -565,7 +582,13 @@ const filteredProducts = computed(() => {
   }
 
   if (selectedCategory.value) {
-    filtered = filtered.filter(product => String(product.category ?? '') === selectedCategory.value);
+    filtered = filtered.filter(product => {
+      const categoryName = String(product.category ?? '').trim();
+      const categoryConfig = availableCategoryOptions.value.find(category => category.name === selectedCategory.value);
+
+      return categoryName === selectedCategory.value
+        || (categoryConfig?.id && product.categoryId === categoryConfig.id);
+    });
   }
 
   if (selectedBrand.value) {

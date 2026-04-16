@@ -3,10 +3,13 @@
     <template v-for="section in homeSections" :key="section">
       <section
         v-if="section === 'hero'"
-        class="bg-gradient-to-br from-primary-700 via-primary-600 to-slate-900 text-white"
+        class="relative overflow-hidden text-white"
+        :class="heroSettings.style === 'image' && heroSettings.imageUrl ? '' : 'bg-gradient-to-br from-primary-700 via-primary-600 to-slate-900'"
+        :style="heroSectionStyle"
       >
+        <div v-if="heroSettings.style === 'image' && heroSettings.imageUrl" class="absolute inset-0" :style="heroOverlayStyle"></div>
         <div class="container mx-auto px-4 py-16 lg:py-20">
-          <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.3fr_0.7fr]">
+          <div class="relative z-10 grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.3fr_0.7fr]">
             <div>
               <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
                 <Sparkles class="h-4 w-4" />
@@ -116,6 +119,8 @@
                   :src="activeBanner.imageUrl"
                   :alt="activeBanner.title || 'Promo banner'"
                   class="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </div>
@@ -149,8 +154,12 @@
               class="group rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
               @click="navigateToUrl(category.url)"
             >
-              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-                <Package class="h-7 w-7" />
+              <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-primary-50 text-primary-600">
+                <img v-if="category.imageUrl" :src="category.imageUrl" :alt="category.label" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                <Package v-else class="h-7 w-7" />
+              </div>
+              <div v-if="category.isUsed" class="mt-4 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Μεταχειρισμένα
               </div>
               <h3 class="mt-5 text-2xl font-black text-slate-900 group-hover:text-primary-700">{{ category.label }}</h3>
               <p class="mt-2 text-sm leading-6 text-slate-500">
@@ -179,7 +188,7 @@
             >
               <div class="flex items-center justify-between gap-4">
                 <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-primary-50 text-primary-600">
-                  <img v-if="brand.imageUrl" :src="brand.imageUrl" :alt="brand.name" class="h-full w-full object-cover" />
+                  <img v-if="brand.imageUrl" :src="brand.imageUrl" :alt="brand.name" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                   <Package v-else class="h-7 w-7" />
                 </div>
                 <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Μάρκα</div>
@@ -217,7 +226,7 @@
               @click="goToProduct(product)"
             >
               <div class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
-                <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="h-full w-full object-cover" />
+                <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                 <Package v-else class="h-12 w-12 text-gray-400" />
               </div>
               <div class="text-xs uppercase tracking-wide text-gray-400">{{ productTypeLabel(product.type) }}</div>
@@ -256,6 +265,10 @@
               class="cursor-pointer rounded-3xl border border-rose-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-lg"
               @click="goToProduct(product)"
             >
+              <div class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-rose-50">
+                <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                <Tag v-else class="h-12 w-12 text-rose-300" />
+              </div>
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <div class="inline-flex rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">
@@ -512,6 +525,7 @@ const quickLinks = computed(() => {
   ];
 });
 const heroButtons = computed(() => appStore.heroCtaButtons);
+const heroSettings = computed(() => appStore.heroSettings);
 const featuredCategories = computed(() => appStore.featuredCategories);
 const featuredBrands = computed(() => appStore.featuredBrands);
 const featureBlocks = computed(() => appStore.featureBlocks);
@@ -523,6 +537,23 @@ const activeBanner = computed(() => promoBanners.value[activeBannerIndex.value] 
 const activeBannerStyle = computed(() => ({
   background: activeBanner.value.backgroundColor || '#111827',
   color: activeBanner.value.textColor || '#ffffff',
+}));
+const heroSectionStyle = computed(() => {
+  if (heroSettings.value.style === 'image' && heroSettings.value.imageUrl) {
+    return {
+      minHeight: heroSettings.value.minHeight,
+      backgroundImage: `url(${heroSettings.value.imageUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+  }
+
+  return {
+    minHeight: heroSettings.value.minHeight,
+  };
+});
+const heroOverlayStyle = computed(() => ({
+  backgroundColor: `rgba(2, 6, 23, ${Math.min(0.9, Math.max(0, Number(heroSettings.value.overlayOpacity ?? 0.5)))})`,
 }));
 const activeBannerPromo = computed(() => {
   const code = activeBanner.value.discountCode;

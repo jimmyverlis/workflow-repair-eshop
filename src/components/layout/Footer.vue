@@ -1,10 +1,15 @@
 <template>
-  <footer class="mt-auto border-t border-slate-200 bg-slate-950 text-white">
+  <footer class="mt-auto border-t border-slate-200 text-white" :style="{ backgroundColor: 'var(--color-footer-bg)' }">
     <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_1.8fr_1fr]">
         <div class="space-y-5">
           <div class="flex items-center gap-3">
-            <img :src="appStore.branding.logo" :alt="appStore.storeName" class="h-12 w-auto rounded-xl bg-white/5 p-1" />
+            <img
+              :src="appStore.branding.logo"
+              :alt="appStore.storeName"
+              class="block w-auto max-w-none shrink-0 rounded-xl bg-white/5 p-1 object-contain transition-[height] duration-200 ease-out"
+              :style="{ height: appStore.branding.footerLogoHeight }"
+            />
             <div>
               <div class="text-lg font-black">{{ appStore.storeName }}</div>
               <div class="text-xs uppercase tracking-[0.22em] text-white/45">Ηλεκτρονικό κατάστημα</div>

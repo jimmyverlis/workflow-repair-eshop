@@ -43,6 +43,8 @@ export const useCartStore = defineStore('cart', () => {
     const inventoryId = item.inventoryId || item.itemId || item.id;
     const isService = Boolean(item.isService || collection === 'services' || item.type === 'service' || item._productType === 'service');
     const stock = isService ? Infinity : Math.max(0, Math.floor(toNumber(item.stock ?? item.quantity)));
+    const weight = toNumber(item.weight ?? 0);
+    const weightUnit = item.weightUnit || item.weight_unit || 'kg';
     const normalized = {
       _key: item._key || `${collection}:${inventoryId}`,
       inventoryId,
@@ -55,6 +57,8 @@ export const useCartStore = defineStore('cart', () => {
       image: item.image || item.images?.[0] || null,
       sku: item.sku || item.barcode || item.partNumber || '',
       stock,
+      weight,
+      weightUnit,
     };
 
     normalized.quantity = isService ? 1 : clampQuantity(normalized, item.quantity);
@@ -78,6 +82,16 @@ export const useCartStore = defineStore('cart', () => {
 
   const hasServices = computed(() => items.value.some(item => item.isService));
   const isServiceOnly = computed(() => items.value.length > 0 && items.value.every(item => item.isService));
+  const estimatedWeight = computed(() =>
+    items.value.reduce((sum, item) => {
+      if (item.isService) return sum;
+      const baseWeight = toNumber(item.weight);
+      const inKg = String(item.weightUnit || 'kg').toLowerCase() === 'g'
+        ? baseWeight / 1000
+        : baseWeight;
+      return sum + (inKg * toNumber(item.quantity));
+    }, 0)
+  );
   const hasStockIssues = computed(() =>
     items.value.some(item => !item.isService && (getMaxQuantity(item) <= 0 || toNumber(item.quantity, 1) > getMaxQuantity(item)))
   );
@@ -116,6 +130,8 @@ export const useCartStore = defineStore('cart', () => {
         image: product.images?.[0] || null,
         sku: product.barcode || product.partNumber || '',
         stock: isService ? Infinity : availableQuantity,
+        weight: product.weight ?? null,
+        weightUnit: product.weightUnit ?? product.weight_unit ?? 'kg',
       }));
     }
 
@@ -202,6 +218,8 @@ export const useCartStore = defineStore('cart', () => {
           image: product.images?.[0] || null,
           sku: product.barcode || product.partNumber || '',
           stock: availableQuantity,
+          weight: product.weight ?? null,
+          weightUnit: product.weightUnit ?? product.weight_unit ?? 'kg',
           quantity: availableQuantity > 0 ? Math.min(item.quantity, availableQuantity) : 1,
         });
       } catch {
@@ -257,6 +275,7 @@ export const useCartStore = defineStore('cart', () => {
     totalDiscount,
     hasServices,
     isServiceOnly,
+    estimatedWeight,
     hasStockIssues,
 
     // Actions

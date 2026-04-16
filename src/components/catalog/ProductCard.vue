@@ -7,6 +7,8 @@
           :src="product.images[0]"
           :alt="productName"
           class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+          decoding="async"
         />
         <div v-else class="flex h-full items-center justify-center text-slate-400">
           <Wrench v-if="product._productType === 'service'" class="h-16 w-16" />

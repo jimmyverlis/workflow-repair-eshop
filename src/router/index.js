@@ -15,6 +15,12 @@ const routes = [
     meta: { title: 'Products' },
   },
   {
+    path: '/warehouse',
+    name: 'Warehouse',
+    component: () => import('@/views/WarehouseView.vue'),
+    meta: { title: 'Warehouse' },
+  },
+  {
     path: '/brands/:brand',
     name: 'BrandCatalog',
     component: () => import('@/views/ProductCatalog.vue'),
