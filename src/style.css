@@ -32,6 +32,22 @@
   #app {
     min-height: 100vh;
   }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  button:disabled,
+  [role="button"]:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @layer components {
@@ -39,7 +55,7 @@
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-weight: 500;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.1s;
   }
 
   .btn-primary {
