@@ -560,9 +560,12 @@ export const useAppStore = defineStore('app', () => {
     try {
       const { data } = await api.get(`/eshop/${storeId.value}/auth/me`)
       currentUser.value = data.data
-    } catch {
-      localStorage.removeItem('eshop_customer_token')
-      currentUser.value = null
+    } catch (err) {
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        localStorage.removeItem('eshop_customer_token')
+        currentUser.value = null
+      }
+      // On network failure / 5xx: keep existing session
     }
   }
 

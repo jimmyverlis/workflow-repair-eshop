@@ -307,6 +307,14 @@ function navigateTo(url, openInNewTab = false) {
   if (!url) return;
 
   if (/^https?:\/\//i.test(url)) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.origin === window.location.origin && !openInNewTab) {
+        router.push(parsed.pathname + parsed.search + parsed.hash);
+        return;
+      }
+    } catch {}
+
     if (openInNewTab) {
       window.open(url, '_blank', 'noopener,noreferrer');
       return;
