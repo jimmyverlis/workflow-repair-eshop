@@ -55,6 +55,11 @@
                 <input v-model.trim="customer.email" type="email" required class="input" placeholder="πελάτης@example.com" />
               </div>
 
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Σημειώσεις παραγγελίας <span class="font-normal text-slate-400">(προαιρετικό)</span></label>
+                <textarea v-model.trim="customerNotes" rows="2" class="input resize-none" placeholder="Ειδικές οδηγίες, σημειώσεις παράδοσης..."></textarea>
+              </div>
+
               <!-- Invoice / Company fields -->
               <div v-if="appStore.invoiceFieldsEnabled" class="pt-2 border-t border-slate-100">
                 <label class="flex items-center gap-2 cursor-pointer mb-3">
@@ -111,6 +116,13 @@
             </div>
 
             <div v-if="delivery.method === 'courier'" class="mt-6 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+              <div v-if="savedAddresses.length > 0 && appStore.isAuthenticated" class="mb-1">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Αποθηκευμένες διευθύνσεις</label>
+                <select class="input" @change="fillSavedAddress($event.target.value)">
+                  <option value="">Επιλέξτε αποθηκευμένη διεύθυνση...</option>
+                  <option v-for="(addr, i) in savedAddresses" :key="i" :value="i">{{ addr.label || addr.street }}</option>
+                </select>
+              </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="md:col-span-2">
                   <label class="mb-1 block text-sm font-medium text-slate-700">Διεύθυνση</label>
@@ -307,7 +319,9 @@ const promoLoading = ref(false);
 const promoMessage = ref('');
 const promoSuccess = ref(false);
 const promoCode = ref('');
+const customerNotes = ref('');
 const selectedPaymentMethod = ref('viva_wallet');
+const savedAddresses = computed(() => Array.isArray(appStore.currentUser?.saved_addresses) ? appStore.currentUser.saved_addresses : []);
 
 const customer = ref({
   name: '',
@@ -531,6 +545,16 @@ function removeDiscountCode() {
   cartStore.clearPromotion();
 }
 
+function fillSavedAddress(index) {
+  if (index === '' || index === null || index === undefined) return;
+  const addr = savedAddresses.value[Number(index)];
+  if (!addr) return;
+  delivery.value.address.street = addr.street || '';
+  delivery.value.address.city = addr.city || '';
+  delivery.value.address.postalCode = addr.postal_code || '';
+  delivery.value.address.notes = '';
+}
+
 function goToStep(target) {
   errorMsg.value = '';
 
@@ -604,6 +628,7 @@ async function placeOrder() {
       } : null,
       paymentMethod: selectedPaymentMethod.value,
       shippingCost: orderTotals.value.shipping_cost,
+      customerNotes: customerNotes.value || null,
       discountCode: cartStore.promotion?.promotion?.code || null,
       invoiceData: appStore.invoiceFieldsEnabled && invoice.value.wantsInvoice ? {
         company_name: invoice.value.company_name,

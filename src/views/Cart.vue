@@ -148,7 +148,7 @@
                         Φόρτωση καλαθιού
                       </button>
                       <RouterLink
-                        :to="{ path: '/account', query: { tab: 'saved-carts' } }"
+                        :to="{ path: '/account', query: { tab: 'saved' } }"
                         class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:border-primary-200 hover:text-primary-700"
                       >
                         Διαχείριση στον λογαριασμό
