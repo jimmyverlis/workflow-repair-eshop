@@ -165,6 +165,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { ordersAPI } from '@/services/api/orders';
+import { paymentsAPI } from '@/services/api/payments';
 import { Package, CheckCircle, XCircle, Clock } from 'lucide-vue-next';
 import { useAnalytics } from '@/composables/useAnalytics';
 
@@ -236,6 +237,20 @@ onMounted(async () => {
       errorMsg.value = 'Η παραγγελία δεν βρέθηκε.';
     } else {
       order.value = data;
+
+      // Server-side verify when Viva redirects back with ?t={transactionId}
+      // Prevents fake ?status=success URLs from appearing as successful payments
+      if (paymentStatus.value === 'success' && route.query.t) {
+        try {
+          const verification = await paymentsAPI.verifyPayment(route.query.t, orderId)
+          if (!verification.paid) {
+            paymentStatus.value = 'fail'
+          }
+        } catch {
+          paymentStatus.value = ''
+        }
+      }
+
       // Fire purchase event once on success redirect (guard with sessionStorage to avoid re-fires on refresh)
       const trackKey = `tracked_order_${data.orderId || orderId}`
       if (paymentStatus.value === 'success' && data.paymentStatus === 'paid' && !sessionStorage.getItem(trackKey)) {

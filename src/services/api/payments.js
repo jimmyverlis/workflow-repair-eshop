@@ -11,10 +11,11 @@ export const paymentsAPI = {
     return data
   },
 
-  // Verify a completed payment by transaction ID
-  async verifyPayment(transactionId) {
+  // Verify a completed payment by transaction ID; orderId enables server-side cross-checks
+  async verifyPayment(transactionId, orderId = null) {
     const { data } = await api.post('/payments/viva/verify', {
       transaction_id: transactionId,
+      ...(orderId && { order_id: orderId }),
       environment: storeConfig.environment,
     })
     return data
