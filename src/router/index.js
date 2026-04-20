@@ -75,6 +75,12 @@ const routes = [
     meta: { title: 'Repair Tracking' },
   },
   {
+    path: '/repair-offer/:token',
+    name: 'RepairOfferPayment',
+    component: () => import('@/views/RepairOfferPayment.vue'),
+    meta: { title: 'Repair Offer' },
+  },
+  {
     path: '/account',
     name: 'CustomerPortal',
     component: () => import('@/views/CustomerPortal.vue'),
