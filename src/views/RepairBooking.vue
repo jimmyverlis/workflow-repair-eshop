@@ -403,7 +403,6 @@ import { useAppStore } from '@/stores/app'
 import { repairsAPI } from '@/services/api/repairs'
 import { paymentsAPI } from '@/services/api/payments'
 import { appointmentsAPI } from '@/services/api/appointments'
-import { storeConfig } from '@/config/store'
 import {
   Check, ArrowRight, ArrowLeft, Smartphone, Wrench,
   Store, Package, User, CreditCard, CalendarDays
@@ -505,7 +504,7 @@ async function goToStep2() {
   if (!loadingServices.value && !services.value.length) {
     loadingServices.value = true
     try {
-      services.value = await repairsAPI.getRepairServices(storeConfig.storeId)
+      services.value = await repairsAPI.getRepairServices(appStore.storeId)
     } finally {
       loadingServices.value = false
     }
@@ -528,7 +527,7 @@ async function loadSlots() {
   slots.value = []
   appointmentTime.value = ''
   try {
-    const res = await appointmentsAPI.getAvailableSlots(storeConfig.storeId, appointmentDate.value, 30)
+    const res = await appointmentsAPI.getAvailableSlots(appStore.storeId, appointmentDate.value, 30)
     slots.value = res?.data?.available_slots || []
   } catch {
     slots.value = []
@@ -573,7 +572,7 @@ async function submitBooking() {
   errorMsg.value = ''
   try {
     const bookingData = {
-      store_id: storeConfig.storeId,
+      store_id: appStore.storeId,
       customer_id: appStore.currentUser?.id || null,
       customer: {
         name: customer.value.name,
@@ -650,7 +649,7 @@ onMounted(async () => {
 
   // Preload device models
   try {
-    deviceModels.value = await repairsAPI.getDeviceModels(storeConfig.storeId)
+    deviceModels.value = await repairsAPI.getDeviceModels(appStore.storeId)
   } catch { /* non-critical */ }
 })
 </script>
