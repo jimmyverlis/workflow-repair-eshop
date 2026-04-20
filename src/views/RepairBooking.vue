@@ -635,6 +635,11 @@ async function submitBooking() {
 }
 
 onMounted(async () => {
+  if (!appStore.repairBookingEnabled) {
+    router.replace('/')
+    return
+  }
+
   if (appStore.requireAuthForRepairBooking && !appStore.isAuthenticated) {
     router.replace({ path: '/login', query: { redirect: '/repair-booking' } })
     return

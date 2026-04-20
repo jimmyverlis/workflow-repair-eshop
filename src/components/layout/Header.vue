@@ -254,17 +254,18 @@ const accountOpen = ref(false);
 const searchTerm = ref(route.query.q || '');
 
 const navItems = computed(() => {
-  if (appStore.navigationItems.length) {
-    return appStore.navigationItems;
-  }
-
-  return [
-    { label: 'Προϊόντα', url: '/products' },
-    { label: 'Ανταλλακτικά', url: '/products?type=part' },
-    { label: 'Συσκευές', url: '/products?type=device' },
-    { label: 'Αξεσουάρ', url: '/products?type=general_product' },
-    { label: 'Επισκευές', url: '/repair-booking', highlight: true },
-  ];
+  const items = appStore.navigationItems.length
+    ? appStore.navigationItems
+    : [
+        { label: 'Προϊόντα', url: '/products' },
+        { label: 'Ανταλλακτικά', url: '/products?type=part' },
+        { label: 'Συσκευές', url: '/products?type=device' },
+        { label: 'Αξεσουάρ', url: '/products?type=general_product' },
+        { label: 'Επισκευές', url: '/repair-booking', highlight: true },
+      ]
+  return items.filter(item =>
+    item.url !== '/repair-booking' || appStore.repairBookingEnabled
+  )
 });
 
 const announcementData = computed(() => {
