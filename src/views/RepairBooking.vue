@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
     <h1 class="text-3xl font-bold mb-2">Κλείστε Επισκευή</h1>
     <p class="text-gray-500 mb-8">Επιλέξτε υπηρεσίες, διαλέξτε ραντεβού και ολοκληρώστε την κράτηση με πληρωμή.</p>
 
@@ -119,22 +119,25 @@
           <Smartphone class="w-5 h-5 text-primary-600" /> Στοιχεία Συσκευής
         </h2>
         <form @submit.prevent="goToStep2" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Κατηγορία Συσκευής *</label>
-            <select v-model="device.category" class="input" required>
-              <option value="">Επιλέξτε κατηγορία</option>
-              <option value="smartphone">Κινητό Τηλέφωνο</option>
-              <option value="tablet">Tablet</option>
-              <option value="laptop">Laptop</option>
-              <option value="desktop">Desktop PC</option>
-              <option value="smartwatch">Smartwatch</option>
-              <option value="other">Άλλο</option>
-            </select>
+
+          <!-- Brand + Model (manual) — always visible at top -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα</label>
+              <input ref="brandInputRef" v-model="device.brand" type="text" class="input" placeholder="π.χ. Apple, Samsung" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
+              <input v-model="device.modelCode" type="text" class="input" placeholder="π.χ. iPhone 15, S24" />
+            </div>
           </div>
 
-          <!-- Device model autocomplete -->
+          <!-- Device model catalog search -->
           <div class="relative">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο Συσκευής</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Αναζήτηση στον Κατάλογο
+              <span class="text-gray-400 font-normal text-xs ml-1">(προαιρετικό)</span>
+            </label>
             <div class="relative">
               <input
                 v-model="deviceModelSearch"
@@ -149,6 +152,8 @@
                 <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></span>
               </span>
             </div>
+
+            <!-- Suggestions dropdown -->
             <ul
               v-if="modelSuggestions.length && showModelDropdown"
               class="absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-auto"
@@ -162,13 +167,22 @@
                 <span class="font-medium">{{ m.brand }}</span> {{ m.name }}
                 <span v-if="m.category" class="text-gray-400 text-xs ml-1">({{ m.category }})</span>
               </li>
-              <li
-                class="px-4 py-2 text-xs text-gray-400 border-t cursor-pointer hover:bg-gray-50"
-                @mousedown.prevent="clearDeviceModel"
-              >
-                Δεν βρίσκεται — εισάγω χειροκίνητα
-              </li>
             </ul>
+
+            <!-- No results: prompt to add manually -->
+            <div
+              v-else-if="deviceModelSearch.length >= 2 && !modelSuggestions.length"
+              class="mt-2 flex flex-wrap items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm"
+            >
+              <span class="text-amber-700">Δεν βρέθηκε «{{ deviceModelSearch }}» στον κατάλογο.</span>
+              <button
+                type="button"
+                @mousedown.prevent="addDeviceManually"
+                class="text-primary-600 hover:text-primary-800 font-medium underline flex-shrink-0 text-xs"
+              >
+                Προσθήκη χειροκίνητα ↑
+              </button>
+            </div>
           </div>
 
           <!-- IMEI identified banner -->
@@ -180,19 +194,8 @@
             <button type="button" @click="imeiIdentified = ''" class="text-green-600 hover:text-green-800 ml-2 flex-shrink-0 text-lg leading-none">✕</button>
           </div>
 
-          <!-- Manual brand/model if no model selected -->
-          <div v-if="!device.deviceModelId" class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα</label>
-              <input v-model="device.brand" type="text" class="input" placeholder="π.χ. Apple, Samsung" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
-              <input v-model="device.modelCode" type="text" class="input" placeholder="π.χ. iPhone 15, S24" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
+          <!-- IMEI + Storage -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">IMEI / Serial (προαιρετικό)</label>
               <input
@@ -208,6 +211,20 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">Αποθηκευτικός χώρος</label>
               <input v-model="device.storage" type="text" class="input" placeholder="π.χ. 128GB" />
             </div>
+          </div>
+
+          <!-- Category — last -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Κατηγορία Συσκευής *</label>
+            <select v-model="device.category" class="input" required>
+              <option value="">Επιλέξτε κατηγορία</option>
+              <option value="smartphone">Κινητό Τηλέφωνο</option>
+              <option value="tablet">Tablet</option>
+              <option value="laptop">Laptop</option>
+              <option value="desktop">Desktop PC</option>
+              <option value="smartwatch">Smartwatch</option>
+              <option value="other">Άλλο</option>
+            </select>
           </div>
 
           <div class="flex justify-end pt-2">
@@ -392,7 +409,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">Οδός & Αριθμός *</label>
               <input v-model="shippingAddress.street" type="text" class="input" required placeholder="Λεωφόρος Αθηνών 100" />
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Πόλη *</label>
                 <input v-model="shippingAddress.city" type="text" class="input" required placeholder="Αθήνα" />
@@ -482,7 +499,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { repairsAPI } from '@/services/api/repairs'
@@ -506,6 +523,7 @@ const result = ref({
 })
 
 // Step 1 — Device
+const brandInputRef = ref(null)
 const device = ref({ category: '', brand: '', modelCode: '', deviceModelId: null, imei: '', storage: '' })
 const deviceModelSearch = ref('')
 const deviceModels = ref([])
@@ -690,6 +708,13 @@ function selectDeviceModel(m) {
 function clearDeviceModel() {
   device.value.deviceModelId = null
   showModelDropdown.value = false
+}
+
+function addDeviceManually() {
+  deviceModelSearch.value = ''
+  device.value.deviceModelId = null
+  showModelDropdown.value = false
+  nextTick(() => brandInputRef.value?.focus())
 }
 
 // ── Services loading ──────────────────────────────────────────────────────────
