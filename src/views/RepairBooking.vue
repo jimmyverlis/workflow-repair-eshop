@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <div v-else class="max-w-2xl mx-auto">
+    <div v-else class="w-full">
       <!-- Step indicator: desktop -->
       <div class="hidden sm:flex items-center mb-8 overflow-x-auto pb-2">
         <div v-for="(label, i) in stepLabels" :key="i" class="flex items-center flex-shrink-0">
