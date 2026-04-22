@@ -120,49 +120,66 @@
         </h2>
         <form @submit.prevent="goToStep2" class="space-y-4">
 
-          <!-- Brand select -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα *</label>
+          <!-- Brand combobox -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="relative">
-              <select v-model="brandSelect" class="input" required>
-                <option value="">Επιλέξτε μάρκα</option>
-                <option v-for="b in brandOptions" :key="b" :value="b">{{ b }}</option>
-                <option value="__custom__">Άλλη μάρκα...</option>
-              </select>
-              <span v-if="loadingModels" class="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
-                <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></span>
-              </span>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα *</label>
+              <div class="relative">
+                <input
+                  v-model="brandInput"
+                  type="text"
+                  class="input pr-8"
+                  placeholder="π.χ. Apple, Samsung"
+                  autocomplete="off"
+                  required
+                  @input="onBrandInput"
+                  @focus="showBrandDropdown = true"
+                  @blur="onBrandBlur"
+                />
+                <span v-if="loadingModels" class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></span>
+                </span>
+              </div>
+              <ul
+                v-if="showBrandDropdown && filteredBrands.length"
+                class="absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-auto"
+              >
+                <li
+                  v-for="b in filteredBrands"
+                  :key="b"
+                  class="px-4 py-2 hover:bg-primary-50 cursor-pointer text-sm"
+                  @mousedown.prevent="selectBrand(b)"
+                >{{ b }}</li>
+              </ul>
             </div>
-            <input
-              v-if="brandSelect === '__custom__'"
-              v-model="device.brand"
-              type="text"
-              class="input mt-2"
-              placeholder="Εισάγετε μάρκα"
-              required
-            />
-          </div>
 
-          <!-- Model select (cascades from brand) -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
-            <select
-              v-if="brandSelect && brandSelect !== '__custom__'"
-              v-model="modelSelect"
-              class="input"
-            >
-              <option value="">Επιλέξτε μοντέλο</option>
-              <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.name }}</option>
-              <option value="__custom__">Άλλο μοντέλο...</option>
-            </select>
-            <input
-              v-if="!brandSelect || brandSelect === '__custom__' || modelSelect === '__custom__'"
-              v-model="device.modelCode"
-              type="text"
-              class="input"
-              :class="{ 'mt-2': modelSelect === '__custom__' }"
-              placeholder="π.χ. iPhone 15, S24"
-            />
+            <!-- Model combobox -->
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
+              <input
+                v-model="modelInput"
+                type="text"
+                class="input"
+                placeholder="π.χ. iPhone 15, Galaxy S24"
+                autocomplete="off"
+                @input="onModelInput"
+                @focus="showModelDropdown = true"
+                @blur="onModelBlur"
+              />
+              <ul
+                v-if="showModelDropdown && filteredModels.length"
+                class="absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-auto"
+              >
+                <li
+                  v-for="m in filteredModels"
+                  :key="m.id"
+                  class="px-4 py-2 hover:bg-primary-50 cursor-pointer text-sm"
+                  @mousedown.prevent="selectModel(m)"
+                >
+                  <span v-if="!device.brand" class="text-gray-400 text-xs mr-1">{{ m.brand }}</span>{{ m.name }}
+                </li>
+              </ul>
+            </div>
           </div>
 
           <!-- IMEI identified banner -->
@@ -509,40 +526,66 @@ const loadingModels = ref(false)
 const imeiLookupLoading = ref(false)
 const imeiIdentified = ref('')
 
-const brandSelect = ref('')
-const modelSelect = ref('')
+const brandInput = ref('')
+const modelInput = ref('')
+const showBrandDropdown = ref(false)
+const showModelDropdown = ref(false)
 
-const brandOptions = computed(() =>
+const allBrands = computed(() =>
   [...new Set(deviceModels.value.map(m => m.brand))].filter(Boolean).sort()
 )
-const modelOptions = computed(() => {
-  if (!brandSelect.value || brandSelect.value === '__custom__') return []
-  return deviceModels.value
-    .filter(m => m.brand === brandSelect.value)
+const filteredBrands = computed(() => {
+  const q = brandInput.value.toLowerCase()
+  return q ? allBrands.value.filter(b => b.toLowerCase().includes(q)) : allBrands.value
+})
+const filteredModels = computed(() => {
+  const q = modelInput.value.toLowerCase()
+  const byBrand = device.value.brand
+    ? deviceModels.value.filter(m => m.brand === device.value.brand)
+    : deviceModels.value
+  return (q ? byBrand.filter(m => m.name.toLowerCase().includes(q)) : byBrand)
     .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 50)
 })
 
-watch(brandSelect, (val) => {
-  modelSelect.value = ''
+function onBrandInput() {
+  device.value.brand = brandInput.value
   device.value.deviceModelId = null
   device.value.modelCode = ''
-  if (val !== '__custom__') device.value.brand = val
-  else device.value.brand = ''
-})
+  modelInput.value = ''
+  showBrandDropdown.value = true
+}
+function onBrandBlur() {
+  setTimeout(() => { showBrandDropdown.value = false }, 150)
+}
+function selectBrand(b) {
+  brandInput.value = b
+  device.value.brand = b
+  device.value.deviceModelId = null
+  device.value.modelCode = ''
+  modelInput.value = ''
+  showBrandDropdown.value = false
+}
 
-watch(modelSelect, (val) => {
-  if (!val || val === '__custom__') {
-    device.value.deviceModelId = null
-    if (val !== '__custom__') device.value.modelCode = ''
-    return
+function onModelInput() {
+  device.value.modelCode = modelInput.value
+  device.value.deviceModelId = null
+  showModelDropdown.value = true
+}
+function onModelBlur() {
+  setTimeout(() => { showModelDropdown.value = false }, 150)
+}
+function selectModel(m) {
+  modelInput.value = m.name
+  device.value.modelCode = m.name
+  device.value.deviceModelId = m.id
+  if (!device.value.brand) {
+    brandInput.value = m.brand
+    device.value.brand = m.brand
   }
-  const m = modelOptions.value.find(m => m.id === val)
-  if (m) {
-    device.value.deviceModelId = m.id
-    device.value.modelCode = m.name
-    if (m.category && !device.value.category) device.value.category = m.category
-  }
-})
+  if (m.category && !device.value.category) device.value.category = m.category
+  showModelDropdown.value = false
+}
 
 // Step 2 — Services
 const services = ref([])
@@ -621,8 +664,8 @@ function saveDraft() {
     localStorage.setItem(draftKey(), JSON.stringify({
       step: step.value,
       device: device.value,
-      brandSelect: brandSelect.value,
-      modelSelect: modelSelect.value,
+      brandInput: brandInput.value,
+      modelInput: modelInput.value,
       selectedServiceIds: selectedServiceIds.value,
       issue: issue.value,
       appointmentDate: appointmentDate.value,
@@ -645,8 +688,8 @@ function restoreDraft() {
     if (!raw) return false
     const draft = JSON.parse(raw)
     if (draft.device) Object.assign(device.value, draft.device)
-    if (draft.brandSelect) brandSelect.value = draft.brandSelect
-    if (draft.modelSelect) modelSelect.value = draft.modelSelect
+    if (draft.brandInput) brandInput.value = draft.brandInput
+    if (draft.modelInput) modelInput.value = draft.modelInput
     if (draft.selectedServiceIds?.length) selectedServiceIds.value = draft.selectedServiceIds
     if (draft.issue) issue.value = draft.issue
     if (draft.appointmentDate) appointmentDate.value = draft.appointmentDate
@@ -665,7 +708,7 @@ function restoreDraft() {
 // Auto-save whenever form state changes
 const draftWatchables = computed(() => JSON.stringify({
   step: step.value, device: device.value,
-  brandSelect: brandSelect.value, modelSelect: modelSelect.value,
+  brandInput: brandInput.value, modelInput: modelInput.value,
   selectedServiceIds: selectedServiceIds.value, issue: issue.value,
   appointmentDate: appointmentDate.value, appointmentTime: appointmentTime.value,
   deliveryMethod: deliveryMethod.value, shippingAddress: shippingAddress.value,
@@ -684,18 +727,11 @@ async function onImeiInput() {
     if (res.found) {
       if (res.category && !device.value.category) device.value.category = res.category
       imeiIdentified.value = `${res.brand} ${res.model_name}`
-      if (brandOptions.value.includes(res.brand)) {
-        brandSelect.value = res.brand
-        await nextTick()
-        const match = modelOptions.value.find(m => m.id === res.device_model_id)
-        modelSelect.value = match ? match.id : '__custom__'
-        if (!match) device.value.modelCode = res.model_name
-      } else {
-        brandSelect.value = '__custom__'
-        device.value.brand = res.brand
-        device.value.modelCode = res.model_name
-        device.value.deviceModelId = res.device_model_id
-      }
+      brandInput.value = res.brand
+      device.value.brand = res.brand
+      modelInput.value = res.model_name
+      device.value.modelCode = res.model_name
+      device.value.deviceModelId = res.device_model_id
     }
   } catch { /* non-critical */ }
   finally { imeiLookupLoading.value = false }
