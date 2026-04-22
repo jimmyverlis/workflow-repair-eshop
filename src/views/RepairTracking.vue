@@ -222,10 +222,16 @@ async function loadRepair() {
   }
 }
 
-// Auto-load if deviceId is in URL and we have both params
-onMounted(() => {
+// Auto-load if deviceId + code are in URL (e.g. from success page deep-link)
+onMounted(async () => {
   if (route.params.deviceId) {
     deviceId.value = route.params.deviceId;
+  }
+  if (route.query.code) {
+    deviceCode.value = String(route.query.code).toUpperCase();
+  }
+  if (deviceId.value && deviceCode.value) {
+    await loadRepair();
   }
 });
 </script>

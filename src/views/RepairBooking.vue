@@ -5,38 +5,82 @@
 
     <!-- Success state -->
     <div v-if="submitted" class="max-w-lg mx-auto">
-      <div class="card text-center">
-        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Check class="w-8 h-8 text-green-600" />
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Η κράτηση καταχωρήθηκε!</h2>
-        <p v-if="result.paymentPending" class="text-gray-600 mb-2">Η πληρωμή σας εκκρεμεί. Αν ανακατευθυνθήκατε πίσω εδώ, ελέγξτε την κατάσταση παραγγελίας.</p>
-        <p v-else class="text-gray-600 mb-4">Η κράτησή σας ολοκληρώθηκε επιτυχώς.</p>
-
-        <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left space-y-2">
-          <div>
-            <div class="text-sm text-gray-500 mb-1">Αριθμός Παραγγελίας</div>
-            <div class="font-mono font-bold text-lg text-primary-600">{{ result.orderNumber }}</div>
+      <div class="card">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check class="w-8 h-8 text-green-600" />
           </div>
-          <div>
-            <div class="text-sm text-gray-500 mb-1">Κωδικός Επισκευής</div>
-            <div class="font-mono font-bold text-xl text-primary-600">{{ result.deviceCode }}</div>
-            <div class="text-xs text-gray-400 mt-1">Αποθηκεύστε αυτόν τον κωδικό για παρακολούθηση</div>
-          </div>
+          <h2 class="text-2xl font-bold mb-2">Η κράτηση καταχωρήθηκε!</h2>
+          <p v-if="result.paymentPending" class="text-gray-600 text-sm">Η πληρωμή σας εκκρεμεί. Αν ανακατευθυνθήκατε πίσω εδώ, ελέγξτε την κατάσταση παραγγελίας.</p>
+          <p v-else class="text-gray-600 text-sm">Η κράτησή σας ολοκληρώθηκε επιτυχώς.</p>
         </div>
 
-        <div class="flex gap-3 justify-center flex-wrap">
-          <RouterLink :to="`/track-repair/${result.deviceId}`" class="btn btn-primary">
+        <!-- Codes -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-gray-500 mb-0.5">Αριθμός Παραγγελίας</div>
+              <div class="font-mono font-bold text-primary-600">{{ result.orderNumber }}</div>
+            </div>
+            <button type="button" @click="copyToClipboard(result.orderNumber)" class="text-gray-400 hover:text-gray-600 p-1 rounded" title="Αντιγραφή">
+              <Copy class="w-4 h-4" />
+            </button>
+          </div>
+          <div class="border-t pt-3 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-gray-500 mb-0.5">Κωδικός Επισκευής</div>
+              <div class="font-mono font-bold text-xl text-primary-600">{{ result.deviceCode }}</div>
+              <div class="text-xs text-gray-400 mt-0.5">Αποθηκεύστε αυτόν τον κωδικό για παρακολούθηση</div>
+            </div>
+            <button type="button" @click="copyToClipboard(result.deviceCode)" class="text-gray-400 hover:text-gray-600 p-1 rounded" title="Αντιγραφή">
+              <Copy class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Appointment confirmation -->
+        <div v-if="result.appointmentDate && result.appointmentTime" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
+          <div class="flex items-center gap-2 text-blue-800 font-medium text-sm mb-1">
+            <CalendarDays class="w-4 h-4" /> Ραντεβού επιβεβαιώθηκε
+          </div>
+          <div class="text-sm text-blue-700">{{ formatAppointmentDate(result.appointmentDate) }} στις {{ result.appointmentTime }}</div>
+        </div>
+
+        <!-- What happens next -->
+        <div class="mb-6">
+          <div class="text-sm font-semibold text-gray-700 mb-3">Τι γίνεται στη συνέχεια;</div>
+          <ol class="space-y-3 text-sm text-gray-600">
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+              <span v-if="result.deliveryMethod === 'courier'">Στείλτε μας τη συσκευή σας με courier. Θα λάβετε οδηγίες αποστολής στο email σας.</span>
+              <span v-else>Φέρτε τη συσκευή σας στο κατάστημα{{ result.appointmentDate ? ` ${formatAppointmentDate(result.appointmentDate)}` : '' }}.</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+              <span>Ο τεχνικός μας θα εξετάσει τη συσκευή και θα επικοινωνήσει μαζί σας με τη διάγνωση.</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+              <span>Θα λάβετε προσφορά επισκευής για έγκριση πριν ξεκινήσει οποιαδήποτε εργασία.</span>
+            </li>
+          </ol>
+        </div>
+
+        <div class="flex gap-3 flex-wrap">
+          <RouterLink
+            :to="{ path: `/track-repair/${result.deviceId}`, query: { code: result.deviceCode } }"
+            class="btn btn-primary flex-1 text-center"
+          >
             Παρακολούθηση Επισκευής
           </RouterLink>
-          <RouterLink to="/" class="btn btn-secondary">Αρχική Σελίδα</RouterLink>
+          <RouterLink to="/" class="btn btn-secondary">Αρχική</RouterLink>
         </div>
       </div>
     </div>
 
     <div v-else class="max-w-2xl mx-auto">
-      <!-- Step indicators -->
-      <div class="flex items-center mb-8 overflow-x-auto pb-2">
+      <!-- Step indicator: desktop -->
+      <div class="hidden sm:flex items-center mb-8 overflow-x-auto pb-2">
         <div v-for="(label, i) in stepLabels" :key="i" class="flex items-center flex-shrink-0">
           <div
             class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-colors"
@@ -47,6 +91,20 @@
           </div>
           <span class="ml-2 text-sm font-medium whitespace-nowrap" :class="step === i + 1 ? 'text-primary-600' : 'text-gray-500'">{{ label }}</span>
           <div v-if="i < stepLabels.length - 1" class="w-6 md:w-12 h-0.5 mx-2 flex-shrink-0" :class="step > i + 1 ? 'bg-green-500' : 'bg-gray-200'"></div>
+        </div>
+      </div>
+
+      <!-- Step indicator: mobile -->
+      <div class="sm:hidden mb-6">
+        <div class="flex items-center justify-between text-sm mb-2">
+          <span class="font-semibold text-primary-600">{{ stepLabels[step - 1] }}</span>
+          <span class="text-gray-400">Βήμα {{ step }} / {{ stepLabels.length }}</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5">
+          <div
+            class="bg-primary-600 h-1.5 rounded-full transition-all duration-300"
+            :style="{ width: `${(step / stepLabels.length) * 100}%` }"
+          ></div>
         </div>
       </div>
 
@@ -77,15 +135,20 @@
           <!-- Device model autocomplete -->
           <div class="relative">
             <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο Συσκευής</label>
-            <input
-              v-model="deviceModelSearch"
-              type="text"
-              class="input"
-              placeholder="Αναζήτηση μοντέλου (π.χ. iPhone 15, Galaxy S24)..."
-              @input="onModelSearchInput"
-              @blur="onModelSearchBlur"
-              autocomplete="off"
-            />
+            <div class="relative">
+              <input
+                v-model="deviceModelSearch"
+                type="text"
+                class="input"
+                placeholder="Αναζήτηση μοντέλου (π.χ. iPhone 15, Galaxy S24)..."
+                @input="onModelSearchInput"
+                @blur="onModelSearchBlur"
+                autocomplete="off"
+              />
+              <span v-if="imeiLookupLoading" class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></span>
+              </span>
+            </div>
             <ul
               v-if="modelSuggestions.length && showModelDropdown"
               class="absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-auto"
@@ -108,6 +171,15 @@
             </ul>
           </div>
 
+          <!-- IMEI identified banner -->
+          <div v-if="imeiIdentified" class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-sm">
+            <div class="flex items-center gap-2 text-green-800">
+              <Check class="w-4 h-4 flex-shrink-0" />
+              <span>Αναγνωρίστηκε από IMEI: <strong>{{ imeiIdentified }}</strong></span>
+            </div>
+            <button type="button" @click="imeiIdentified = ''" class="text-green-600 hover:text-green-800 ml-2 flex-shrink-0 text-lg leading-none">✕</button>
+          </div>
+
           <!-- Manual brand/model if no model selected -->
           <div v-if="!device.deviceModelId" class="grid grid-cols-2 gap-4">
             <div>
@@ -123,7 +195,14 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">IMEI / Serial (προαιρετικό)</label>
-              <input v-model="device.imei" type="text" class="input" placeholder="15 ψηφία IMEI" maxlength="20" />
+              <input
+                v-model="device.imei"
+                type="text"
+                class="input"
+                placeholder="15 ψηφία IMEI"
+                maxlength="20"
+                @input="onImeiInput"
+              />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Αποθηκευτικός χώρος</label>
@@ -144,7 +223,13 @@
         <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
           <Wrench class="w-5 h-5 text-primary-600" /> Επιλογή Υπηρεσιών
         </h2>
-        <p class="text-sm text-gray-500 mb-6">Επιλέξτε τις υπηρεσίες που χρειάζεστε. Αν δεν είστε σίγουροι, επιλέξτε "Διάγνωση".</p>
+        <p class="text-sm text-gray-500 mb-4">Επιλέξτε τις υπηρεσίες που χρειάζεστε. Αν δεν είστε σίγουροι, επιλέξτε "Διάγνωση".</p>
+
+        <!-- Category filter notice -->
+        <div v-if="device.category && !showAllServices" class="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm mb-4">
+          <span class="text-blue-700">Υπηρεσίες για <strong>{{ categoryLabel(device.category) }}</strong></span>
+          <button type="button" @click="loadAllServices" class="text-blue-600 hover:text-blue-800 text-xs underline ml-3 flex-shrink-0">Εμφάνιση όλων</button>
+        </div>
 
         <div v-if="loadingServices" class="text-center py-8 text-gray-400">
           <span class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-2"></span>
@@ -226,7 +311,7 @@
           <div v-else-if="!slots.length" class="text-sm text-gray-400 py-2">Δεν υπάρχουν διαθέσιμες ώρες για αυτή την ημέρα.</div>
           <div v-else>
             <label class="block text-sm font-medium text-gray-700 mb-2">Ώρα Ραντεβού</label>
-            <div class="grid grid-cols-4 gap-2">
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
               <button
                 v-for="slot in slots"
                 :key="slot.start"
@@ -397,7 +482,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { repairsAPI } from '@/services/api/repairs'
@@ -405,7 +490,7 @@ import { paymentsAPI } from '@/services/api/payments'
 import { appointmentsAPI } from '@/services/api/appointments'
 import {
   Check, ArrowRight, ArrowLeft, Smartphone, Wrench,
-  Store, Package, User, CreditCard, CalendarDays
+  Store, Package, User, CreditCard, CalendarDays, Copy
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -415,13 +500,18 @@ const step = ref(1)
 const submitting = ref(false)
 const errorMsg = ref('')
 const submitted = ref(false)
-const result = ref({ deviceId: '', deviceCode: '', orderNumber: '', paymentPending: false })
+const result = ref({
+  deviceId: '', deviceCode: '', orderNumber: '',
+  paymentPending: false, appointmentDate: '', appointmentTime: '', deliveryMethod: '',
+})
 
 // Step 1 — Device
 const device = ref({ category: '', brand: '', modelCode: '', deviceModelId: null, imei: '', storage: '' })
 const deviceModelSearch = ref('')
 const deviceModels = ref([])
 const showModelDropdown = ref(false)
+const imeiLookupLoading = ref(false)
+const imeiIdentified = ref('')
 const modelSuggestions = computed(() => {
   if (!deviceModelSearch.value || deviceModelSearch.value.length < 2) return []
   const q = deviceModelSearch.value.toLowerCase()
@@ -433,6 +523,8 @@ const modelSuggestions = computed(() => {
 // Step 2 — Services
 const services = ref([])
 const loadingServices = ref(false)
+const loadedForCategory = ref(null)
+const showAllServices = ref(false)
 const selectedServiceIds = ref([])
 const issue = ref('')
 const selectedServices = computed(() =>
@@ -477,8 +569,109 @@ const availablePaymentMethods = computed(() => {
   return all.filter(m => methods.includes(m.value))
 })
 
+function categoryLabel(cat) {
+  const map = {
+    smartphone: 'Κινητό Τηλέφωνο', tablet: 'Tablet', laptop: 'Laptop',
+    desktop: 'Desktop PC', smartwatch: 'Smartwatch', other: 'Άλλο',
+  }
+  return map[cat] || cat
+}
+
+function formatAppointmentDate(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard?.writeText(text).catch(() => {})
+}
+
+// ── LocalStorage draft persistence ──────────────────────────────────────────
+
+function draftKey() {
+  return `repair_booking_draft_${appStore.storeId}`
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(draftKey(), JSON.stringify({
+      step: step.value,
+      device: device.value,
+      deviceModelSearch: deviceModelSearch.value,
+      selectedServiceIds: selectedServiceIds.value,
+      issue: issue.value,
+      appointmentDate: appointmentDate.value,
+      appointmentTime: appointmentTime.value,
+      deliveryMethod: deliveryMethod.value,
+      shippingAddress: shippingAddress.value,
+      customer: customer.value,
+      paymentMethod: paymentMethod.value,
+    }))
+  } catch { /* non-critical */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(draftKey()) } catch { /* non-critical */ }
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(draftKey())
+    if (!raw) return false
+    const draft = JSON.parse(raw)
+    if (draft.device) Object.assign(device.value, draft.device)
+    if (draft.deviceModelSearch) deviceModelSearch.value = draft.deviceModelSearch
+    if (draft.selectedServiceIds?.length) selectedServiceIds.value = draft.selectedServiceIds
+    if (draft.issue) issue.value = draft.issue
+    if (draft.appointmentDate) appointmentDate.value = draft.appointmentDate
+    if (draft.appointmentTime) appointmentTime.value = draft.appointmentTime
+    if (draft.deliveryMethod) deliveryMethod.value = draft.deliveryMethod
+    if (draft.shippingAddress) Object.assign(shippingAddress.value, draft.shippingAddress)
+    if (draft.customer) Object.assign(customer.value, draft.customer)
+    if (draft.paymentMethod) paymentMethod.value = draft.paymentMethod
+    if (draft.step && draft.step > 1) step.value = draft.step
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Auto-save whenever form state changes
+const draftWatchables = computed(() => JSON.stringify({
+  step: step.value, device: device.value, deviceModelSearch: deviceModelSearch.value,
+  selectedServiceIds: selectedServiceIds.value, issue: issue.value,
+  appointmentDate: appointmentDate.value, appointmentTime: appointmentTime.value,
+  deliveryMethod: deliveryMethod.value, shippingAddress: shippingAddress.value,
+  customer: customer.value, paymentMethod: paymentMethod.value,
+}))
+watch(draftWatchables, saveDraft)
+
+// ── IMEI auto-lookup ─────────────────────────────────────────────────────────
+
+async function onImeiInput() {
+  const digits = device.value.imei.replace(/\D/g, '')
+  if (digits.length !== 15 || imeiLookupLoading.value) return
+  imeiLookupLoading.value = true
+  try {
+    const res = await repairsAPI.lookupDeviceByImei(appStore.storeId, digits)
+    if (res.found) {
+      device.value.deviceModelId = res.device_model_id
+      device.value.brand = res.brand
+      device.value.modelCode = res.model_name
+      if (res.category && !device.value.category) device.value.category = res.category
+      deviceModelSearch.value = `${res.brand} ${res.model_name}`
+      imeiIdentified.value = `${res.brand} ${res.model_name}`
+    }
+  } catch { /* non-critical */ }
+  finally { imeiLookupLoading.value = false }
+}
+
+// ── Device model autocomplete ─────────────────────────────────────────────────
+
 function onModelSearchInput() {
   device.value.deviceModelId = null
+  imeiIdentified.value = ''
   showModelDropdown.value = true
 }
 
@@ -499,18 +692,36 @@ function clearDeviceModel() {
   showModelDropdown.value = false
 }
 
+// ── Services loading ──────────────────────────────────────────────────────────
+
+async function loadServicesForCategory(category) {
+  loadingServices.value = true
+  loadedForCategory.value = category || null
+  try {
+    services.value = await repairsAPI.getRepairServices(appStore.storeId, category || null)
+  } finally {
+    loadingServices.value = false
+  }
+}
+
+async function loadAllServices() {
+  showAllServices.value = true
+  await loadServicesForCategory(null)
+}
+
 async function goToStep2() {
   errorMsg.value = ''
-  if (!loadingServices.value && !services.value.length) {
-    loadingServices.value = true
-    try {
-      services.value = await repairsAPI.getRepairServices(appStore.storeId)
-    } finally {
-      loadingServices.value = false
-    }
+  const cat = device.value.category || null
+  const needsReload = !services.value.length || (
+    !showAllServices.value && loadedForCategory.value !== cat
+  )
+  if (needsReload) {
+    await loadServicesForCategory(showAllServices.value ? null : cat)
   }
   step.value = 2
 }
+
+// ── Navigation helpers ────────────────────────────────────────────────────────
 
 function goToStep3() {
   errorMsg.value = ''
@@ -560,12 +771,13 @@ function goToStep5() {
       return
     }
   }
-  // Set default payment method from allowed methods
   if (availablePaymentMethods.value.length && !availablePaymentMethods.value.find(m => m.value === paymentMethod.value)) {
     paymentMethod.value = availablePaymentMethods.value[0].value
   }
   step.value = 5
 }
+
+// ── Submit ────────────────────────────────────────────────────────────────────
 
 async function submitBooking() {
   submitting.value = true
@@ -601,7 +813,16 @@ async function submitBooking() {
     const { orderId, orderNumber, deviceId, deviceCode } = res
 
     if (!res.payment_required || paymentMethod.value !== 'viva_wallet') {
-      result.value = { deviceId, deviceCode, orderNumber, paymentPending: false }
+      clearDraft()
+      result.value = {
+        deviceId,
+        deviceCode,
+        orderNumber,
+        paymentPending: false,
+        appointmentDate: appointmentDate.value,
+        appointmentTime: appointmentTime.value,
+        deliveryMethod: deliveryMethod.value,
+      }
       submitted.value = true
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
@@ -625,6 +846,7 @@ async function submitBooking() {
       throw new Error('Αποτυχία δημιουργίας συνεδρίας πληρωμής.')
     }
 
+    clearDraft()
     window.location.href = paymentResult.paymentUrl
   } catch (err) {
     console.error('Repair booking error:', err)
@@ -633,6 +855,8 @@ async function submitBooking() {
     submitting.value = false
   }
 }
+
+// ── Mount ─────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
   if (!appStore.repairBookingEnabled) {
@@ -645,6 +869,10 @@ onMounted(async () => {
     return
   }
 
+  // Restore draft before auth pre-fill
+  restoreDraft()
+
+  // Auth pre-fill overwrites saved customer data when logged in
   const u = appStore.currentUser
   if (u) {
     customer.value.name = `${u.first_name || ''} ${u.last_name || ''}`.trim()
@@ -652,9 +880,14 @@ onMounted(async () => {
     customer.value.phone = u.phone || ''
   }
 
-  // Preload device models
+  // Preload device models for autocomplete
   try {
     deviceModels.value = await repairsAPI.getDeviceModels(appStore.storeId)
   } catch { /* non-critical */ }
+
+  // If draft restored to step 2, reload the services list
+  if (step.value === 2 && selectedServiceIds.value.length) {
+    loadServicesForCategory(showAllServices.value ? null : device.value.category || null).catch(() => {})
+  }
 })
 </script>

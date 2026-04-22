@@ -14,8 +14,10 @@ export const repairsAPI = {
   },
 
   // Fetch repair services (inventory items of type service) for the store
-  async getRepairServices(storeId) {
-    const { data } = await api.get(`/eshop/${storeId}/repair-services`)
+  // Pass category to filter to relevant services only (null = all)
+  async getRepairServices(storeId, category = null) {
+    const params = category ? { category } : {}
+    const { data } = await api.get(`/eshop/${storeId}/repair-services`, { params })
     return data.data || []
   },
 
@@ -23,6 +25,12 @@ export const repairsAPI = {
   async getDeviceModels(storeId) {
     const { data } = await api.get(`/eshop/${storeId}/device-models`)
     return data.data || []
+  },
+
+  // Look up a device model by IMEI (uses TAC prefix, first 8 digits)
+  async lookupDeviceByImei(storeId, imei) {
+    const { data } = await api.get(`/eshop/${storeId}/device-models/lookup-by-imei`, { params: { imei } })
+    return data
   },
 
   // Track repair status by device ID / device code
