@@ -120,69 +120,49 @@
         </h2>
         <form @submit.prevent="goToStep2" class="space-y-4">
 
-          <!-- Brand + Model (manual) — always visible at top -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα</label>
-              <input ref="brandInputRef" v-model="device.brand" type="text" class="input" placeholder="π.χ. Apple, Samsung" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
-              <input v-model="device.modelCode" type="text" class="input" placeholder="π.χ. iPhone 15, S24" />
-            </div>
-          </div>
-
-          <!-- Device model catalog search -->
-          <div class="relative">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Αναζήτηση στον Κατάλογο
-              <span class="text-gray-400 font-normal text-xs ml-1">(προαιρετικό)</span>
-            </label>
+          <!-- Brand select -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Μάρκα *</label>
             <div class="relative">
-              <input
-                v-model="deviceModelSearch"
-                type="text"
-                class="input"
-                placeholder="Αναζήτηση μοντέλου (π.χ. iPhone 15, Galaxy S24)..."
-                @input="onModelSearchInput"
-                @blur="onModelSearchBlur"
-                autocomplete="off"
-              />
-              <span v-if="imeiLookupLoading" class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <select v-model="brandSelect" class="input" required>
+                <option value="">Επιλέξτε μάρκα</option>
+                <option v-for="b in brandOptions" :key="b" :value="b">{{ b }}</option>
+                <option value="__custom__">Άλλη μάρκα...</option>
+              </select>
+              <span v-if="loadingModels" class="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
                 <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></span>
               </span>
             </div>
+            <input
+              v-if="brandSelect === '__custom__'"
+              v-model="device.brand"
+              type="text"
+              class="input mt-2"
+              placeholder="Εισάγετε μάρκα"
+              required
+            />
+          </div>
 
-            <!-- Suggestions dropdown -->
-            <ul
-              v-if="modelSuggestions.length && showModelDropdown"
-              class="absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-auto"
+          <!-- Model select (cascades from brand) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Μοντέλο</label>
+            <select
+              v-if="brandSelect && brandSelect !== '__custom__'"
+              v-model="modelSelect"
+              class="input"
             >
-              <li
-                v-for="m in modelSuggestions"
-                :key="m.id"
-                class="px-4 py-2 hover:bg-primary-50 cursor-pointer text-sm"
-                @mousedown.prevent="selectDeviceModel(m)"
-              >
-                <span class="font-medium">{{ m.brand }}</span> {{ m.name }}
-                <span v-if="m.category" class="text-gray-400 text-xs ml-1">({{ m.category }})</span>
-              </li>
-            </ul>
-
-            <!-- No results: prompt to add manually -->
-            <div
-              v-else-if="deviceModelSearch.length >= 2 && !modelSuggestions.length"
-              class="mt-2 flex flex-wrap items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm"
-            >
-              <span class="text-amber-700">Δεν βρέθηκε «{{ deviceModelSearch }}» στον κατάλογο.</span>
-              <button
-                type="button"
-                @mousedown.prevent="addDeviceManually"
-                class="text-primary-600 hover:text-primary-800 font-medium underline flex-shrink-0 text-xs"
-              >
-                Προσθήκη χειροκίνητα ↑
-              </button>
-            </div>
+              <option value="">Επιλέξτε μοντέλο</option>
+              <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.name }}</option>
+              <option value="__custom__">Άλλο μοντέλο...</option>
+            </select>
+            <input
+              v-if="!brandSelect || brandSelect === '__custom__' || modelSelect === '__custom__'"
+              v-model="device.modelCode"
+              type="text"
+              class="input"
+              :class="{ 'mt-2': modelSelect === '__custom__' }"
+              placeholder="π.χ. iPhone 15, S24"
+            />
           </div>
 
           <!-- IMEI identified banner -->
@@ -523,19 +503,45 @@ const result = ref({
 })
 
 // Step 1 — Device
-const brandInputRef = ref(null)
 const device = ref({ category: '', brand: '', modelCode: '', deviceModelId: null, imei: '', storage: '' })
-const deviceModelSearch = ref('')
 const deviceModels = ref([])
-const showModelDropdown = ref(false)
+const loadingModels = ref(false)
 const imeiLookupLoading = ref(false)
 const imeiIdentified = ref('')
-const modelSuggestions = computed(() => {
-  if (!deviceModelSearch.value || deviceModelSearch.value.length < 2) return []
-  const q = deviceModelSearch.value.toLowerCase()
-  return deviceModels.value.filter(m =>
-    m.name?.toLowerCase().includes(q) || m.brand?.toLowerCase().includes(q)
-  ).slice(0, 8)
+
+const brandSelect = ref('')
+const modelSelect = ref('')
+
+const brandOptions = computed(() =>
+  [...new Set(deviceModels.value.map(m => m.brand))].filter(Boolean).sort()
+)
+const modelOptions = computed(() => {
+  if (!brandSelect.value || brandSelect.value === '__custom__') return []
+  return deviceModels.value
+    .filter(m => m.brand === brandSelect.value)
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+
+watch(brandSelect, (val) => {
+  modelSelect.value = ''
+  device.value.deviceModelId = null
+  device.value.modelCode = ''
+  if (val !== '__custom__') device.value.brand = val
+  else device.value.brand = ''
+})
+
+watch(modelSelect, (val) => {
+  if (!val || val === '__custom__') {
+    device.value.deviceModelId = null
+    if (val !== '__custom__') device.value.modelCode = ''
+    return
+  }
+  const m = modelOptions.value.find(m => m.id === val)
+  if (m) {
+    device.value.deviceModelId = m.id
+    device.value.modelCode = m.name
+    if (m.category && !device.value.category) device.value.category = m.category
+  }
 })
 
 // Step 2 — Services
@@ -572,10 +578,9 @@ const paymentMethod = ref('viva_wallet')
 
 const stepLabels = ['Συσκευή', 'Υπηρεσίες', 'Ραντεβού', 'Στοιχεία', 'Πληρωμή']
 
-const deviceLabel = computed(() => {
-  if (device.value.deviceModelId) return deviceModelSearch.value
-  return [device.value.brand, device.value.modelCode].filter(Boolean).join(' ') || 'Συσκευή'
-})
+const deviceLabel = computed(() =>
+  [device.value.brand, device.value.modelCode].filter(Boolean).join(' ') || 'Συσκευή'
+)
 
 const availablePaymentMethods = computed(() => {
   const methods = appStore.repairPaymentMethods
@@ -616,7 +621,8 @@ function saveDraft() {
     localStorage.setItem(draftKey(), JSON.stringify({
       step: step.value,
       device: device.value,
-      deviceModelSearch: deviceModelSearch.value,
+      brandSelect: brandSelect.value,
+      modelSelect: modelSelect.value,
       selectedServiceIds: selectedServiceIds.value,
       issue: issue.value,
       appointmentDate: appointmentDate.value,
@@ -639,7 +645,8 @@ function restoreDraft() {
     if (!raw) return false
     const draft = JSON.parse(raw)
     if (draft.device) Object.assign(device.value, draft.device)
-    if (draft.deviceModelSearch) deviceModelSearch.value = draft.deviceModelSearch
+    if (draft.brandSelect) brandSelect.value = draft.brandSelect
+    if (draft.modelSelect) modelSelect.value = draft.modelSelect
     if (draft.selectedServiceIds?.length) selectedServiceIds.value = draft.selectedServiceIds
     if (draft.issue) issue.value = draft.issue
     if (draft.appointmentDate) appointmentDate.value = draft.appointmentDate
@@ -657,7 +664,8 @@ function restoreDraft() {
 
 // Auto-save whenever form state changes
 const draftWatchables = computed(() => JSON.stringify({
-  step: step.value, device: device.value, deviceModelSearch: deviceModelSearch.value,
+  step: step.value, device: device.value,
+  brandSelect: brandSelect.value, modelSelect: modelSelect.value,
   selectedServiceIds: selectedServiceIds.value, issue: issue.value,
   appointmentDate: appointmentDate.value, appointmentTime: appointmentTime.value,
   deliveryMethod: deliveryMethod.value, shippingAddress: shippingAddress.value,
@@ -674,47 +682,23 @@ async function onImeiInput() {
   try {
     const res = await repairsAPI.lookupDeviceByImei(appStore.storeId, digits)
     if (res.found) {
-      device.value.deviceModelId = res.device_model_id
-      device.value.brand = res.brand
-      device.value.modelCode = res.model_name
       if (res.category && !device.value.category) device.value.category = res.category
-      deviceModelSearch.value = `${res.brand} ${res.model_name}`
       imeiIdentified.value = `${res.brand} ${res.model_name}`
+      if (brandOptions.value.includes(res.brand)) {
+        brandSelect.value = res.brand
+        await nextTick()
+        const match = modelOptions.value.find(m => m.id === res.device_model_id)
+        modelSelect.value = match ? match.id : '__custom__'
+        if (!match) device.value.modelCode = res.model_name
+      } else {
+        brandSelect.value = '__custom__'
+        device.value.brand = res.brand
+        device.value.modelCode = res.model_name
+        device.value.deviceModelId = res.device_model_id
+      }
     }
   } catch { /* non-critical */ }
   finally { imeiLookupLoading.value = false }
-}
-
-// ── Device model autocomplete ─────────────────────────────────────────────────
-
-function onModelSearchInput() {
-  device.value.deviceModelId = null
-  imeiIdentified.value = ''
-  showModelDropdown.value = true
-}
-
-function onModelSearchBlur() {
-  setTimeout(() => { showModelDropdown.value = false }, 150)
-}
-
-function selectDeviceModel(m) {
-  device.value.deviceModelId = m.id
-  device.value.brand = m.brand
-  device.value.modelCode = m.name
-  deviceModelSearch.value = `${m.brand} ${m.name}`
-  showModelDropdown.value = false
-}
-
-function clearDeviceModel() {
-  device.value.deviceModelId = null
-  showModelDropdown.value = false
-}
-
-function addDeviceManually() {
-  deviceModelSearch.value = ''
-  device.value.deviceModelId = null
-  showModelDropdown.value = false
-  nextTick(() => brandInputRef.value?.focus())
 }
 
 // ── Services loading ──────────────────────────────────────────────────────────
@@ -905,10 +889,12 @@ onMounted(async () => {
     customer.value.phone = u.phone || ''
   }
 
-  // Preload device models for autocomplete
+  // Load device models for brand/model selects
+  loadingModels.value = true
   try {
     deviceModels.value = await repairsAPI.getDeviceModels(appStore.storeId)
   } catch { /* non-critical */ }
+  finally { loadingModels.value = false }
 
   // If draft restored to step 2, reload the services list
   if (step.value === 2 && selectedServiceIds.value.length) {
