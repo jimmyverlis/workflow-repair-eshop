@@ -93,9 +93,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { repairsAPI } from '@/services/api/repairs'
 import { paymentsAPI } from '@/services/api/payments'
+import { useAppStore } from '@/stores/app'
 import { Check as CheckCircle, XCircle } from 'lucide-vue-next'
 
 const route = useRoute()
+const appStore = useAppStore()
 
 const loading = ref(true)
 const loadError = ref(false)
@@ -112,6 +114,19 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function loadVivaScript(baseUrl) {
+  return new Promise((resolve, reject) => {
+    if (window.VivaPayments?.checkout) { resolve(); return }
+    const existing = document.querySelector(`script[src*="vivacheckout"]`)
+    if (existing) { existing.addEventListener('load', resolve); existing.addEventListener('error', reject); return }
+    const script = document.createElement('script')
+    script.src = `${baseUrl}/web/checkout/v2/vivacheckout.js`
+    script.onload = resolve
+    script.onerror = () => reject(new Error('Αδυναμία φόρτωσης Viva Checkout SDK.'))
+    document.head.appendChild(script)
+  })
+}
 
 async function payOffer() {
   paying.value = true
@@ -133,11 +148,27 @@ async function payOffer() {
       failUrl: `${window.location.href}?status=fail`,
     })
 
-    if (!paymentResult.paymentUrl) {
+    const orderCode = paymentResult.order_code ?? paymentResult.orderCode
+    if (!orderCode) {
       throw new Error('Αποτυχία δημιουργίας συνεδρίας πληρωμής.')
     }
 
-    window.location.href = paymentResult.paymentUrl
+    await loadVivaScript(appStore.vivaCheckoutBaseUrl)
+
+    window.VivaPayments.checkout.setup({
+      successCallback() {
+        window.location.href = `${window.location.origin}/order/${res.orderId}?status=success`
+      },
+      failCallback() {
+        errorMsg.value = 'Η πληρωμή δεν ολοκληρώθηκε. Παρακαλώ δοκιμάστε ξανά.'
+        paying.value = false
+      },
+      cancelCallback() {
+        errorMsg.value = 'Η πληρωμή ακυρώθηκε.'
+        paying.value = false
+      },
+    })
+    window.VivaPayments.checkout.redirectToCheckout({ orderCode })
   } catch (err) {
     console.error('Offer payment error:', err)
     errorMsg.value = err.response?.data?.message || err.message || 'Αποτυχία. Δοκιμάστε ξανά.'

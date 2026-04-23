@@ -659,18 +659,47 @@ async function placeOrder() {
       failUrl: `${window.location.origin}/order/${orderId}?status=fail`,
     });
 
-    if (!paymentResult.paymentUrl) {
+    const orderCode = paymentResult.order_code ?? paymentResult.orderCode;
+    if (!orderCode) {
       throw new Error('Αποτυχία δημιουργίας συνεδρίας πληρωμής.');
     }
 
+    await loadVivaScript(appStore.vivaCheckoutBaseUrl);
     cartStore.clearCart();
-    window.location.href = paymentResult.paymentUrl;
+
+    window.VivaPayments.checkout.setup({
+      successCallback() {
+        router.push(`/order/${orderId}?status=success`);
+      },
+      failCallback() {
+        errorMsg.value = 'Η πληρωμή δεν ολοκληρώθηκε. Παρακαλώ δοκιμάστε ξανά.';
+        submitting.value = false;
+      },
+      cancelCallback() {
+        errorMsg.value = 'Η πληρωμή ακυρώθηκε.';
+        submitting.value = false;
+      },
+    });
+    window.VivaPayments.checkout.redirectToCheckout({ orderCode });
   } catch (error) {
     console.error('Order error:', error);
     errorMsg.value = error.response?.data?.message || error.message || 'Αποτυχία καταχώρισης παραγγελίας.';
   } finally {
     submitting.value = false;
   }
+}
+
+function loadVivaScript(baseUrl) {
+  return new Promise((resolve, reject) => {
+    if (window.VivaPayments?.checkout) { resolve(); return; }
+    const existing = document.querySelector(`script[src*="vivacheckout"]`);
+    if (existing) { existing.addEventListener('load', resolve); existing.addEventListener('error', reject); return; }
+    const script = document.createElement('script');
+    script.src = `${baseUrl}/web/checkout/v2/vivacheckout.js`;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Αδυναμία φόρτωσης Viva Checkout SDK.'));
+    document.head.appendChild(script);
+  });
 }
 
 function roundCurrency(value) {

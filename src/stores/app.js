@@ -177,6 +177,11 @@ export const useAppStore = defineStore('app', () => {
   const invoiceFieldsEnabled = computed(() => !!storeConfig.value?.invoice_fields_enabled)
   const payAtStoreEnabled = computed(() => !!storeConfig.value?.pay_at_store_enabled)
   const payAtCourierEnabled = computed(() => !!storeConfig.value?.pay_at_courier_enabled)
+  const vivaCheckoutBaseUrl = computed(() =>
+    storeConfig.value?.viva_environment === 'production'
+      ? 'https://www.vivapayments.com'
+      : 'https://demo.vivapayments.com'
+  )
   const repairBookingEnabled = computed(() => !!storeConfig.value?.repair_booking_enabled)
   const repairPaymentMethods = computed(() => storeConfig.value?.repair_payment_methods ?? ['viva_wallet'])
   const pickupContent = computed(() => storeConfig.value?.pickup_content || '')
@@ -633,6 +638,7 @@ export const useAppStore = defineStore('app', () => {
     invoiceFieldsEnabled,
     payAtStoreEnabled,
     payAtCourierEnabled,
+    vivaCheckoutBaseUrl,
     repairBookingEnabled,
     repairPaymentMethods,
     pickupContent,
